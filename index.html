@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -41,23 +41,23 @@
             flex-wrap: wrap;
             gap: 12px;
         }
-        .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text-main); }
+        .brand { display: flex; align-items: center; gap: 14px; text-decoration: none; color: var(--text-main); }
         .header-logo {
-            height: 38px; width: 38px;
+            height: 54px; width: 54px;
             object-fit: cover; border-radius: 50%;
             border: 2px solid var(--accent);
-            box-shadow: 0 0 10px var(--accent-glow);
+            box-shadow: 0 0 14px var(--accent-glow);
         }
         .logo-box { 
-            width: 38px; height: 38px; 
+            width: 54px; height: 54px; 
             background: linear-gradient(135deg, var(--accent), #ff9f1c); 
             border-radius: 50%; 
             display: flex; align-items: center; justify-content: center; 
-            font-weight: 900; font-size: 16px; color: #fff; 
+            font-weight: 900; font-size: 20px; color: #fff; 
         }
-        .brand h1 { font-size: 14px; font-weight: 800; letter-spacing: 0.5px; }
+        .brand h1 { font-size: 16px; font-weight: 800; letter-spacing: 0.5px; }
 
-        .header-right { display: flex; align-items: center; gap: 12px; }
+        .header-right { display: flex; align-items: center; gap: 14px; }
         .global-badge { font-size: 11px; color: var(--success); font-weight: 800; }
         
         .lang-switch {
@@ -66,7 +66,7 @@
         }
         .lang-btn {
             background: transparent; border: none; color: var(--text-muted);
-            padding: 4px 8px; font-size: 10px; font-weight: 800; cursor: pointer;
+            padding: 6px 10px; font-size: 11px; font-weight: 800; cursor: pointer;
             border-right: 1px solid rgba(255,255,255,0.05);
         }
         .lang-btn:last-child { border-right: none; }
@@ -140,8 +140,8 @@
         <div class="header-right">
             <div class="global-badge">● GLOBAL</div>
             <div class="lang-switch">
-                <button class="lang-btn active" id="btn-lang-en" onclick="setLandingLang('en')">EN</button>
-                <button class="lang-btn" id="btn-lang-tr" onclick="setLandingLang('tr')">TR</button>
+                <button class="lang-btn active" id="btn-lang-tr" onclick="setLandingLang('tr')">TR</button>
+                <button class="lang-btn" id="btn-lang-en" onclick="setLandingLang('en')">EN</button>
                 <button class="lang-btn" id="btn-lang-de" onclick="setLandingLang('de')">DE</button>
                 <button class="lang-btn" id="btn-lang-ru" onclick="setLandingLang('ru')">RU</button>
             </div>
@@ -149,11 +149,11 @@
     </header>
 
     <div class="hero">
-        <div class="hero-badge" data-i18n="l_badge">⚡ 100% Client-Side WebAssembly Power</div>
+        <div class="hero-badge" data-i18n="l_badge">⚡ %100 Tarayıcı Tabanlı WebAssembly Gücü</div>
         <h2 data-i18n="l_title">Create Pro CS2 Shorts & Covers <span>Without Server Lag</span></h2>
         <p data-i18n="l_desc">The ultimate browser-based content studio for gamers and creators. Crop vertical shorts with auto-zoom killfeeds, generate 16:9 YouTube thumbnails instantly.</p>
         
-        <a href="studio.html" class="cta-btn" data-i18n="l_cta">🚀 LAUNCH STUDIO NOW</a>
+        <a href="studio.html" class="cta-btn" data-i18n="l_cta">🚀 STÜDYOYU BAŞLAT</a>
 
         <div class="features-grid">
             <div class="feature-card">
@@ -169,30 +169,17 @@
             <div class="feature-card">
                 <span class="feature-icon">🌍</span>
                 <h3 data-i18n="f3_title">Multi-Language</h3>
-                <p data-i18n="f3_desc">Fully localized for EN, TR, DE, and RU gaming communities.</p>
+                <p data-i18n="f3_desc">Fully localized for TR, EN, DE, and RU gaming communities.</p>
             </div>
         </div>
     </div>
 
     <footer>
-        <p>MCEYS CUT STUDİO &copy; 2026 | <span data-i18n="footer_pres">MCEYS PRESENT</span></p>
+        <p>MCEYS CUT STUDİO &copy; 2026 | <span data-i18n="footer_pres">MCEYS SUNAR</span></p>
     </footer>
 
     <script>
         const landingDict = {
-            en: {
-                l_badge: "⚡ 100% Client-Side WebAssembly Power",
-                l_title: "Create Pro CS2 Shorts & Covers <span>Without Server Lag</span>",
-                l_desc: "The ultimate browser-based content studio for gamers and creators. Crop vertical shorts with auto-zoom killfeeds, generate 16:9 YouTube thumbnails instantly.",
-                l_cta: "🚀 LAUNCH STUDIO NOW",
-                f1_title: "CS2 Killfeed Zoom",
-                f1_desc: "Automatically isolate and highlight top frags with optimized vertical 9:16 framing.",
-                f2_title: "Instant Thumbnails",
-                f2_desc: "Grab high-res frames directly from your video, overlay custom badges in seconds.",
-                f3_title: "Multi-Language",
-                f3_desc: "Fully localized for EN, TR, DE, and RU gaming communities.",
-                footer_pres: "MCEYS PRESENT"
-            },
             tr: {
                 l_badge: "⚡ %100 Tarayıcı Tabanlı WebAssembly Gücü",
                 l_title: "Sunucu Yükü Olmadan Profesyonel CS2 Shorts & Kapak Tasarla",
@@ -203,8 +190,21 @@
                 f2_title: "Anında Kapaklar",
                 f2_desc: "Videodan yüksek çözünürlüklü kareler yakala, rozetleri saniyeler içinde ekle.",
                 f3_title: "Çoklu Dil Desteği",
-                f3_desc: "İngilizce, Türkçe, Almanca ve Rusça topluluklar için tam uyumlu.",
+                f3_desc: "Türkçe, İngilizce, Almanca ve Rusça topluluklar için tam uyumlu.",
                 footer_pres: "MCEYS SUNAR"
+            },
+            en: {
+                l_badge: "⚡ 100% Client-Side WebAssembly Power",
+                l_title: "Create Pro CS2 Shorts & Covers <span>Without Server Lag</span>",
+                l_desc: "The ultimate browser-based content studio for gamers and creators. Crop vertical shorts with auto-zoom killfeeds, generate 16:9 YouTube thumbnails instantly.",
+                l_cta: "🚀 LAUNCH STUDIO NOW",
+                f1_title: "CS2 Killfeed Zoom",
+                f1_desc: "Automatically isolate and highlight top frags with optimized vertical 9:16 framing.",
+                f2_title: "Instant Thumbnails",
+                f2_desc: "Grab high-res frames directly from your video, overlay custom badges in seconds.",
+                f3_title: "Multi-Language",
+                f3_desc: "Fully localized for TR, EN, DE, and RU gaming communities.",
+                footer_pres: "MCEYS PRESENT"
             },
             de: {
                 l_badge: "⚡ 100% Client-Side WebAssembly Power",
@@ -216,7 +216,7 @@
                 f2_title: "Sofortige Thumbnails",
                 f2_desc: "Schnappe dir hochauflösende Frames direkt aus dem Video.",
                 f3_title: "Mehrsprachig",
-                f3_desc: "Vollständig lokalisiert für EN, TR, DE und RU.",
+                f3_desc: "Vollständig lokalisiert für TR, EN, DE und RU.",
                 footer_pres: "MCEYS PRÄSENTIERT"
             },
             ru: {
@@ -229,7 +229,7 @@
                 f2_title: "Мгновенные превью",
                 f2_desc: "Захватывай кадры высокого разрешения прямо из видео.",
                 f3_title: "Мультиязычно",
-                f3_desc: "Полная локализация для EN, TR, DE и RU сообществ.",
+                f3_desc: "Полная локализация для TR, EN, DE и RU сообществ.",
                 footer_pres: "MCEYS ПРЕДСТАВЛЯЕТ"
             }
         };
@@ -246,7 +246,7 @@
             });
         }
 
-        const savedLang = localStorage.getItem('mceys_landing_lang') || 'en';
+        const savedLang = localStorage.getItem('mceys_landing_lang') || 'tr';
         setLandingLang(savedLang);
     </script>
 </body>
