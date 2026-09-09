@@ -344,19 +344,19 @@
                 return;
             }
 
-            // SEGMENT PLANLAMA (ÇATIŞMA BAŞLANGICINI ASLA KAÇIRMAYAN KURGU)
+            // SEGMENT PLANLAMA (2. KILL ÖNCESİNE EKSTRA PAY EKLENDİ)
             let rawSegments = [];
             detectedKills.forEach(kt => {
-                // Killfeed belirmeden tam 4.5 saniye öncesi (Peek, silah çekme, spray anı)
-                // Killfeed göründükten 1.0 saniye sonrası
-                const s = Math.max(0, kt - 4.5);
+                // Killfeed'den tam 5.2 saniye öncesi (Peek, silah çekişi ve çatışma başlangıcı tam oturur)
+                // Killfeed'den 1.0 saniye sonrası
+                const s = Math.max(0, kt - 5.2);
                 const e = Math.min(duration - 0.2, kt + 1.0);
 
                 if (rawSegments.length > 0) {
                     const lastSeg = rawSegments[rawSegments.length - 1];
-                    // Eğer ikinci kill bu aralığın içine düşerse veya 1.8 sn yakınsa çatışmayı bölme, akıcı bağla!
-                    if (s <= lastSeg.end + 1.8) {
-                        lastSeg.end = Math.min(lastSeg.start + 9.0, e);
+                    // İkinci kill yakınsa kesmeden akıcı bağla (Maksimum 10.5 sn seri çatışma)
+                    if (s <= lastSeg.end + 2.2) {
+                        lastSeg.end = Math.min(lastSeg.start + 10.5, e);
                     } else {
                         rawSegments.push({ start: s, end: e });
                     }
