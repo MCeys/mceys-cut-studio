@@ -356,23 +356,25 @@
 <body>
 
     <header>
-        <a href="index.html" class="brand" style="text-decoration: none; color: inherit; cursor: pointer;">
-        <img src="site_logo.png" alt="Logo" class="header-logo" onerror="this.style.display='none'; document.getElementById('fallback-logo').style.display='flex';">
-        <div id="fallback-logo" class="logo-box" style="display: none;">CS</div>
-        <div><h1>MCEYS CUT STUDİO</h1>
-    </a>
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <a href="index.html" class="brand" style="text-decoration: none; color: inherit; cursor: pointer;">
+                <img src="site_logo.png" alt="Logo" class="header-logo" onerror="this.style.display='none'; document.getElementById('fallback-logo').style.display='flex';">
+                <div id="fallback-logo" class="logo-box" style="display: none;">CS</div>
+                <h1>MCEYS CUT STUDİO</h1>
+            </a>
             <span class="badge-version" data-i18n="badge_fast">⚡ FAST ENGINE</span>
         </div>
+
         <div class="header-right">
             <div class="server-status">
                 <span data-i18n="servers_label">Servers:</span> <span style="color: var(--success); font-weight: 700;" data-i18n="servers_active">● ACTIVE</span>
             </div>
             <div class="lang-switch">
-    <button class="lang-btn active" id="btn-lang-tr" onclick="setLanguage('tr')">TR</button>
-    <button class="lang-btn" id="btn-lang-en" onclick="setLanguage('en')">EN</button>
-    <button class="lang-btn" id="btn-lang-de" onclick="setLanguage('de')">DE</button>
-    <button class="lang-btn" id="btn-lang-ru" onclick="setLanguage('ru')">RU</button>
-</div>
+                <button class="lang-btn active" id="btn-lang-tr" onclick="setLanguage('tr')">TR</button>
+                <button class="lang-btn" id="btn-lang-en" onclick="setLanguage('en')">EN</button>
+                <button class="lang-btn" id="btn-lang-de" onclick="setLanguage('de')">DE</button>
+                <button class="lang-btn" id="btn-lang-ru" onclick="setLanguage('ru')">RU</button>
+            </div>
         </div>
     </header>
 
