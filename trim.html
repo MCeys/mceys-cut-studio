@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCEYS TRIM STUDIO - Hızlı & Kayıpsız Online Video Kesici</title>
+    
+    <!-- FFmpeg.wasm Engine -->
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="MCEYS TRIM STUDIO - Tarayıcı üzerinden ücretsiz, kayıpsız ve anında video kesme aracı. Sunucu yükü yok, WebAssembly ile %100 gizli ve orijinal kalitede video kırpın.">
+    <meta name="keywords" content="video kesme, video kırpma, online video trimmer, kayıpsız video kesici, browser video cut, webassembly video trim">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://www.cutmakeshorts.com/trim.html">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.cutmakeshorts.com/trim.html">
+    <meta property="og:title" content="MCEYS TRIM STUDIO - Kayıpsız Video Kesici">
+    <meta property="og:description" content="Videolarını kaliteden ödün vermeden saniyeler içinde kırp. Tarayıcı tabanlı, hızlı ve ücretsiz.">
+    <meta property="og:image" content="https://www.cutmakeshorts.com/site_logo.png">
+
+    <style>
+        :root {
+            --bg-main: #0a0c10;
+            --bg-card: #13161f;
+            --bg-input: #0e1117;
+            --border-color: #242938;
+            --border-focus: #ff6b35;
+            --accent: #ff6b35;
+            --accent-hover: #ff5419;
+            --accent-glow: rgba(255, 107, 53, 0.35);
+            --text-main: #f3f5f9;
+            --text-muted: #8b93a7;
+            --success: #10b981;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            background: radial-gradient(circle at 50% 0%, #171b26 0%, var(--bg-main) 70%); 
+            color: var(--text-main); 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        
+        header { 
+            width: 100%;
+            min-height: 96px;
+            padding: 0 40px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: rgba(19, 22, 31, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            box-sizing: border-box;
+        }
+        .brand { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 16px; 
+            text-decoration: none; 
+            color: inherit; 
+            cursor: pointer; 
+        }
+        .header-logo {
+            height: 64px; 
+            width: 64px;
+            min-width: 64px;
+            object-fit: cover; 
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 16px var(--accent-glow);
+            display: block;
+        }
+        .logo-box { 
+            width: 64px; 
+            height: 64px; 
+            min-width: 64px;
+            background: linear-gradient(135deg, var(--accent), #ff9f1c); 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: 900; 
+            font-size: 22px; 
+            color: #fff; 
+            box-shadow: 0 4px 16px var(--accent-glow); 
+        }
+        .brand h1 { 
+            font-size: 22px; 
+            font-weight: 800; 
+            letter-spacing: 0.8px; 
+            line-height: 1;
+        }
+        .badge-version { 
+            background: rgba(16, 185, 129, 0.12); color: var(--success); 
+            font-size: 11px; padding: 5px 12px; border-radius: 20px; 
+            font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.25);
+            margin-left: 10px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .nav-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 8px 14px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #fff;
+            background: rgba(255,255,255,0.06);
+        }
+
+        main { 
+            flex: 1; display: flex; justify-content: center; align-items: center; 
+            padding: 40px 20px; width: 100%; 
+        }
+        .trim-container {
+            width: 100%; max-width: 760px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 36px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+        }
+        .trim-title {
+            font-size: 22px; font-weight: 900; margin-bottom: 6px;
+            text-align: center; color: #fff;
+        }
+        .trim-desc {
+            font-size: 13px; color: var(--text-muted); text-align: center;
+            margin-bottom: 28px; line-height: 1.5;
+        }
+
+        .form-group { margin-bottom: 20px; }
+        .form-row { display: flex; gap: 16px; }
+        label { 
+            display: block; font-size: 12px; font-weight: 800; 
+            color: var(--text-muted); text-transform: uppercase; 
+            letter-spacing: 0.6px; margin-bottom: 8px; 
+        }
+        input[type="text"] { 
+            width: 100%; padding: 14px 18px; background: var(--bg-input); 
+            border: 1px solid var(--border-color); border-radius: 10px; 
+            color: #fff; font-size: 15px; transition: all 0.2s; 
+        }
+        input[type="text"]:focus { 
+            outline: none; border-color: var(--border-focus); 
+            box-shadow: 0 0 0 4px var(--accent-glow); 
+        }
+
+        .custom-file-upload {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; gap: 8px; padding: 32px 16px;
+            border: 2px dashed var(--border-color); border-radius: 14px;
+            background: var(--bg-input); cursor: pointer; transition: all 0.2s;
+            text-align: center; margin-bottom: 20px;
+        }
+        .custom-file-upload:hover {
+            border-color: var(--accent);
+            background: rgba(255, 107, 53, 0.04);
+        }
+        .hidden-file-input { display: none; }
+
+        .btn-submit { 
+            width: 100%; padding: 16px; 
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover)); 
+            border: none; border-radius: 10px; color: #fff; font-size: 15px; 
+            font-weight: 800; cursor: pointer; transition: all 0.2s; 
+            text-transform: uppercase; letter-spacing: 0.8px; margin-top: 10px; 
+            box-shadow: 0 8px 24px var(--accent-glow);
+        }
+        .btn-submit:hover { transform: translateY(-2px); }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .progress-box { display: none; margin-top: 24px; padding: 20px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 12px; }
+        .progress-meta { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; }
+        .progress-bar-bg { width: 100%; height: 10px; background: #1a1e2b; border-radius: 5px; overflow: hidden; }
+        .progress-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent), #10b981); transition: width 0.2s; }
+
+        .result-box { display: none; margin-top: 24px; padding: 20px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 14px; }
+        .player-wrapper video { width: 100%; max-height: 380px; border-radius: 10px; background: #000; margin-bottom: 14px; }
+        .download-btn { display: block; text-align: center; padding: 14px; background: #10b981; color: #fff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 800; text-transform: uppercase; }
+
+        footer { background: var(--bg-card); border-top: 1px solid var(--border-color); padding: 20px; text-align: center; font-size: 12px; color: var(--text-muted); }
+        footer span { color: var(--accent); font-weight: 700; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div style="display: flex; align-items: center;">
+            <a href="index.html" class="brand">
+                <img src="site_logo.png" alt="Logo" class="header-logo" onerror="this.style.display='none'; document.getElementById('fallback-logo').style.display='flex';">
+                <div id="fallback-logo" class="logo-box" style="display: none;">CS</div>
+                <h1>MCEYS TRIM STUDİO</h1>
+            </a>
+            <span class="badge-version">⚡ LOSSLESS</span>
+        </div>
+
+        <div class="header-right">
+            <a href="studio.html" class="nav-link">CS2 Shorts Studio</a>
+            <a href="trim.html" class="nav-link active">Video Kesici</a>
+        </div>
+    </header>
+
+    <main>
+        <div class="trim-container">
+            <h2 class="trim-title">Kayıpsız & Işık Hızında Video Kesici</h2>
+            <p class="trim-desc">Yeniden kodlama yapılmaz, kalite bozulmaz. WebAssembly motoruyla saniyeler içinde istediğin aralığı kırpıp indir.</p>
+
+            <form id="trim-form" onsubmit="handleTrim(event)">
+                <label class="custom-file-upload" for="t-video">
+                    <span style="font-size: 32px;">✂️</span>
+                    <span id="t-file-name" style="font-weight: 700; color: #fff;">Kesilecek Video Dosyasını Seç</span>
+                    <span style="font-size: 11px; color: var(--text-muted);">MP4, MOV veya MKV (Sıfır kalite kaybı)</span>
+                    <input type="file" id="t-video" class="hidden-file-input" accept="video/mp4,video/quicktime,video/mkv" required onchange="onFileSelected(this)">
+                </label>
+
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Başlangıç Zamanı (Örn: 00:15):</label>
+                        <input type="text" id="t-start" placeholder="Boşsa: 00:00">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Bitiş Zamanı (Örn: 01:20):</label>
+                        <input type="text" id="t-end" placeholder="Örn: 00:45">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit" id="btn-trim">⚡ VİDEOYU ANINDA KES</button>
+            </form>
+
+            <div id="progress-box" class="progress-box">
+                <div class="progress-meta">
+                    <span id="progress-status">İşleniyor...</span>
+                    <span id="progress-percent">%0</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div id="progress-bar-fill" class="progress-bar-fill"></div>
+                </div>
+            </div>
+
+            <div id="result-box" class="result-box">
+                <div class="player-wrapper">
+                    <video id="out-player" controls playsinline></video>
+                </div>
+                <a id="btn-download" class="download-btn" href="#" download="trimmed_video.mp4">🎬 Kesilen Videoyu İndir</a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>MCEYS TRIM STUDİO &copy; 2026 | <span>MCEYS SUNAR</span></p>
+    </footer>
+
+    <script>
+        const { createFFmpeg, fetchFile } = FFmpeg;
+        const ffmpeg = createFFmpeg({ log: true });
+
+        function onFileSelected(input) {
+            const label = document.getElementById('t-file-name');
+            if (input.files && input.files[0]) {
+                label.innerText = "✔ " + input.files[0].name;
+                label.style.color = "var(--success)";
+            }
+        }
+
+        function parseTimeToSec(tStr) {
+            if(!tStr || !tStr.trim()) return null;
+            const parts = tStr.trim().split(':');
+            if(parts.length === 1) return parseFloat(parts[0]) || null;
+            if(parts.length === 2) return (parseFloat(parts[0]) * 60) + parseFloat(parts[1]) || null;
+            if(parts.length === 3) return (parseFloat(parts[0]) * 3600) + (parseFloat(parts[1]) * 60) + parseFloat(parts[2]) || null;
+            return null;
+        }
+
+        async function handleTrim(e) {
+            e.preventDefault();
+            const file = document.getElementById('t-video').files[0];
+            if (!file) return alert("Lütfen bir video dosyası seçin!");
+
+            const startSec = parseTimeToSec(document.getElementById('t-start').value) || 0.0;
+            const rawEnd = parseTimeToSec(document.getElementById('t-end').value);
+
+            const btn = document.getElementById('btn-trim');
+            const progressBox = document.getElementById('progress-box');
+            const fill = document.getElementById('progress-bar-fill');
+            const status = document.getElementById('progress-status');
+            const percent = document.getElementById('progress-percent');
+            const resultBox = document.getElementById('result-box');
+
+            btn.disabled = true;
+            resultBox.style.display = 'none';
+            progressBox.style.display = 'block';
+            fill.style.width = '20%';
+            percent.innerText = '%20';
+            status.innerText = 'Motor hazırlanıyor...';
+
+            try {
+                if(!ffmpeg.isLoaded()) {
+                    await ffmpeg.load();
+                }
+
+                fill.style.width = '50%';
+                percent.innerText = '%50';
+                status.innerText = 'Video belleğe alınıyor...';
+                ffmpeg.FS('writeFile', 'input_trim.mp4', await fetchFile(file));
+
+                fill.style.width = '80%';
+                percent.innerText = '%80';
+                status.innerText = 'Kayıpsız kesim yapılıyor (-c copy)...';
+
+                const ffmpegArgs = ['-ss', `${startSec.toFixed(2)}`];
+                if (rawEnd !== null && rawEnd > startSec) {
+                    const dur = rawEnd - startSec;
+                    ffmpegArgs.push('-t', `${dur.toFixed(2)}`);
+                }
+                ffmpegArgs.push('-i', 'input_trim.mp4', '-c', 'copy', 'trimmed_out.mp4');
+
+                await ffmpeg.run(...ffmpegArgs);
+
+                const data = ffmpeg.FS('readFile', 'trimmed_out.mp4');
+                const outBlob = new Blob([data.buffer], { type: 'video/mp4' });
+                const outUrl = URL.createObjectURL(outBlob);
+                const outName = `trim_${Date.now()}.mp4`;
+
+                fill.style.width = '100%';
+                percent.innerText = '%100';
+                status.innerText = '✔ Tamamlandı!';
+
+                const player = document.getElementById('out-player');
+                player.src = outUrl;
+                const dlBtn = document.getElementById('btn-download');
+                dlBtn.href = outUrl;
+                dlBtn.download = outName;
+
+                resultBox.style.display = 'block';
+            } catch(err) {
+                console.error(err);
+                alert("Kesme hatası: " + err.message);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
