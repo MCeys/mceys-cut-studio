@@ -330,91 +330,83 @@
             debugStatus.innerText = `Bulunan Vuruş: ${detectedKills.length} adet`;
             console.log("Onaylanan Kill Zamanları:", detectedKills);
 
-            // 3. AŞAMA: SADECE VURUŞ ANLARINI 6-8 SANİYELİK KES
-            const rawClips = [];
+            // 3. AŞAMA: SADECE VURUŞ ANLARINI 4'ER SANİYE KESİP BİRLEŞTİRME (TEK MONTAJ SHORTS'U)
+            const trimSegments = [];
             if (detectedKills.length > 0) {
                 detectedKills.forEach(kt => {
-                    const start = Math.max(0, kt - 4.0);
-                    const end = Math.min(duration, kt + 2.5);
-
-                    // Eğer önceki kliple çakışıyorsa birleştir
-                    if (rawClips.length > 0 && start <= rawClips[rawClips.length - 1].end + 1.0) {
-                        rawClips[rawClips.length - 1].end = end;
-                    } else {
-                        rawClips.push({ start, end });
-                    }
+                    const s = Math.max(0, kt - 2.5);
+                    const e = Math.min(duration, kt + 1.5);
+                    trimSegments.push({ start: s, end: e });
                 });
             } else {
-                // Eğer videoda killfeed hiç kıpırdamadıysa en azından kullanıcının seçtiği bir anı 8 sn kes
-                rawClips.push({ start: 0, end: Math.min(duration, 8) });
+                // Emniyet: kill yakalanamazsa ilk 15 sn
+                trimSegments.push({ start: 0, end: Math.min(duration, 15) });
             }
 
-            // 4. AŞAMA: FFMPEG EXPORT
-            pText.innerText = "Klipler üretiliyor...";
+            pText.innerText = "Vuruşlar tek parça Shorts'a dikiliyor...";
             if(!ffmpeg.isLoaded()) await ffmpeg.load();
             ffmpeg.FS('writeFile', 'source.mp4', await fetchFile(selectedFile));
 
-            for (let idx = 0; idx < rawClips.length; idx++) {
-                const clip = rawClips[idx];
-                const clipDur = Math.max(1, (clip.end - clip.start)).toFixed(2);
-                const outFileName = `val_clip_${idx + 1}.mp4`;
+            // FFmpeg select filtresi ile boş kısımları atıp sadece kill anlarını birleştiriyoruz
+            // Örnek ifade: between(t, 12, 16) + between(t, 34, 38)
+            const selectFilterParts = trimSegments.map(seg => `between(t,${seg.start.toFixed(2)},${seg.end.toFixed(2)})`).join('+');
 
-                pText.innerText = `Vuruş Klipi #${idx + 1} (${clipDur} sn) kesiliyor...`;
+            const outFileName = "valorant_montage_shorts.mp4";
 
-                if (selectedFormat === '16-9') {
-                    // Kayıpsız orijinal yatay kesim
-                    await ffmpeg.run(
-                        '-ss', clip.start.toFixed(2),
-                        '-i', 'source.mp4',
-                        '-t', clipDur,
-                        '-c', 'copy',
-                        outFileName
-                    );
-                } else {
-                    // 9:16 Shorts + Killfeed Zoom
-                    const filter = 
-                        "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:5[bg];" +
-                        "[0:v]scale=1080:-1[fg];" +
-                        "[0:v]crop=iw*0.24:ih*0.20:iw*0.76:ih*0.02,scale=iw*2.2:-1[killfeed];" +
-                        "[bg][fg]overlay=(W-w)/2:(H-h)/2[base];" +
-                        "[base][killfeed]overlay=(W-w)/2:140[v]";
+            if (selectedFormat === '16-9') {
+                // 16:9 Yatay Montaj (Boşluklar atılmış tek video)
+                const filter = `[0:v]select='${selectFilterParts}',setpts=N/FRAME_RATE/TB[v];` +
+                               `[0:a]aselect='${selectFilterParts}',asetpts=N/SR/TB[a]`;
 
-                    await ffmpeg.run(
-                        '-ss', clip.start.toFixed(2),
-                        '-i', 'source.mp4',
-                        '-t', clipDur,
-                        '-filter_complex', filter,
-                        '-map', '[v]',
-                        '-map', '0:a?',
-                        '-c:v', 'libx264',
-                        '-preset', 'ultrafast',
-                        '-crf', '24',
-                        '-c:a', 'copy',
-                        outFileName
-                    );
-                }
+                await ffmpeg.run(
+                    '-i', 'source.mp4',
+                    '-filter_complex', filter,
+                    '-map', '[v]',
+                    '-map', '[a]',
+                    '-c:v', 'libx264',
+                    '-preset', 'ultrafast',
+                    '-crf', '22',
+                    outFileName
+                );
+            } else {
+                // 9:16 Dikey Shorts + Killfeed Zoom + Tek Parça Montaj
+                const filter = 
+                    `[0:v]select='${selectFilterParts}',setpts=N/FRAME_RATE/TB[trimmed];` +
+                    `[0:a]aselect='${selectFilterParts}',asetpts=N/SR/TB[a];` +
+                    `[trimmed]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:5[bg];` +
+                    `[trimmed]scale=1080:-1[fg];` +
+                    `[trimmed]crop=iw*0.24:ih*0.20:iw*0.76:ih*0.02,scale=iw*2.2:-1[killfeed];` +
+                    `[bg][fg]overlay=(W-w)/2:(H-h)/2[base];` +
+                    `[base][killfeed]overlay=(W-w)/2:140[v]`;
 
-                const data = ffmpeg.FS('readFile', outFileName);
-                const blob = new Blob([data.buffer], { type: 'video/mp4' });
-                const url = URL.createObjectURL(blob);
-
-                const item = document.createElement('div');
-                item.className = 'clip-item';
-                item.innerHTML = `
-                    <div class="clip-info">
-                        <span class="clip-tag">⚡ Vuruş Klipi #${idx + 1} (${selectedFormat === '9-16' ? '9:16 Shorts' : '16:9 Yatay'})</span>
-                        <span class="clip-time">Aralık: ${clip.start.toFixed(1)}s - ${clip.end.toFixed(1)}s (${clipDur} saniye)</span>
-                    </div>
-                    <a class="btn-clip-dl" href="${url}" download="valorant_highlight_${idx+1}.mp4">İndir</a>
-                `;
-                clipsList.appendChild(item);
-
-                const currentProgress = 45 + Math.round(((idx + 1) / rawClips.length) * 55);
-                pFill.style.width = currentProgress + '%';
-                pPct.innerText = '%' + currentProgress;
+                await ffmpeg.run(
+                    '-i', 'source.mp4',
+                    '-filter_complex', filter,
+                    '-map', '[v]',
+                    '-map', '[a]',
+                    '-c:v', 'libx264',
+                    '-preset', 'ultrafast',
+                    '-crf', '24',
+                    outFileName
+                );
             }
 
-            pText.innerText = "✔ Tam isabet! Sadece vuruş anları kesildi.";
+            const data = ffmpeg.FS('readFile', outFileName);
+            const blob = new Blob([data.buffer], { type: 'video/mp4' });
+            const url = URL.createObjectURL(blob);
+
+            // Tek bir nihai klip kartı ekle
+            clipsList.innerHTML = `
+                <div class="clip-item" style="border: 2px solid var(--val-red); background: rgba(255, 70, 85, 0.05);">
+                    <div class="clip-info">
+                        <span class="clip-tag">🔥 Tek Parça Kill Montajı (${selectedFormat === '9-16' ? '9:16 Shorts' : '16:9 Yatay'})</span>
+                        <span class="clip-time">Toplam ${detectedKills.length} vuruş birleştirildi, tüm boş anlar çöpe atıldı!</span>
+                    </div>
+                    <a class="btn-clip-dl" href="${url}" download="valorant_montage_shorts.mp4">Montajı İndir</a>
+                </div>
+            `;
+
+            pText.innerText = "✔ Tek parça akıcı Shorts hazır!";
             pFill.style.width = '100%';
             pPct.innerText = '%100';
             clipsBox.style.display = 'block';
