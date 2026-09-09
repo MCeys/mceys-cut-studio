@@ -114,7 +114,7 @@
                 <video src="site_logo.webm" class="header-logo" autoplay loop muted playsinline></video>
                 <h1>VALORANT AUTO-STUDIO</h1>
             </a>
-            <span class="badge-val">⚡ V3.8 SMART-WINDOW</span>
+            <span class="badge-val">⚡ V3.9 STRICT-CUT</span>
         </div>
 
         <div class="header-right">
@@ -130,7 +130,7 @@
     <main>
         <div class="studio-card">
             <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 6px; text-align: center;">Valorant Akıllı Highlight Kesici</h2>
-            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Yayın veya maç kaydını yükle; tüm seri vuruşları çatışma anıyla birlikte tek parça Shorts yapsın.</p>
+            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Yayın veya maç kaydını yükle; sadece çatışmaları alıp round sonunu anında kessin.</p>
 
             <div class="custom-file-upload" id="drop-zone" onclick="document.getElementById('v-video-file').click()">
                 <span style="font-size: 32px;">🎯</span>
@@ -266,7 +266,7 @@
             const step = 0.30;
             const detectedKills = [];
 
-            // Sağ üst killfeed penceresi
+            // Sağ üst dar killfeed alanı
             const kfX = Math.floor(640 * 0.77);
             const kfY = Math.floor(360 * 0.02);
             const kfW = Math.floor(640 * 0.22);
@@ -276,7 +276,10 @@
 
             let prevKfData = null;
 
-            for (let t = 0; t < duration; t += step) {
+            // Round sonu ekranının sahte tetikleme yapmaması için son 3.5 saniyeyi tarama dışı bırak
+            const scanLimit = Math.max(0, duration - 3.5);
+
+            for (let t = 0; t < scanLimit; t += step) {
                 await new Promise(res => {
                     const handler = () => {
                         player.removeEventListener('seeked', handler);
@@ -318,7 +321,6 @@
                     }
 
                     if (isKill) {
-                        // Seri vuruşları yakalayabilmek için minimum aralık 1.5s
                         if (detectedKills.length === 0 || (t - detectedKills[detectedKills.length - 1] > 1.5)) {
                             detectedKills.push(t);
                             console.log("✔ Kill Zamanı:", t.toFixed(2), "Delta:", avgDelta.toFixed(1));
@@ -342,28 +344,36 @@
                 return;
             }
 
-            // DİNAMİK ADAPTİF SEGMENT PLANLAMA (TRIPLE & MULTI-KILL KURTARICI)
+            // KESİN SINIRLANDIRILMIŞ KURGU (ROUND SONU UZAMALARINI KÖKÜNDEN KESER)
             let rawSegments = [];
             if (detectedKills.length > 0) {
-                let currentStart = Math.max(0, detectedKills[0] - 4.8);
-                let currentEnd = Math.min(duration - 0.2, detectedKills[0] + 1.2);
+                let currentStart = Math.max(0, detectedKills[0] - 4.5);
+                // Vuruştan en fazla 1.3 saniye sonrasını al
+                let currentEnd = detectedKills[0] + 1.3;
 
                 for (let i = 1; i < detectedKills.length; i++) {
                     const killTime = detectedKills[i];
                     const prevKillTime = detectedKills[i - 1];
                     const gap = killTime - prevKillTime;
 
-                    // Eğer iki vuruş arası 6 saniyeden azsa (seri çatışma), sahneyi bölme ve uzat
-                    if (gap <= 6.0) {
-                        currentEnd = Math.min(duration - 0.2, killTime + 1.2);
+                    // İki vuruş arasında 5.0 saniyeden az varsa bağla ama tek segment asla 8.5 saniyeyi geçmesin
+                    if (gap <= 5.0 && (killTime + 1.3 - currentStart) <= 8.5) {
+                        currentEnd = killTime + 1.3;
                     } else {
-                        // Araya 6 saniyeden uzun boşluk girdiyse ayrı klip yap
-                        rawSegments.push({ start: currentStart, end: currentEnd });
-                        currentStart = Math.max(0, killTime - 4.8);
-                        currentEnd = Math.min(duration - 0.2, killTime + 1.2);
+                        // Yeni segmente geç
+                        rawSegments.push({ 
+                            start: currentStart, 
+                            end: Math.min(duration - 0.2, currentEnd) 
+                        });
+                        currentStart = Math.max(0, killTime - 4.5);
+                        currentEnd = killTime + 1.3;
                     }
                 }
-                rawSegments.push({ start: currentStart, end: currentEnd });
+                // Son bloğun kesin bitişi: Son kill anından tam 1.3 saniye sonrası!
+                rawSegments.push({ 
+                    start: currentStart, 
+                    end: Math.min(duration - 0.2, currentEnd) 
+                });
             }
 
             if(rawSegments.length > 5) {
@@ -384,7 +394,6 @@
                 pText.innerText = `Vuruş ${i+1}/${rawSegments.length} renderlanıyor (${segDur}s)...`;
 
                 if (selectedFormat === '16-9') {
-                    // HASSAS SEEK: -ss bayrağı -i sonrasında
                     await ffmpeg.run(
                         '-i', 'source.mp4',
                         '-ss', seg.start.toFixed(2),
@@ -396,7 +405,6 @@
                         partName
                     );
                 } else {
-                    // Dikey Shorts: Nişangah merkezli zoom + Tepeye büyük killfeed
                     const filter = 
                         `[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:5[bg];` +
                         `[0:v]crop=ih*9/16:ih:(iw-ih*9/16)/2:0,scale=1080:1920[fg];` +
@@ -445,7 +453,7 @@
                 <div class="clip-item" style="border: 2px solid var(--val-red); background: rgba(255, 70, 85, 0.05);">
                     <div class="clip-info">
                         <span class="clip-tag">🔥 Tek Parça Kill Montajı (${selectedFormat === '9-16' ? '9:16 Shorts' : '16:9 Yatay'})</span>
-                        <span class="clip-time">Mod: ${selectedKillMode === 'solo' ? 'Sadece Benim' : 'Tüm Takım'} | ${rawSegments.length} vuruş sekansı bağlandı!</span>
+                        <span class="clip-time">Mod: ${selectedKillMode === 'solo' ? 'Sadece Benim' : 'Tüm Takım'} | ${rawSegments.length} vuruş bağlandı, round sonu kesildi!</span>
                     </div>
                     <a class="btn-clip-dl" href="${url}" download="valorant_montage_shorts.mp4">Montajı İndir</a>
                 </div>
