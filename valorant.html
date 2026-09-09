@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCEYS VALORANT STUDIO - Akıllı Highlight Kesici</title>
+    <title>MCEYS VALORANT STUDIO - Akıllı Highlight Kesici & Shorts</title>
 
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -63,17 +63,41 @@
         .custom-file-upload { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 30px; border: 2px dashed var(--border-color); border-radius: 14px; background: var(--bg-input); cursor: pointer; text-align: center; margin-bottom: 20px; transition: all 0.2s; }
         .custom-file-upload:hover, .custom-file-upload.dragover { border-color: var(--val-red); background: rgba(255, 70, 85, 0.05); }
 
-        .format-selector { display: flex; gap: 12px; margin-bottom: 20px; }
+        /* Format Seçiciler */
+        .format-selector { display: flex; gap: 12px; margin-bottom: 18px; }
         .format-card { flex: 1; background: var(--bg-input); border: 2px solid var(--border-color); border-radius: 12px; padding: 14px; cursor: pointer; text-align: center; transition: 0.2s; }
         .format-card.selected { border-color: var(--val-red); background: rgba(255, 70, 85, 0.08); box-shadow: 0 0 16px var(--val-glow); }
         .format-title { font-weight: 800; font-size: 14px; display: block; margin-bottom: 4px; }
         .format-desc { font-size: 11px; color: var(--text-muted); }
 
+        /* Hedef Kill Modu Butonları */
+        .mode-container { margin-bottom: 18px; }
+        .mode-buttons { display: flex; gap: 10px; }
+        .btn-mode {
+            flex: 1;
+            padding: 12px 14px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-mode:hover { color: #fff; border-color: rgba(255, 70, 85, 0.4); }
+        .btn-mode.selected {
+            background: rgba(255, 70, 85, 0.12);
+            border-color: var(--val-red);
+            color: #fff;
+            box-shadow: 0 0 12px var(--val-glow);
+        }
+
         .workspace { display: none; margin-top: 10px; }
         .player-frame { width: 100%; max-height: 380px; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); margin-bottom: 16px; display: flex; justify-content: center; position: relative; }
         .player-frame video { width: 100%; max-height: 380px; }
 
-        .debug-panel { display: flex; justify-content: space-between; align-items: center; background: #0b0d13; border: 1px solid #1f2535; border-radius: 8px; padding: 8px 14px; font-size: 11px; font-family: monospace; color: var(--accent-cyan, #00f2fe); margin-bottom: 14px; }
+        .debug-panel { display: flex; justify-content: space-between; align-items: center; background: #0b0d13; border: 1px solid #1f2535; border-radius: 8px; padding: 8px 14px; font-size: 11px; font-family: monospace; color: var(--text-muted); margin-bottom: 14px; }
 
         .btn-submit { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--val-red), var(--val-red-hover)); border: none; border-radius: 10px; color: #fff; font-size: 15px; font-weight: 800; cursor: pointer; text-transform: uppercase; box-shadow: 0 8px 24px var(--val-glow); transition: 0.2s; }
         .btn-submit:hover { transform: translateY(-2px); }
@@ -116,8 +140,8 @@
 
     <main>
         <div class="studio-card">
-            <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 6px; text-align: center;">Valorant Otomatik Kill Bulucu & Kırpıcı</h2>
-            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Uzun maç kaydını yükle; tüm vuruş anlarını otomatik yakalayıp istediğin formatta çıkartsın.</p>
+            <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 6px; text-align: center;">Valorant Otomatik Highlight Kesici</h2>
+            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Videoyu yükle; boşlukları atıp vuruş anlarını tek parça akıcı montaja dönüştürsün.</p>
 
             <div class="custom-file-upload" id="drop-zone" onclick="document.getElementById('v-video-file').click()">
                 <span style="font-size: 32px;">🎯</span>
@@ -138,21 +162,29 @@
                     </div>
                 </div>
 
+                <div class="mode-container">
+                    <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 6px;">🎯 HEDEF KILL TÜRÜ:</span>
+                    <div class="mode-buttons">
+                        <button type="button" class="btn-mode selected" id="mode-solo" onclick="selectKillMode('solo')">👤 Sadece Benim Killerim</button>
+                        <button type="button" class="btn-mode" id="mode-team" onclick="selectKillMode('team')">👥 Tüm Takım & ACE (Arkadaşlar Dahil)</button>
+                    </div>
+                </div>
+
                 <div class="player-frame">
                     <video id="val-player" controls playsinline></video>
                 </div>
 
                 <div class="debug-panel" id="debug-panel">
                     <span id="debug-status">Durum: Bekleniyor</span>
-                    <span id="debug-metrics">Killfeed: 0 | Banner: 0</span>
+                    <span id="debug-metrics">Killfeed: 0 piksel</span>
                 </div>
 
-                <button type="button" class="btn-submit" id="btn-scan" onclick="startScanAndRender()">🎯 VURUŞLARI TARA VE KLİPLERİ OLUŞTUR</button>
+                <button type="button" class="btn-submit" id="btn-scan" onclick="startScanAndRender()">🎬 VURUŞLARI TARA VE MONTAJ SHORTS ÜRET</button>
             </div>
 
             <div id="progress-box" class="progress-box">
                 <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px;">
-                    <span id="progress-text">Vuruş anları taranıyor...</span>
+                    <span id="progress-text">Killfeed taranıyor...</span>
                     <span id="progress-pct">%0</span>
                 </div>
                 <div style="background: #1a1e2b; height: 8px; border-radius: 4px; overflow: hidden;">
@@ -161,7 +193,7 @@
             </div>
 
             <div id="clips-container" class="clips-container">
-                <h3 style="font-size: 15px; margin-bottom: 12px; color: var(--val-red);">🔥 Tespit Edilen Vuruş Klipleri</h3>
+                <h3 style="font-size: 15px; margin-bottom: 12px; color: var(--val-red);">🔥 Üretilen Montaj</h3>
                 <div id="clips-list"></div>
             </div>
         </div>
@@ -184,11 +216,18 @@
         
         let selectedFile = null;
         let selectedFormat = '9-16';
+        let selectedKillMode = 'solo'; // 'solo' veya 'team'
 
         function selectFormat(fmt) {
             selectedFormat = fmt;
             document.getElementById('opt-9-16').classList.toggle('selected', fmt === '9-16');
             document.getElementById('opt-16-9').classList.toggle('selected', fmt === '16-9');
+        }
+
+        function selectKillMode(mode) {
+            selectedKillMode = mode;
+            document.getElementById('mode-solo').classList.toggle('selected', mode === 'solo');
+            document.getElementById('mode-team').classList.toggle('selected', mode === 'team');
         }
 
         fileInput.addEventListener('change', function() {
@@ -214,11 +253,10 @@
 
             player.onloadedmetadata = () => {
                 scanCanvas.width = 640;
-                scanCanvas.height = 360; // Hızlı ve hafif tarama için normalize çözünürlük
+                scanCanvas.height = 360;
             };
         }
 
-       // %100 SAĞ ÜST KILLFEED KIRMIZI BANT DEDEKTÖRÜ (SKİNLERDEN TAMAMEN BAĞIMSIZ)
         async function startScanAndRender() {
             const btn = document.getElementById('btn-scan');
             const pBox = document.getElementById('progress-box');
@@ -236,14 +274,14 @@
             pBox.style.display = 'block';
 
             const duration = player.duration || 10;
-            const step = 0.3; // 300ms hassas tarama
+            const step = 0.3; // 300ms hassas aralık
             const detectedKills = [];
 
-            // 640x360 çözünürlükte sağ üst killfeed tam koordinatı:
-            const kfX = Math.floor(640 * 0.75);
-            const kfY = Math.floor(360 * 0.03);
-            const kfW = Math.floor(640 * 0.23);
-            const kfH = Math.floor(360 * 0.20);
+            // 640x360 çözünürlükte sağ üst killfeed alanı
+            const kfX = Math.floor(640 * 0.74);
+            const kfY = Math.floor(360 * 0.02);
+            const kfW = Math.floor(640 * 0.25);
+            const kfH = Math.floor(360 * 0.22);
 
             debugStatus.innerText = "Killfeed taranıyor...";
 
@@ -260,27 +298,31 @@
                 scanCtx.drawImage(player, 0, 0, 640, 360);
                 const kfData = scanCtx.getImageData(kfX, kfY, kfW, kfH).data;
 
-                // Valorant'ta rakip öldüğünde sağ üstte çıkan kırmızı/bordo bant pikselleri
-                let redBandPixels = 0;
+                let killMatches = 0;
                 for (let i = 0; i < kfData.length; i += 4) {
                     const r = kfData[i];
                     const g = kfData[i + 1];
                     const b = kfData[i + 2];
 
-                    // Kırmızı ton kontrolü (Valorant killfeed kırmızı bildirim şeridi)
-                    if (r > 140 && g < 60 && b < 70) {
-                        redBandPixels++;
+                    // Kırmızı şerit (Kendi vuruşun / rakip ölümü)
+                    const isRed = (r > 150 && g < 75 && b < 85);
+
+                    // Turkuaz / Cyan / Yeşil şerit (Takım arkadaşı vuruşu)
+                    const isCyan = (r < 90 && g > 150 && b > 140) || (r < 110 && g > 180 && b < 160);
+
+                    if (selectedKillMode === 'solo') {
+                        if (isRed) killMatches++;
+                    } else {
+                        if (isRed || isCyan) killMatches++;
                     }
                 }
 
-                debugMetrics.innerText = `Saniye: ${t.toFixed(1)}s | Kırmızı Piksel: ${redBandPixels}`;
+                debugMetrics.innerText = `Zaman: ${t.toFixed(1)}s | Eşleşme: ${killMatches}`;
 
-                // Kırmızı şerit belirdiğinde kill onaylanır (Eşik: en az 45 piksel kırmızı)
-                if (redBandPixels > 45) {
-                    // Aynı kill için 2 saniye içinde tekrar tetiklenmesin
+                // Eşik aşımı (Killfeed belirdi)
+                if (killMatches > 40) {
                     if (detectedKills.length === 0 || (t - detectedKills[detectedKills.length - 1] > 2.0)) {
                         detectedKills.push(t);
-                        console.log("✔ Kill Yakalandı -> Saniye:", t.toFixed(2), "Kırmızı Yoğunluğu:", redBandPixels);
                     }
                 }
 
@@ -289,27 +331,26 @@
                 pPct.innerText = '%' + progress;
             }
 
-            debugStatus.innerText = `Toplam Bulunan Kill: ${detectedKills.length}`;
+            debugStatus.innerText = `Bulunan Kill: ${detectedKills.length} adet`;
 
-            // KİLL ANLARINI DİLİMLE (Vuruştan 2.5 sn önce, 1.5 sn sonra = Tam 4 sn)
+            // Sadece vuruş anlarını dilimle (2.5 sn önce + 1.5 sn sonra = 4 sn aksiyon)
             let trimSegments = [];
             if (detectedKills.length > 0) {
                 detectedKills.forEach(kt => {
                     const s = Math.max(0, kt - 2.5);
                     const e = Math.min(duration, kt + 1.5);
                     
-                    if (trimSegments.length > 0 && s <= trimSegments[trimSegments.length - 1].end + 0.5) {
+                    if (trimSegments.length > 0 && s <= trimSegments[trimSegments.length - 1].end + 0.8) {
                         trimSegments[trimSegments.length - 1].end = e;
                     } else {
                         trimSegments.push({ start: s, end: e });
                     }
                 });
             } else {
-                trimSegments.push({ start: 0, end: Math.min(duration, 8) });
+                trimSegments.push({ start: 0, end: Math.min(duration, 10) });
             }
 
-            // FFMPEG SELECT İLE BOŞLUKLARI ATIP TEK VİDEO YAP
-            pText.innerText = "Sadece vuruş anları tek videoya dikiliyor...";
+            pText.innerText = "Kill anları tek montaja dikiliyor...";
             if(!ffmpeg.isLoaded()) await ffmpeg.load();
             ffmpeg.FS('writeFile', 'source.mp4', await fetchFile(selectedFile));
 
@@ -360,7 +401,7 @@
                 <div class="clip-item" style="border: 2px solid var(--val-red); background: rgba(255, 70, 85, 0.05);">
                     <div class="clip-info">
                         <span class="clip-tag">🔥 Tek Parça Kill Montajı (${selectedFormat === '9-16' ? '9:16 Shorts' : '16:9 Yatay'})</span>
-                        <span class="clip-time">${detectedKills.length} vuruş peş peşe bağlandı, boş anlar tamamen kesildi!</span>
+                        <span class="clip-time">Mod: ${selectedKillMode === 'solo' ? 'Sadece Benim' : 'Tüm Takım'} | ${detectedKills.length} vuruş peş peşe birleştirildi!</span>
                     </div>
                     <a class="btn-clip-dl" href="${url}" download="valorant_montage_shorts.mp4">Montajı İndir</a>
                 </div>
