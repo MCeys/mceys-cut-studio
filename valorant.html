@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCEYS VALORANT SHORTS STUDIO - Klip Kırpıcı & Otomatik 9:16</title>
+    <title>MCEYS VALORANT STUDIO - Otomatik Kill Yakalama & Format Dönüştürücü</title>
 
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -17,11 +17,6 @@
       gtag('config', 'G-T4H7EHSR4T');
     </script>
 
-    <!-- SEO Meta Tags -->
-    <meta name="description" content="Valorant kliplerinizi tek tıkla YouTube Shorts, TikTok ve Reels formatına dönüştürün. Sağ üst killfeed otomatik büyütülür, arka plan blur yapılır. %100 gizli ve ücretsiz.">
-    <meta name="keywords" content="valorant shorts yapma, valorant klip dikey yapma, valorant killfeed zoom, valorant tiktok converter, valorant reels edit">
-    <link rel="canonical" href="https://www.cutmakeshorts.com/valorant.html">
-
     <style>
         :root {
             --bg-main: #0a0c10;
@@ -31,7 +26,6 @@
             --val-red: #ff4655;
             --val-red-hover: #ff2b3d;
             --val-glow: rgba(255, 70, 85, 0.4);
-            --accent-cyan: #00f2fe;
             --text-main: #ece8e1;
             --text-muted: #8b94a7;
             --success: #10b981;
@@ -45,35 +39,23 @@
             display: flex; 
             flex-direction: column; 
         }
-        
         header { 
             width: 100%; min-height: 96px; padding: 0 36px; 
             display: flex; justify-content: space-between; align-items: center; 
             background: rgba(18, 22, 32, 0.92); backdrop-filter: blur(12px); 
-            border-bottom: 1px solid var(--border-color); box-sizing: border-box;
+            border-bottom: 1px solid var(--border-color);
             flex-wrap: wrap; gap: 16px;
         }
         .brand { display: inline-flex; align-items: center; gap: 16px; text-decoration: none; color: inherit; }
-        .header-logo { height: 64px; width: 64px; min-width: 64px; border-radius: 50%; border: 2px solid var(--val-red); box-shadow: 0 0 16px var(--val-glow); object-fit: cover; }
+        .header-logo { height: 64px; width: 64px; border-radius: 50%; border: 2px solid var(--val-red); box-shadow: 0 0 16px var(--val-glow); object-fit: cover; }
         .brand h1 { font-size: 20px; font-weight: 900; letter-spacing: 0.8px; line-height: 1; }
-        .badge-val { 
-            background: rgba(255, 70, 85, 0.12); color: var(--val-red); 
-            font-size: 11px; padding: 4px 10px; border-radius: 20px; 
-            font-weight: 800; border: 1px solid rgba(255, 70, 85, 0.3); margin-left: 10px;
-        }
+        .badge-val { background: rgba(255, 70, 85, 0.12); color: var(--val-red); font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 800; border: 1px solid rgba(255, 70, 85, 0.3); margin-left: 10px; }
 
         .header-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
         .nav-pill-group { display: flex; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 3px; gap: 2px; }
         .nav-link { color: var(--text-muted); text-decoration: none; font-size: 12px; font-weight: 800; padding: 7px 14px; border-radius: 6px; transition: all 0.2s; white-space: nowrap; }
         .nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
         .nav-link.active { color: #fff; background: #1f1a26; border: 1px solid rgba(255, 70, 85, 0.2); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); }
-        .header-divider { width: 1px; height: 24px; background: var(--border-color); display: inline-block; }
-
-        .lang-switch { display: flex; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
-        .lang-btn { background: transparent; border: none; color: var(--text-muted); padding: 7px 11px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.2s; border-right: 1px solid rgba(255, 255, 255, 0.05); }
-        .lang-btn:last-child { border-right: none; }
-        .lang-btn:hover { color: #fff; }
-        .lang-btn.active { background: var(--val-red); color: #fff; }
 
         main { flex: 1; display: flex; justify-content: center; align-items: center; padding: 36px 20px; width: 100%; }
         .studio-card { width: 100%; max-width: 900px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
@@ -82,12 +64,16 @@
         .custom-file-upload:hover { border-color: var(--val-red); background: rgba(255, 70, 85, 0.03); }
         .hidden-file-input { display: none; }
 
-        .workspace { display: none; margin-top: 10px; }
-        .player-frame { width: 100%; max-height: 400px; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); margin-bottom: 16px; display: flex; justify-content: center; }
-        .player-frame video { width: 100%; max-height: 400px; }
+        /* Format Seçici Butonlar */
+        .format-selector { display: flex; gap: 12px; margin-bottom: 20px; }
+        .format-card { flex: 1; background: var(--bg-input); border: 2px solid var(--border-color); border-radius: 12px; padding: 14px; cursor: pointer; text-align: center; transition: 0.2s; }
+        .format-card.selected { border-color: var(--val-red); background: rgba(255, 70, 85, 0.08); box-shadow: 0 0 16px var(--val-glow); }
+        .format-title { font-weight: 800; font-size: 14px; display: block; margin-bottom: 4px; }
+        .format-desc { font-size: 11px; color: var(--text-muted); }
 
-        .controls-panel { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 12px; padding: 18px; margin-bottom: 20px; }
-        .timeline-slider { width: 100%; accent-color: var(--val-red); cursor: pointer; }
+        .workspace { display: none; margin-top: 10px; }
+        .player-frame { width: 100%; max-height: 380px; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); margin-bottom: 16px; display: flex; justify-content: center; }
+        .player-frame video { width: 100%; max-height: 380px; }
 
         .btn-submit { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--val-red), var(--val-red-hover)); border: none; border-radius: 10px; color: #fff; font-size: 15px; font-weight: 800; cursor: pointer; text-transform: uppercase; box-shadow: 0 8px 24px var(--val-glow); transition: 0.2s; }
         .btn-submit:hover { transform: translateY(-2px); }
@@ -96,8 +82,12 @@
         .progress-box { display: none; margin-top: 20px; padding: 16px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 10px; }
         .progress-bar-fill { width: 0%; height: 8px; background: linear-gradient(90deg, var(--val-red), #ff8a95); border-radius: 4px; transition: width 0.2s; }
 
-        .result-box { display: none; margin-top: 24px; padding: 20px; background: rgba(255, 70, 85, 0.08); border: 1px solid rgba(255, 70, 85, 0.3); border-radius: 12px; }
-        .download-btn { display: block; text-align: center; padding: 14px; background: var(--val-red); color: #fff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 800; }
+        .clips-container { display: none; margin-top: 24px; }
+        .clip-item { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 10px; padding: 14px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .clip-info { display: flex; flex-direction: column; gap: 4px; }
+        .clip-tag { font-size: 13px; font-weight: 800; color: var(--val-red); }
+        .clip-time { font-size: 11px; color: var(--text-muted); }
+        .btn-clip-dl { padding: 8px 16px; background: var(--val-red); color: #fff; text-decoration: none; border-radius: 6px; font-size: 12px; font-weight: 800; }
 
         footer { background: var(--bg-card); border-top: 1px solid var(--border-color); padding: 20px; text-align: center; font-size: 12px; color: var(--text-muted); }
         footer span { color: var(--val-red); font-weight: 700; }
@@ -109,9 +99,9 @@
         <div style="display: flex; align-items: center;">
             <a href="index.html" class="brand">
                 <video src="site_logo.webm" class="header-logo" autoplay loop muted playsinline></video>
-                <h1>VALORANT SHORTS</h1>
+                <h1>VALORANT AUTO-STUDIO</h1>
             </a>
-            <span class="badge-val">⚡ AUTO-KILLFEED</span>
+            <span class="badge-val">⚡ AI AUTO-KILL</span>
         </div>
 
         <div class="header-right">
@@ -121,47 +111,43 @@
                 <a href="valorant.html" class="nav-link active">Valorant Shorts</a>
                 <a href="trim.html" class="nav-link">Kayıpsız Kesici</a>
             </nav>
-            <span class="header-divider"></span>
-            <div class="lang-switch">
-                <button class="lang-btn active" id="btn-lang-tr" onclick="setValLang('tr')">TR</button>
-                <button class="lang-btn" id="btn-lang-en" onclick="setValLang('en')">EN</button>
-                <button class="lang-btn" id="btn-lang-de" onclick="setValLang('de')">DE</button>
-                <button class="lang-btn" id="btn-lang-ru" onclick="setValLang('ru')">RU</button>
-            </div>
         </div>
     </header>
 
     <main>
         <div class="studio-card">
-            <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 6px; text-align: center;" data-i18n="title">Valorant 9:16 Shorts Üretici</h2>
-            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;" data-i18n="desc">16:9 Valorant klibini yükle; arkaplanı otomatik blur'lasın, sağ üst killfeed'i tepeye büyütsün.</p>
+            <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 6px; text-align: center;">Valorant Otomatik Kill Bulucu & Kırpıcı</h2>
+            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Uzun maç kaydını yükle; tüm vuruş anlarını otomatik yakalayıp istediğin formatta çıkartsın.</p>
 
             <label class="custom-file-upload" for="v-video" id="upload-box">
                 <span style="font-size: 32px;">🎯</span>
-                <span id="v-file-name" style="font-weight: 700;" data-i18n="upload_btn">Valorant Klibini Yükle</span>
-                <span style="font-size: 11px; color: var(--text-muted);">MP4, MOV veya MKV (1080p önerilir)</span>
+                <span id="v-file-name" style="font-weight: 700;">Valorant Maç / Klip Dosyasını Seç</span>
+                <span style="font-size: 11px; color: var(--text-muted);">MP4, MOV veya MKV</span>
                 <input type="file" id="v-video" class="hidden-file-input" accept="video/mp4,video/quicktime,video/mkv" onchange="loadVideo(this)">
             </label>
 
             <div id="workspace" class="workspace">
+                <div class="format-selector">
+                    <div class="format-card selected" id="opt-9-16" onclick="selectFormat('9-16')">
+                        <span class="format-title">📱 Dikey Shorts (9:16)</span>
+                        <span class="format-desc">Arkaplan blur + Killfeed zoom (TikTok/Shorts)</span>
+                    </div>
+                    <div class="format-card" id="opt-16-9" onclick="selectFormat('16-9')">
+                        <span class="format-title">🖥️ Orijinal Yatay (16:9)</span>
+                        <span class="format-desc">Kayıpsız orijinal kalite (YouTube/Montaj)</span>
+                    </div>
+                </div>
+
                 <div class="player-frame">
                     <video id="val-player" controls playsinline></video>
                 </div>
 
-                <div class="controls-panel">
-                    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px;">
-                        <span style="color: var(--text-muted);" data-i18n="lbl_time">Klip Süresi:</span>
-                        <span id="badge-dur" style="font-weight: 800; color: #fff;">0.0s</span>
-                    </div>
-                    <input type="range" id="timeline" class="timeline-slider" min="0" value="0" step="0.05" oninput="scrub(this.value)">
-                </div>
-
-                <button type="button" class="btn-submit" id="btn-render" onclick="renderValorantShorts()" data-i18n="btn_render">🎬 VALORANT SHORTS'A DÖNÜŞTÜR (9:16)</button>
+                <button type="button" class="btn-submit" id="btn-scan" onclick="startScanAndRender()">🎯 VURUŞLARI TARA VE KLİPLERİ OLUŞTUR</button>
             </div>
 
             <div id="progress-box" class="progress-box">
                 <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px;">
-                    <span id="progress-text">İşleniyor...</span>
+                    <span id="progress-text">Vuruş anları taranıyor...</span>
                     <span id="progress-pct">%0</span>
                 </div>
                 <div style="background: #1a1e2b; height: 8px; border-radius: 4px; overflow: hidden;">
@@ -169,14 +155,15 @@
                 </div>
             </div>
 
-            <div id="result-box" class="result-box">
-                <div class="player-frame" style="max-height: 420px; width: 236px; margin: 0 auto 16px auto; border-radius: 12px;">
-                    <video id="out-player" controls playsinline></video>
-                </div>
-                <a id="btn-download" class="download-btn" href="#" download="valorant_shorts.mp4" data-i18n="btn_dl">🔥 9:16 Shorts Klibini İndir</a>
+            <div id="clips-container" class="clips-container">
+                <h3 style="font-size: 15px; margin-bottom: 12px; color: var(--val-red);">🔥 Tespit Edilen Vuruş Klipleri</h3>
+                <div id="clips-list"></div>
             </div>
         </div>
     </main>
+
+    <!-- Arka planda piksel taraması yapan gizli canvas -->
+    <canvas id="scanCanvas" style="display:none;"></canvas>
 
     <footer>
         <p>MCEYS VALORANT STUDİO &copy; 2026 | <span>MCEYS SUNAR</span></p>
@@ -184,74 +171,18 @@
 
     <script>
         const { createFFmpeg, fetchFile } = FFmpeg;
-        const ffmpeg = createFFmpeg({ log: true });
+        const ffmpeg = createFFmpeg({ log: false });
         const player = document.getElementById('val-player');
+        const scanCanvas = document.getElementById('scanCanvas');
+        const scanCtx = scanCanvas.getContext('2d');
+        
         let selectedFile = null;
+        let selectedFormat = '9-16';
 
-        const valDict = {
-            tr: {
-                title: "Valorant 9:16 Shorts Üretici",
-                desc: "16:9 Valorant klibini yükle; arkaplanı otomatik blur'lasın, sağ üst killfeed'i tepeye büyütsün.",
-                upload_btn: "Valorant Klibini Yükle",
-                lbl_time: "Klip Süresi:",
-                btn_render: "🎬 VALORANT SHORTS'A DÖNÜŞTÜR (9:16)",
-                btn_dl: "🔥 9:16 Shorts Klibini İndir",
-                msg_engine: "FFmpeg motoru hazırlanıyor...",
-                msg_load: "Video belleğe aktarılıyor...",
-                msg_proc: "Valorant Killfeed ve 9:16 renderlanıyor...",
-                msg_done: "✔ Hazır!"
-            },
-            en: {
-                title: "Valorant 9:16 Shorts Generator",
-                desc: "Upload 16:9 Valorant clip; auto blur background, zoom top-right killfeed to top.",
-                upload_btn: "Upload Valorant Clip",
-                lbl_time: "Clip Duration:",
-                btn_render: "🎬 CONVERT TO VALORANT SHORTS (9:16)",
-                btn_dl: "🔥 Download 9:16 Shorts Clip",
-                msg_engine: "Loading FFmpeg engine...",
-                msg_load: "Transferring clip to memory...",
-                msg_proc: "Rendering Valorant Killfeed & 9:16...",
-                msg_done: "✔ Completed!"
-            },
-            de: {
-                title: "Valorant 9:16 Shorts Generator",
-                desc: "Lade deinen Valorant-Clip hoch; Hintergrund weichzeichnen, Killfeed oben vergrößern.",
-                upload_btn: "Valorant Clip Hochladen",
-                lbl_time: "Clip-Dauer:",
-                btn_render: "🎬 IN VALORANT SHORTS UMWANDELN (9:16)",
-                btn_dl: "🔥 9:16 Shorts Clip Herunterladen",
-                msg_engine: "FFmpeg wird geladen...",
-                msg_load: "Video wird geladen...",
-                msg_proc: "Killfeed & 9:16 Rendering läuft...",
-                msg_done: "✔ Fertig!"
-            },
-            ru: {
-                title: "Valorant 9:16 Генератор Shorts",
-                desc: "Загрузите клип Valorant: размытие фона и приближение киллфида наверх.",
-                upload_btn: "Загрузить клип Valorant",
-                lbl_time: "Длительность:",
-                btn_render: "🎬 СОЗДАТЬ VALORANT SHORTS (9:16)",
-                btn_dl: "🔥 Скачать готовый Shorts (9:16)",
-                msg_engine: "Загрузка FFmpeg...",
-                msg_load: "Перенос клипа в память...",
-                msg_proc: "Рендеринг киллфида и 9:16...",
-                msg_done: "✔ Готово!"
-            }
-        };
-
-        let currentLang = 'tr';
-        function setValLang(lang) {
-            currentLang = lang;
-            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-            const b = document.getElementById('btn-lang-' + lang);
-            if(b) b.classList.add('active');
-            const d = valDict[lang];
-            if(!d) return;
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const k = el.getAttribute('data-i18n');
-                if(k === 'upload_btn' && selectedFile) return;
-                if(d[k]) el.innerText = d[k];
-            });
+        function selectFormat(fmt) {
+            selectedFormat = fmt;
+            document.getElementById('opt-9-16').classList.toggle('selected', fmt === '9-16');
+            document.getElementById('opt-16-9').classList.toggle('selected', fmt === '16-9');
         }
 
         function loadVideo(input) {
@@ -262,89 +193,164 @@
             player.src = URL.createObjectURL(selectedFile);
             player.onloadedmetadata = () => {
                 document.getElementById('workspace').style.display = 'block';
-                document.getElementById('timeline').max = player.duration;
-                document.getElementById('badge-dur').innerText = player.duration.toFixed(1) + 's';
+                scanCanvas.width = player.videoWidth || 1920;
+                scanCanvas.height = player.videoHeight || 1080;
             };
         }
 
-        function scrub(val) { player.currentTime = parseFloat(val); }
-        player.ontimeupdate = () => { document.getElementById('timeline').value = player.currentTime; };
-
-        async function renderValorantShorts() {
-            if(!selectedFile) return;
-            const dict = valDict[currentLang];
-            const btn = document.getElementById('btn-render');
+        // 1. AŞAMA: VİDEODA ALT-ORTA KILL BANNER TARAMASI
+        async function startScanAndRender() {
+            const btn = document.getElementById('btn-scan');
             const pBox = document.getElementById('progress-box');
             const pFill = document.getElementById('progress-fill');
             const pText = document.getElementById('progress-text');
             const pPct = document.getElementById('progress-pct');
-            const rBox = document.getElementById('result-box');
+            const clipsBox = document.getElementById('clips-container');
+            const clipsList = document.getElementById('clips-list');
 
             btn.disabled = true;
-            rBox.style.display = 'none';
+            clipsBox.style.display = 'none';
+            clipsList.innerHTML = '';
             pBox.style.display = 'block';
-            pFill.style.width = '20%';
-            pPct.innerText = '%20';
-            pText.innerText = dict.msg_engine;
 
-            try {
-                if(!ffmpeg.isLoaded()) {
-                    await ffmpeg.load();
+            const duration = player.duration;
+            const detectedKillTimestamps = [];
+            const step = 0.5; // Her yarım saniyede bir kare tara
+
+            // Alt-orta Kafatası Alanı (Valorant HUD 16:9 standart alanı)
+            const targetX = scanCanvas.width * 0.40;
+            const targetY = scanCanvas.height * 0.74;
+            const targetW = scanCanvas.width * 0.20;
+            const targetH = scanCanvas.height * 0.16;
+
+            pText.innerText = "Video kareleri analiz ediliyor...";
+
+            for(let t = 0; t < duration; t += step) {
+                player.currentTime = t;
+                await new Promise(r => player.onseeked = r);
+
+                scanCtx.drawImage(player, 0, 0, scanCanvas.width, scanCanvas.height);
+                const frameData = scanCtx.getImageData(targetX, targetY, targetW, targetH).data;
+
+                // Valorant Kırmızı/Neon Altın Renk Eşiği Denetimi
+                let killColorMatches = 0;
+                for(let i = 0; i < frameData.length; i += 16) {
+                    const r = frameData[i];
+                    const g = frameData[i+1];
+                    const b = frameData[i+2];
+
+                    // Kırmızı tonları veya parlak altın sarısı vuruş parlaması
+                    if((r > 190 && g < 70 && b < 80) || (r > 210 && g > 170 && b < 60)) {
+                        killColorMatches++;
+                    }
                 }
 
-                pFill.style.width = '45%';
-                pPct.innerText = '%45';
-                pText.innerText = dict.msg_load;
-                ffmpeg.FS('writeFile', 'val_in.mp4', await fetchFile(selectedFile));
+                // Eşik aşıldıysa kill anı damgala
+                if(killColorMatches > 120) {
+                    detectedKillTimestamps.push(t);
+                }
 
-                pFill.style.width = '75%';
-                pPct.innerText = '%75';
-                pText.innerText = dict.msg_proc;
+                const progress = Math.round((t / duration) * 50);
+                pFill.style.width = progress + '%';
+                pPct.innerText = '%' + progress;
+            }
 
-                // VALORANT ÖZEL FİLTRE MİMARİSİ:
-                // 1. [bg]: Giriş videosunu 1080x1920'ye zorlayıp arkaya koyu blur yapar.
-                // 2. [main]: Ortadaki nişangahı ve aksiyonu 1080 genişliğe ortalar.
-                // 3. [killfeed]: Valorant'ın sağ üst killfeed'ini (X:76% Y:2% W:24% H:20%) kırpar, 2.2 kat büyütüp tepeye yapıştırır.
-                const filterComplex = 
-                    "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:5[bg];" +
-                    "[0:v]scale=1080:-1[fg];" +
-                    "[0:v]crop=iw*0.24:ih*0.20:iw*0.76:ih*0.02,scale=iw*2.2:-1[killfeed];" +
-                    "[bg][fg]overlay=(W-w)/2:(H-h)/2[base];" +
-                    "[base][killfeed]overlay=(W-w)/2:140[v]";
+            // 2. AŞAMA: BİRBİRİNE YAKIN KİLLERI BİRLEŞTİR (CLUSTER)
+            const rawClips = [];
+            if(detectedKillTimestamps.length > 0) {
+                let clusterStart = Math.max(0, detectedKillTimestamps[0] - 4);
+                let lastKill = detectedKillTimestamps[0];
 
-                await ffmpeg.run(
-                    '-i', 'val_in.mp4',
-                    '-filter_complex', filterComplex,
-                    '-map', '[v]',
-                    '-map', '0:a?',
-                    '-c:v', 'libx264',
-                    '-preset', 'ultrafast',
-                    '-crf', '23',
-                    '-c:a', 'copy',
-                    'val_shorts_out.mp4'
-                );
+                for(let i = 1; i < detectedKillTimestamps.length; i++) {
+                    const current = detectedKillTimestamps[i];
+                    if(current - lastKill <= 5.0) {
+                        // Seri kill, devam et
+                        lastKill = current;
+                    } else {
+                        let clusterEnd = Math.min(duration, lastKill + 3);
+                        if(clusterEnd - clusterStart > 60) clusterEnd = clusterStart + 60; // Max 60s
+                        rawClips.push({ start: clusterStart, end: clusterEnd, count: lastKill });
+                        clusterStart = Math.max(0, current - 4);
+                        lastKill = current;
+                    }
+                }
+                let clusterEnd = Math.min(duration, lastKill + 3);
+                if(clusterEnd - clusterStart > 60) clusterEnd = clusterStart + 60;
+                rawClips.push({ start: clusterStart, end: clusterEnd });
+            } else {
+                // Hiç vuruş bulunamazsa videonun ilk 15 saniyesini demo al
+                rawClips.push({ start: 0, end: Math.min(duration, 15) });
+            }
 
-                const data = ffmpeg.FS('readFile', 'val_shorts_out.mp4');
+            // 3. AŞAMA: FFMPEG İLE KESME VE RENDER
+            pText.innerText = "Klipler üretiliyor...";
+            if(!ffmpeg.isLoaded()) await ffmpeg.load();
+            ffmpeg.FS('writeFile', 'source.mp4', await fetchFile(selectedFile));
+
+            for(let idx = 0; idx < rawClips.length; idx++) {
+                const clip = rawClips[idx];
+                const clipDur = (clip.end - clip.start).toFixed(2);
+                const outFileName = `val_clip_${idx + 1}.mp4`;
+
+                if(selectedFormat === '16-9') {
+                    // 16:9 Hızlı Kayıpsız Kesim
+                    await ffmpeg.run(
+                        '-ss', clip.start.toString(),
+                        '-i', 'source.mp4',
+                        '-t', clipDur,
+                        '-c', 'copy',
+                        outFileName
+                    );
+                } else {
+                    // 9:16 Dikey + Killfeed Zoom Filtresi
+                    const filter = 
+                        "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:5[bg];" +
+                        "[0:v]scale=1080:-1[fg];" +
+                        "[0:v]crop=iw*0.24:ih*0.20:iw*0.76:ih*0.02,scale=iw*2.2:-1[killfeed];" +
+                        "[bg][fg]overlay=(W-w)/2:(H-h)/2[base];" +
+                        "[base][killfeed]overlay=(W-w)/2:140[v]";
+
+                    await ffmpeg.run(
+                        '-ss', clip.start.toString(),
+                        '-i', 'source.mp4',
+                        '-t', clipDur,
+                        '-filter_complex', filter,
+                        '-map', '[v]',
+                        '-map', '0:a?',
+                        '-c:v', 'libx264',
+                        '-preset', 'ultrafast',
+                        '-crf', '24',
+                        '-c:a', 'copy',
+                        outFileName
+                    );
+                }
+
+                const data = ffmpeg.FS('readFile', outFileName);
                 const blob = new Blob([data.buffer], { type: 'video/mp4' });
                 const url = URL.createObjectURL(blob);
-                const outName = `val_shorts_${Date.now()}.mp4`;
 
-                pFill.style.width = '100%';
-                pPct.innerText = '%100';
-                pText.innerText = dict.msg_done;
+                // Listeye Ekle
+                const item = document.createElement('div');
+                item.className = 'clip-item';
+                item.innerHTML = `
+                    <div class="clip-info">
+                        <span class="clip-tag">⚡ Vuruş Klipi #${idx + 1} (${selectedFormat === '9-16' ? '9:16 Shorts' : '16:9 Yatay'})</span>
+                        <span class="clip-time">Zaman Aralığı: ${clip.start.toFixed(1)}s - ${clip.end.toFixed(1)}s (${clipDur} sn)</span>
+                    </div>
+                    <a class="btn-clip-dl" href="${url}" download="valorant_highlight_${idx+1}.mp4">İndir</a>
+                `;
+                clipsList.appendChild(item);
 
-                document.getElementById('out-player').src = url;
-                const dl = document.getElementById('btn-download');
-                dl.href = url;
-                dl.download = outName;
-
-                rBox.style.display = 'block';
-            } catch(err) {
-                console.error(err);
-                alert("Render Hatası: " + err.message);
-            } finally {
-                btn.disabled = false;
+                const currentProgress = 50 + Math.round(((idx + 1) / rawClips.length) * 50);
+                pFill.style.width = currentProgress + '%';
+                pPct.innerText = '%' + currentProgress;
             }
+
+            pText.innerText = "✔ Tüm klipler hazır!";
+            pFill.style.width = '100%';
+            pPct.innerText = '%100';
+            clipsBox.style.display = 'block';
+            btn.disabled = false;
         }
     </script>
 </body>
