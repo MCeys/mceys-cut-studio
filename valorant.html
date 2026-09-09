@@ -114,7 +114,7 @@
                 <video src="site_logo.webm" class="header-logo" autoplay loop muted playsinline></video>
                 <h1>VALORANT AUTO-STUDIO</h1>
             </a>
-            <span class="badge-val">⚡ V3.2 ACTION-SYNC</span>
+            <span class="badge-val">⚡ V3.5 FRAME-ACCURATE</span>
         </div>
 
         <div class="header-right">
@@ -130,7 +130,7 @@
     <main>
         <div class="studio-card">
             <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 6px; text-align: center;">Valorant Akıllı Highlight Kesici</h2>
-            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Yayın veya maç kaydını yükle; vuruş öncesi çatışmayı kaçırmadan tek parça dikey Shorts yapsın.</p>
+            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Yayın veya maç kaydını yükle; tüm vuruşları çatışma anıyla birlikte tek parça Shorts yapsın.</p>
 
             <div class="custom-file-upload" id="drop-zone" onclick="document.getElementById('v-video-file').click()">
                 <span style="font-size: 32px;">🎯</span>
@@ -263,16 +263,16 @@
             pBox.style.display = 'block';
 
             const duration = player.duration || 10;
-            const step = 0.35;
+            const step = 0.30;
             const detectedKills = [];
 
-            // Killfeed alanı (Sağ üst tam kutu)
-            const kfX = Math.floor(640 * 0.78);
+            // Killfeed alanı (Sağ üst bölge)
+            const kfX = Math.floor(640 * 0.77);
             const kfY = Math.floor(360 * 0.02);
-            const kfW = Math.floor(640 * 0.21);
-            const kfH = Math.floor(360 * 0.15);
+            const kfW = Math.floor(640 * 0.22);
+            const kfH = Math.floor(360 * 0.16);
 
-            debugStatus.innerText = "Killfeed hareketleri taranıyor...";
+            debugStatus.innerText = "Killfeed hareketleri analiz ediliyor...";
 
             let prevKfData = null;
 
@@ -280,7 +280,8 @@
                 await new Promise(res => {
                     const handler = () => {
                         player.removeEventListener('seeked', handler);
-                        res();
+                        // Tarayıcının render buffer'ını tam doldurmasını bekle
+                        requestAnimationFrame(() => res());
                     };
                     player.addEventListener('seeked', handler);
                     player.currentTime = t;
@@ -302,7 +303,7 @@
                                    Math.abs(g - prevKfData[i+1]) +
                                    Math.abs(b - prevKfData[i+2]);
 
-                        if (r > 150 && r > g + 40 && r > b + 30) {
+                        if (r > 145 && r > g + 35 && r > b + 25) {
                             redCount++;
                         }
                     }
@@ -312,17 +313,17 @@
 
                     let isKill = false;
                     if (selectedKillMode === 'solo') {
-                        if (avgDelta > 26 && redCount > 12) isKill = true;
+                        if (avgDelta > 26 && redCount > 10) isKill = true;
                     } else {
-                        // Takım modu: sağ üste yeni satır düştüğünde (Delta > 28)
-                        if (avgDelta > 28) isKill = true;
+                        // Takım modu: sağ üste düşen her yeni satır
+                        if (avgDelta > 27) isKill = true;
                     }
 
                     if (isKill) {
-                        // İki bağımsız kill arasında en az 3.2 sn boşluk
-                        if (detectedKills.length === 0 || (t - detectedKills[detectedKills.length - 1] > 3.2)) {
+                        // Seri vuruşları yakalayabilmek için minimum aralığı 1.5 saniyeye çektik
+                        if (detectedKills.length === 0 || (t - detectedKills[detectedKills.length - 1] > 1.5)) {
                             detectedKills.push(t);
-                            console.log("✔ Kill Noktası:", t.toFixed(2), "Delta:", avgDelta.toFixed(1));
+                            console.log("✔ Kill Zamanı:", t.toFixed(2), "Delta:", avgDelta.toFixed(1));
                         }
                     }
                 }
@@ -343,20 +344,19 @@
                 return;
             }
 
-            // --- İŞTE SİHİRLİ VURUŞ SENKRONİZASYONU ---
-            // Killfeed gecikmesini telafi etmek için:
-            // kt anından 4.2 saniye geriye gidiyoruz (Peek atma, nişan alma, merminin kafaya oturması montaja girer!)
-            // kt anından sadece 1.0 saniye ileri gidiyoruz (Killfeed görünüp adam düşünce bıçak gibi keser!)
+            // SEGMENT PLANLAMA (ÇATIŞMA BAŞLANGICINI ASLA KAÇIRMAYAN KURGU)
             let rawSegments = [];
             detectedKills.forEach(kt => {
-                const s = Math.max(0, kt - 4.2);
+                // Killfeed belirmeden tam 4.5 saniye öncesi (Peek, silah çekme, spray anı)
+                // Killfeed göründükten 1.0 saniye sonrası
+                const s = Math.max(0, kt - 4.5);
                 const e = Math.min(duration - 0.2, kt + 1.0);
 
                 if (rawSegments.length > 0) {
                     const lastSeg = rawSegments[rawSegments.length - 1];
-                    // Eğer iki vuruş birbirine çok yakınsa (combo/seri kill) birleştir ama tek segment 6.5s'yi aşmasın
-                    if (s <= lastSeg.end + 0.8) {
-                        lastSeg.end = Math.min(lastSeg.start + 6.5, e);
+                    // Eğer ikinci kill bu aralığın içine düşerse veya 1.8 sn yakınsa çatışmayı bölme, akıcı bağla!
+                    if (s <= lastSeg.end + 1.8) {
+                        lastSeg.end = Math.min(lastSeg.start + 9.0, e);
                     } else {
                         rawSegments.push({ start: s, end: e });
                     }
@@ -383,9 +383,10 @@
                 pText.innerText = `Vuruş ${i+1}/${rawSegments.length} renderlanıyor (${segDur}s)...`;
 
                 if (selectedFormat === '16-9') {
+                    // HASSAS ARAMA (ACCURATE SEEK): -ss parametresi -i'den SONRA gelmeli
                     await ffmpeg.run(
-                        '-ss', seg.start.toFixed(2),
                         '-i', 'source.mp4',
+                        '-ss', seg.start.toFixed(2),
                         '-t', segDur,
                         '-c:v', 'libx264',
                         '-preset', 'ultrafast',
@@ -394,7 +395,7 @@
                         partName
                     );
                 } else {
-                    // Dikey Shorts: Nişangah merkezli tam ekran zoom + Tepeye büyük killfeed
+                    // Dikey Shorts: Hassas arama + Tam nişangah odaklı zoom
                     const filter = 
                         `[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:5[bg];` +
                         `[0:v]crop=ih*9/16:ih:(iw-ih*9/16)/2:0,scale=1080:1920[fg];` +
@@ -403,8 +404,8 @@
                         `[base][killfeed]overlay=0:160[v]`;
 
                     await ffmpeg.run(
-                        '-ss', seg.start.toFixed(2),
                         '-i', 'source.mp4',
+                        '-ss', seg.start.toFixed(2),
                         '-t', segDur,
                         '-filter_complex', filter,
                         '-map', '[v]',
@@ -443,7 +444,7 @@
                 <div class="clip-item" style="border: 2px solid var(--val-red); background: rgba(255, 70, 85, 0.05);">
                     <div class="clip-info">
                         <span class="clip-tag">🔥 Tek Parça Kill Montajı (${selectedFormat === '9-16' ? '9:16 Shorts' : '16:9 Yatay'})</span>
-                        <span class="clip-time">Mod: ${selectedKillMode === 'solo' ? 'Sadece Benim' : 'Tüm Takım'} | ${rawSegments.length} vuruş tam aksiyon anıyla bağlandı!</span>
+                        <span class="clip-time">Mod: ${selectedKillMode === 'solo' ? 'Sadece Benim' : 'Tüm Takım'} | ${rawSegments.length} vuruş tam çatışma başlangıcıyla bağlandı!</span>
                     </div>
                     <a class="btn-clip-dl" href="${url}" download="valorant_montage_shorts.mp4">Montajı İndir</a>
                 </div>
