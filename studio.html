@@ -1316,37 +1316,71 @@
         }
 
         // ================= VERTICAL COVER (CANVAS) =================
+        // ================= VERTICAL COVER (CANVAS) =================
         function generateVerticalCover(file, timeSec, customTxt, callback) {
             const t = translations[currentLang];
+            const badgeTxt = (document.getElementById('s-badge')?.value || '').toUpperCase();
+            const pos = document.getElementById('s-pos')?.value || 'L';
+
             const video = document.createElement('video');
             video.src = URL.createObjectURL(file);
             video.muted = true;
             video.playsInline = true;
 
             video.onloadedmetadata = () => { video.currentTime = timeSec; };
-            video.onseeked = () => {
+            video.onseeked = async () => {
                 const canvas = document.getElementById('hidden-canvas');
                 canvas.width = 1080;
                 canvas.height = 1920;
                 const ctx = canvas.getContext('2d');
 
+                // Arka plan blur
                 ctx.filter = 'blur(30px)';
                 ctx.drawImage(video, -100, -100, 1280, 2120);
                 ctx.filter = 'none';
 
+                // Orta oyun alanı
                 const cropW = video.videoHeight * (1080 / 1400);
                 const cropX = Math.max(0, (video.videoWidth - cropW) / 2);
                 ctx.drawImage(video, cropX, 0, cropW, video.videoHeight, 0, 260, 1080, 1400);
 
+                // Özel Logo Varsa Çiz
+                if (logoDataUrl) {
+                    const logoImg = new Image();
+                    logoImg.src = logoDataUrl;
+                    await new Promise(r => logoImg.onload = r);
+                    const lx = (pos === 'L') ? 50 : (1080 - 150 - 50);
+                    ctx.drawImage(logoImg, lx, 60, 150, 150 * (logoImg.height / logoImg.width));
+                }
+
+                // Üst Rozet (FACEIT LEVEL 10 vb.)
+                if (badgeTxt.trim()) {
+                    ctx.font = 'bold 36px -apple-system, sans-serif';
+                    ctx.textAlign = 'center';
+                    const textMetrics = ctx.measureText(badgeTxt);
+                    const bw = textMetrics.width + 60;
+                    const bx = (1080 - bw) / 2;
+                    const by = 110;
+
+                    ctx.fillStyle = '#f05014';
+                    ctx.beginPath();
+                    ctx.roundRect(bx, by, bw, 64, [10]);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText(badgeTxt, 1080 / 2, by + 45);
+                }
+
+                // Alt Başlık Metni
                 if (customTxt && customTxt.trim()) {
                     const txt = customTxt.trim().toUpperCase();
-                    ctx.font = '900 68px -apple-system, sans-serif';
+                    ctx.font = '900 64px -apple-system, sans-serif';
                     ctx.textAlign = 'center';
                     ctx.lineWidth = 14;
                     ctx.strokeStyle = '#000000';
-                    ctx.strokeText(txt, 540, 1740);
-                    ctx.fillStyle = '#00e1ff';
-                    ctx.fillText(txt, 540, 1740);
+                    ctx.strokeText(txt, 540, 1750);
+                    ctx.fillStyle = '#ffd700';
+                    ctx.fillText(txt, 540, 1750);
                 }
 
                 canvas.toBlob((blob) => {
