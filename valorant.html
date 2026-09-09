@@ -199,6 +199,7 @@
         }
 
         // 1. AŞAMA: VİDEODA ALT-ORTA KILL BANNER TARAMASI
+      // YENİ NESİL: SKİN BAĞIMSIZ ANİ DEĞİŞİM (FRAME DIFFERENCE) MOTORU
         async function startScanAndRender() {
             const btn = document.getElementById('btn-scan');
             const pBox = document.getElementById('progress-box');
@@ -215,47 +216,72 @@
 
             const duration = player.duration;
             const detectedKillTimestamps = [];
-            const step = 0.5; // Her yarım saniyede bir kare tara
+            const step = 0.35; // Daha sıkı takip: Her 0.35 saniyede bir kare analiz et
 
-            // Alt-orta Kafatası Alanı (Valorant HUD 16:9 standart alanı)
-            const targetX = scanCanvas.width * 0.40;
-            const targetY = scanCanvas.height * 0.74;
-            const targetW = scanCanvas.width * 0.20;
-            const targetH = scanCanvas.height * 0.16;
+            // 1. Alan: Alt-Orta Kill Banner (Skin ne olursa olsun animasyon patlayan yer)
+            const bannerX = Math.floor(scanCanvas.width * 0.42);
+            const bannerY = Math.floor(scanCanvas.height * 0.76);
+            const bannerW = Math.floor(scanCanvas.width * 0.16);
+            const bannerH = Math.floor(scanCanvas.height * 0.12);
 
-            pText.innerText = "Video kareleri analiz ediliyor...";
+            // 2. Alan: Sağ Üst Killfeed (Yeni yazı/ikon düşen şerit)
+            const kfX = Math.floor(scanCanvas.width * 0.78);
+            const kfY = Math.floor(scanCanvas.height * 0.04);
+            const kfW = Math.floor(scanCanvas.width * 0.18);
+            const kfH = Math.floor(scanCanvas.height * 0.14);
+
+            pText.innerText = "Skin bağımsız dinamik patlamalar taranıyor...";
+
+            let prevBannerData = null;
+            let prevKfData = null;
 
             for(let t = 0; t < duration; t += step) {
                 player.currentTime = t;
                 await new Promise(r => player.onseeked = r);
 
                 scanCtx.drawImage(player, 0, 0, scanCanvas.width, scanCanvas.height);
-                const frameData = scanCtx.getImageData(targetX, targetY, targetW, targetH).data;
+                
+                const currentBanner = scanCtx.getImageData(bannerX, bannerY, bannerW, bannerH).data;
+                const currentKf = scanCtx.getImageData(kfX, kfY, kfW, kfH).data;
 
-                // Valorant Kırmızı/Neon Altın Renk Eşiği Denetimi
-                let killColorMatches = 0;
-                for(let i = 0; i < frameData.length; i += 16) {
-                    const r = frameData[i];
-                    const g = frameData[i+1];
-                    const b = frameData[i+2];
+                if(prevBannerData && prevKfData) {
+                    let bannerDelta = 0;
+                    let kfDelta = 0;
 
-                    // Kırmızı tonları veya parlak altın sarısı vuruş parlaması
-                    if((r > 190 && g < 70 && b < 80) || (r > 210 && g > 170 && b < 60)) {
-                        killColorMatches++;
+                    // Alt-Orta Animasyon Şiddeti Hesabı
+                    for(let i = 0; i < currentBanner.length; i += 8) {
+                        bannerDelta += Math.abs(currentBanner[i] - prevBannerData[i]) +
+                                       Math.abs(currentBanner[i+1] - prevBannerData[i+1]) +
+                                       Math.abs(currentBanner[i+2] - prevBannerData[i+2]);
+                    }
+
+                    // Sağ Üst Killfeed Şiddeti Hesabı
+                    for(let i = 0; i < currentKf.length; i += 8) {
+                        kfDelta += Math.abs(currentKf[i] - prevKfData[i]) +
+                                   Math.abs(currentKf[i+1] - prevKfData[i+1]) +
+                                   Math.abs(currentKf[i+2] - prevKfData[i+2]);
+                    }
+
+                    const avgBannerDiff = bannerDelta / (currentBanner.length / 8);
+                    const avgKfDiff = kfDelta / (currentKf.length / 8);
+
+                    // Skin fark etmeksizin animasyonun patladığı eşik değeri:
+                    if (avgBannerDiff > 42 || avgKfDiff > 35) {
+                        if (detectedKillTimestamps.length === 0 || (t - detectedKillTimestamps[detectedKillTimestamps.length - 1] > 1.2)) {
+                            detectedKillTimestamps.push(t);
+                        }
                     }
                 }
 
-                // Eşik aşıldıysa kill anı damgala
-                if(killColorMatches > 120) {
-                    detectedKillTimestamps.push(t);
-                }
+                prevBannerData = currentBanner;
+                prevKfData = currentKf;
 
                 const progress = Math.round((t / duration) * 50);
                 pFill.style.width = progress + '%';
                 pPct.innerText = '%' + progress;
             }
 
-            // 2. AŞAMA: BİRBİRİNE YAKIN KİLLERI BİRLEŞTİR (CLUSTER)
+            // 2. AŞAMA: KÜMELEME (CLUSTERING) & ZAMAN AYARI
             const rawClips = [];
             if(detectedKillTimestamps.length > 0) {
                 let clusterStart = Math.max(0, detectedKillTimestamps[0] - 4);
@@ -264,12 +290,11 @@
                 for(let i = 1; i < detectedKillTimestamps.length; i++) {
                     const current = detectedKillTimestamps[i];
                     if(current - lastKill <= 5.0) {
-                        // Seri kill, devam et
                         lastKill = current;
                     } else {
                         let clusterEnd = Math.min(duration, lastKill + 3);
-                        if(clusterEnd - clusterStart > 60) clusterEnd = clusterStart + 60; // Max 60s
-                        rawClips.push({ start: clusterStart, end: clusterEnd, count: lastKill });
+                        if(clusterEnd - clusterStart > 60) clusterEnd = clusterStart + 60;
+                        rawClips.push({ start: clusterStart, end: clusterEnd });
                         clusterStart = Math.max(0, current - 4);
                         lastKill = current;
                     }
@@ -278,12 +303,11 @@
                 if(clusterEnd - clusterStart > 60) clusterEnd = clusterStart + 60;
                 rawClips.push({ start: clusterStart, end: clusterEnd });
             } else {
-                // Hiç vuruş bulunamazsa videonun ilk 15 saniyesini demo al
                 rawClips.push({ start: 0, end: Math.min(duration, 15) });
             }
 
-            // 3. AŞAMA: FFMPEG İLE KESME VE RENDER
-            pText.innerText = "Klipler üretiliyor...";
+            // 3. AŞAMA: FFMPEG ÇIKTI ÜRETİMİ
+            pText.innerText = "Klipler hazırlanıyor...";
             if(!ffmpeg.isLoaded()) await ffmpeg.load();
             ffmpeg.FS('writeFile', 'source.mp4', await fetchFile(selectedFile));
 
@@ -293,7 +317,6 @@
                 const outFileName = `val_clip_${idx + 1}.mp4`;
 
                 if(selectedFormat === '16-9') {
-                    // 16:9 Hızlı Kayıpsız Kesim
                     await ffmpeg.run(
                         '-ss', clip.start.toString(),
                         '-i', 'source.mp4',
@@ -302,7 +325,6 @@
                         outFileName
                     );
                 } else {
-                    // 9:16 Dikey + Killfeed Zoom Filtresi
                     const filter = 
                         "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:5[bg];" +
                         "[0:v]scale=1080:-1[fg];" +
@@ -329,13 +351,12 @@
                 const blob = new Blob([data.buffer], { type: 'video/mp4' });
                 const url = URL.createObjectURL(blob);
 
-                // Listeye Ekle
                 const item = document.createElement('div');
                 item.className = 'clip-item';
                 item.innerHTML = `
                     <div class="clip-info">
                         <span class="clip-tag">⚡ Vuruş Klipi #${idx + 1} (${selectedFormat === '9-16' ? '9:16 Shorts' : '16:9 Yatay'})</span>
-                        <span class="clip-time">Zaman Aralığı: ${clip.start.toFixed(1)}s - ${clip.end.toFixed(1)}s (${clipDur} sn)</span>
+                        <span class="clip-time">Zaman: ${clip.start.toFixed(1)}s - ${clip.end.toFixed(1)}s (${clipDur} sn)</span>
                     </div>
                     <a class="btn-clip-dl" href="${url}" download="valorant_highlight_${idx+1}.mp4">İndir</a>
                 `;
@@ -346,12 +367,11 @@
                 pPct.innerText = '%' + currentProgress;
             }
 
-            pText.innerText = "✔ Tüm klipler hazır!";
+            pText.innerText = "✔ Tüm klipler başarıyla çıkarıldı!";
             pFill.style.width = '100%';
             pPct.innerText = '%100';
             clipsBox.style.display = 'block';
             btn.disabled = false;
         }
-    </script>
 </body>
 </html>
