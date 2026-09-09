@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCEYS VALORANT STUDIO - Otomatik Kill Yakalama & Format Dönüştürücü</title>
+    <title>MCEYS VALORANT STUDIO - Otomatik Kill Bulucu & Format Dönüştürücü</title>
 
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -61,10 +61,9 @@
         .studio-card { width: 100%; max-width: 900px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
 
         .custom-file-upload { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 30px; border: 2px dashed var(--border-color); border-radius: 14px; background: var(--bg-input); cursor: pointer; text-align: center; margin-bottom: 20px; transition: all 0.2s; }
-        .custom-file-upload:hover { border-color: var(--val-red); background: rgba(255, 70, 85, 0.03); }
-        .hidden-file-input { display: none; }
+        .custom-file-upload:hover, .custom-file-upload.dragover { border-color: var(--val-red); background: rgba(255, 70, 85, 0.05); }
 
-        /* Format Seçici Butonlar */
+        /* Format Seçiciler */
         .format-selector { display: flex; gap: 12px; margin-bottom: 20px; }
         .format-card { flex: 1; background: var(--bg-input); border: 2px solid var(--border-color); border-radius: 12px; padding: 14px; cursor: pointer; text-align: center; transition: 0.2s; }
         .format-card.selected { border-color: var(--val-red); background: rgba(255, 70, 85, 0.08); box-shadow: 0 0 16px var(--val-glow); }
@@ -119,22 +118,22 @@
             <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 6px; text-align: center;">Valorant Otomatik Kill Bulucu & Kırpıcı</h2>
             <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Uzun maç kaydını yükle; tüm vuruş anlarını otomatik yakalayıp istediğin formatta çıkartsın.</p>
 
-            <label class="custom-file-upload" for="v-video" id="upload-box">
+            <div class="custom-file-upload" id="drop-zone" onclick="document.getElementById('v-video-file').click()">
                 <span style="font-size: 32px;">🎯</span>
-                <span id="v-file-name" style="font-weight: 700;">Valorant Maç / Klip Dosyasını Seç</span>
-                <span style="font-size: 11px; color: var(--text-muted);">MP4, MOV veya MKV</span>
-                <input type="file" id="v-video" class="hidden-file-input" accept="video/mp4,video/quicktime,video/mkv" onchange="loadVideo(this)">
-            </label>
+                <span id="v-file-name" style="font-weight: 700;">Valorant Maç / Klip Dosyasını Seç veya Sürükle</span>
+                <span style="font-size: 11px; color: var(--text-muted);">MP4, MOV veya WebM</span>
+                <input type="file" id="v-video-file" style="display: none;" accept="video/mp4,video/quicktime,video/webm">
+            </div>
 
             <div id="workspace" class="workspace">
                 <div class="format-selector">
                     <div class="format-card selected" id="opt-9-16" onclick="selectFormat('9-16')">
                         <span class="format-title">📱 Dikey Shorts (9:16)</span>
-                        <span class="format-desc">Arkaplan blur + Killfeed zoom (TikTok/Shorts)</span>
+                        <span class="format-desc">Arkaplan blur + Killfeed zoom</span>
                     </div>
                     <div class="format-card" id="opt-16-9" onclick="selectFormat('16-9')">
                         <span class="format-title">🖥️ Orijinal Yatay (16:9)</span>
-                        <span class="format-desc">Kayıpsız orijinal kalite (YouTube/Montaj)</span>
+                        <span class="format-desc">Kayıpsız orijinal kalite</span>
                     </div>
                 </div>
 
@@ -162,7 +161,6 @@
         </div>
     </main>
 
-    <!-- Arka planda piksel taraması yapan gizli canvas -->
     <canvas id="scanCanvas" style="display:none;"></canvas>
 
     <footer>
@@ -175,6 +173,8 @@
         const player = document.getElementById('val-player');
         const scanCanvas = document.getElementById('scanCanvas');
         const scanCtx = scanCanvas.getContext('2d');
+        const fileInput = document.getElementById('v-video-file');
+        const dropZone = document.getElementById('drop-zone');
         
         let selectedFile = null;
         let selectedFormat = '9-16';
@@ -185,39 +185,38 @@
             document.getElementById('opt-16-9').classList.toggle('selected', fmt === '16-9');
         }
 
-        function loadVideo(input) {
-            if(!input.files || !input.files[0]) return;
-            selectedFile = input.files[0];
+        // Dosya Seçme ve Sürükle-Bırak Olayları
+        fileInput.addEventListener('change', function() {
+            if(this.files && this.files[0]) handleFile(this.files[0]);
+        });
+
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if(e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+        });
+
+        function handleFile(file) {
+            selectedFile = file;
+            document.getElementById('v-file-name').innerText = "✔ " + file.name;
+            document.getElementById('v-file-name').style.color = "var(--success)";
             
-            const fileNameEl = document.getElementById('v-file-name');
-            if(fileNameEl) {
-                fileNameEl.innerText = "✔ " + selectedFile.name;
-                fileNameEl.style.color = "var(--success)";
-            }
+            // Çalışma alanını anında aç
+            document.getElementById('workspace').style.display = 'block';
 
-            // Çalışma alanını beklemeden doğrudan aç
-            const workspace = document.getElementById('workspace');
-            if(workspace) workspace.style.display = 'block';
-
-            // Blob URL bağla
-            const videoUrl = URL.createObjectURL(selectedFile);
+            const videoUrl = URL.createObjectURL(file);
             player.src = videoUrl;
             player.load();
 
             player.onloadedmetadata = () => {
                 scanCanvas.width = player.videoWidth || 1920;
                 scanCanvas.height = player.videoHeight || 1080;
-                console.log("Video yüklendi:", scanCanvas.width, "x", scanCanvas.height, "Süre:", player.duration);
-            };
-
-            player.onerror = (e) => {
-                console.error("Video yüklenirken hata:", e);
-                alert("Tarayıcı bu video formatını doğrudan oynatamadı. MP4 (H.264) formatında olduğundan emin ol kanka.");
             };
         }
 
-        // 1. AŞAMA: VİDEODA ALT-ORTA KILL BANNER TARAMASI
-      // YENİ NESİL: SKİN BAĞIMSIZ ANİ DEĞİŞİM (FRAME DIFFERENCE) MOTORU
+        // VURUŞ TARAMA VE DÖNÜŞTÜRME MOTORU
         async function startScanAndRender() {
             const btn = document.getElementById('btn-scan');
             const pBox = document.getElementById('progress-box');
@@ -232,23 +231,23 @@
             clipsList.innerHTML = '';
             pBox.style.display = 'block';
 
-            const duration = player.duration;
+            const duration = player.duration || 10;
             const detectedKillTimestamps = [];
-            const step = 0.35; // Daha sıkı takip: Her 0.35 saniyede bir kare analiz et
+            const step = 0.35;
 
-            // 1. Alan: Alt-Orta Kill Banner (Skin ne olursa olsun animasyon patlayan yer)
+            // Alt-orta Kafatası / Skin Patlama Alanı
             const bannerX = Math.floor(scanCanvas.width * 0.42);
             const bannerY = Math.floor(scanCanvas.height * 0.76);
             const bannerW = Math.floor(scanCanvas.width * 0.16);
             const bannerH = Math.floor(scanCanvas.height * 0.12);
 
-            // 2. Alan: Sağ Üst Killfeed (Yeni yazı/ikon düşen şerit)
+            // Sağ Üst Killfeed Alanı
             const kfX = Math.floor(scanCanvas.width * 0.78);
             const kfY = Math.floor(scanCanvas.height * 0.04);
             const kfW = Math.floor(scanCanvas.width * 0.18);
             const kfH = Math.floor(scanCanvas.height * 0.14);
 
-            pText.innerText = "Skin bağımsız dinamik patlamalar taranıyor...";
+            pText.innerText = "Dinamik patlamalar taranıyor...";
 
             let prevBannerData = null;
             let prevKfData = null;
@@ -258,7 +257,6 @@
                 await new Promise(r => player.onseeked = r);
 
                 scanCtx.drawImage(player, 0, 0, scanCanvas.width, scanCanvas.height);
-                
                 const currentBanner = scanCtx.getImageData(bannerX, bannerY, bannerW, bannerH).data;
                 const currentKf = scanCtx.getImageData(kfX, kfY, kfW, kfH).data;
 
@@ -266,14 +264,12 @@
                     let bannerDelta = 0;
                     let kfDelta = 0;
 
-                    // Alt-Orta Animasyon Şiddeti Hesabı
                     for(let i = 0; i < currentBanner.length; i += 8) {
                         bannerDelta += Math.abs(currentBanner[i] - prevBannerData[i]) +
                                        Math.abs(currentBanner[i+1] - prevBannerData[i+1]) +
                                        Math.abs(currentBanner[i+2] - prevBannerData[i+2]);
                     }
 
-                    // Sağ Üst Killfeed Şiddeti Hesabı
                     for(let i = 0; i < currentKf.length; i += 8) {
                         kfDelta += Math.abs(currentKf[i] - prevKfData[i]) +
                                    Math.abs(currentKf[i+1] - prevKfData[i+1]) +
@@ -283,8 +279,7 @@
                     const avgBannerDiff = bannerDelta / (currentBanner.length / 8);
                     const avgKfDiff = kfDelta / (currentKf.length / 8);
 
-                    // Skin fark etmeksizin animasyonun patladığı eşik değeri:
-                    if (avgBannerDiff > 42 || avgKfDiff > 35) {
+                    if (avgBannerDiff > 40 || avgKfDiff > 32) {
                         if (detectedKillTimestamps.length === 0 || (t - detectedKillTimestamps[detectedKillTimestamps.length - 1] > 1.2)) {
                             detectedKillTimestamps.push(t);
                         }
@@ -299,7 +294,7 @@
                 pPct.innerText = '%' + progress;
             }
 
-            // 2. AŞAMA: KÜMELEME (CLUSTERING) & ZAMAN AYARI
+            // KÜMELEME
             const rawClips = [];
             if(detectedKillTimestamps.length > 0) {
                 let clusterStart = Math.max(0, detectedKillTimestamps[0] - 4);
@@ -324,8 +319,8 @@
                 rawClips.push({ start: 0, end: Math.min(duration, 15) });
             }
 
-            // 3. AŞAMA: FFMPEG ÇIKTI ÜRETİMİ
-            pText.innerText = "Klipler hazırlanıyor...";
+            // FFMPEG RENDER
+            pText.innerText = "Klipler üretiliyor...";
             if(!ffmpeg.isLoaded()) await ffmpeg.load();
             ffmpeg.FS('writeFile', 'source.mp4', await fetchFile(selectedFile));
 
@@ -385,11 +380,12 @@
                 pPct.innerText = '%' + currentProgress;
             }
 
-            pText.innerText = "✔ Tüm klipler başarıyla çıkarıldı!";
+            pText.innerText = "✔ Tüm klipler hazır!";
             pFill.style.width = '100%';
             pPct.innerText = '%100';
             clipsBox.style.display = 'block';
             btn.disabled = false;
         }
+    </script>
 </body>
 </html>
