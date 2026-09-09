@@ -51,32 +51,59 @@
         }
 
         header { 
-            width: 100%;
-            padding: 18px 40px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            background: rgba(19, 22, 31, 0.9);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-color);
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-        .brand { display: flex; align-items: center; gap: 16px; text-decoration: none; color: var(--text-main); }
-        .header-logo {
-            height: 72px; width: 72px;
-            object-fit: cover; border-radius: 50%;
-            border: 2px solid var(--accent);
-            box-shadow: 0 0 18px var(--accent-glow);
-        }
-        .logo-box { 
-            width: 72px; height: 72px; 
-            background: linear-gradient(135deg, var(--accent), #ff9f1c); 
-            border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; 
-            font-weight: 900; font-size: 24px; color: #fff; 
-        }
-        .brand h1 { font-size: 22px; font-weight: 800; letter-spacing: 0.6px; }
+    width: 100%;
+    min-height: 96px;
+    padding: 0 40px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    background: rgba(19, 22, 31, 0.9);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    box-sizing: border-box;
+}
+
+.brand { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 16px; 
+    text-decoration: none; 
+    color: inherit; 
+    cursor: pointer; 
+}
+
+.header-logo {
+    height: 64px; 
+    width: 64px;
+    min-width: 64px;
+    object-fit: cover; 
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 16px var(--accent-glow);
+    display: block;
+}
+
+.logo-box { 
+    width: 64px; 
+    height: 64px; 
+    min-width: 64px;
+    background: linear-gradient(135deg, var(--accent), #ff9f1c); 
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-weight: 900; 
+    font-size: 22px; 
+    color: #fff; 
+    box-shadow: 0 4px 16px var(--accent-glow); 
+}
+
+.brand h1 { 
+    font-size: 22px; 
+    font-weight: 800; 
+    letter-spacing: 0.8px; 
+    line-height: 1;
+}
 
         .header-right { display: flex; align-items: center; gap: 16px; }
         .global-badge { font-size: 11px; color: var(--success); font-weight: 800; letter-spacing: 0.5px; }
