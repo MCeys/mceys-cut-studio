@@ -36,6 +36,97 @@
             flex-direction: column; 
         }
         
+header { 
+    width: 100%;
+    min-height: 96px;
+    padding: 0 36px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    background: rgba(19, 22, 31, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    box-sizing: border-box;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+/* Sayfa Geçiş Hapı (Pill Selector) */
+.nav-pill-group {
+    display: flex;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+}
+
+.nav-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 7px 14px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.nav-link:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-link.active {
+    color: #fff;
+    background: #1c2230;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Dikey Ayırıcı Çizgi */
+.header-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border-color);
+    display: inline-block;
+}
+
+/* Dil Seçici Butonları */
+.lang-switch {
+    display: flex;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.lang-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 7px 11px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: 0.2s;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.lang-btn:last-child { border-right: none; }
+.lang-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.04); }
+.lang-btn.active {
+    background: var(--accent);
+    color: #fff;
+}
+        
         header { 
             width: 100%; min-height: 96px; padding: 0 40px; 
             display: flex; justify-content: space-between; align-items: center; 
@@ -95,8 +186,21 @@
             <h1>MCEYS TRIM STUDİO</h1>
         </a>
         <div class="header-right">
-            <a href="studio.html" class="nav-link">CS2 Shorts Studio</a>
-            <a href="trim.html" class="nav-link active">Kayıpsız Kesici</a>
+            <nav class="nav-pill-group">
+                <a href="index.html" class="nav-link">Ana Sayfa</a>
+                <a href="studio.html" class="nav-link active">CS2 Shorts</a>
+                <a href="trim.html" class="nav-link">Kayıpsız Kesici</a>
+            </nav>
+            <span class="header-divider"></span>
+            <div class="server-status">
+                <span data-i18n="servers_label">Servers:</span> <span style="color: var(--success); font-weight: 700;" data-i18n="servers_active">● ACTIVE</span>
+            </div>
+            <div class="lang-switch">
+                <button class="lang-btn active" id="btn-lang-tr" onclick="setLanguage('tr')">TR</button>
+                <button class="lang-btn" id="btn-lang-en" onclick="setLanguage('en')">EN</button>
+                <button class="lang-btn" id="btn-lang-de" onclick="setLanguage('de')">DE</button>
+                <button class="lang-btn" id="btn-lang-ru" onclick="setLanguage('ru')">RU</button>
+            </div>
         </div>
     </header>
 
