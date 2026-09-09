@@ -114,7 +114,7 @@
                 <video src="site_logo.webm" class="header-logo" autoplay loop muted playsinline></video>
                 <h1>VALORANT AUTO-STUDIO</h1>
             </a>
-            <span class="badge-val">⚡ V2.7 ULTRA CROP</span>
+            <span class="badge-val">⚡ V2.8 ALL-KILL</span>
         </div>
 
         <div class="header-right">
@@ -130,7 +130,7 @@
     <main>
         <div class="studio-card">
             <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 6px; text-align: center;">Valorant Akıllı Highlight Kesici</h2>
-            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Yayın veya maç kaydını yükle; vuruşları yakalayıp dikey Shorts'a dönüştürsün.</p>
+            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Yayın veya maç kaydını yükle; tüm takım vuruşlarını tek parça Shorts'a dönüştürsün.</p>
 
             <div class="custom-file-upload" id="drop-zone" onclick="document.getElementById('v-video-file').click()">
                 <span style="font-size: 32px;">🎯</span>
@@ -266,11 +266,11 @@
             const step = 0.35;
             const detectedKills = [];
 
-            // Sağ üst killfeed alanı
-            const kfX = Math.floor(640 * 0.78);
+            // Killfeed alanı (Sağ üst bölge)
+            const kfX = Math.floor(640 * 0.74);
             const kfY = Math.floor(360 * 0.02);
-            const kfW = Math.floor(640 * 0.21);
-            const kfH = Math.floor(360 * 0.16);
+            const kfW = Math.floor(640 * 0.25);
+            const kfH = Math.floor(360 * 0.18);
 
             debugStatus.innerText = "Killfeed taranıyor...";
 
@@ -293,21 +293,24 @@
                     const g = kfData[i + 1];
                     const b = kfData[i + 2];
 
-                    const isRed = (r > 160 && g < 70 && b < 80);
-                    const isCyan = (r < 80 && g > 160 && b > 140);
+                    // 1. Kırmızı Killfeed (Kendi vuruşun / rakip düşüşü)
+                    const isRed = (r > 135 && r > g + 35 && r > b + 25);
+
+                    // 2. Turkuaz / Cyan / Yeşil Killfeed (Takım arkadaşı vuruşu - century vb.)
+                    const isTeamCyan = (g > 115 && b > 105 && g > r + 20 && b > r + 15);
 
                     if (selectedKillMode === 'solo') {
                         if (isRed) killMatches++;
                     } else {
-                        if (isRed || isCyan) killMatches++;
+                        if (isRed || isTeamCyan) killMatches++;
                     }
                 }
 
                 debugMetrics.innerText = `Zaman: ${t.toFixed(1)}s | Piksel: ${killMatches}`;
 
-                // Eşik 65, min 3.5 sn aralık
-                if (killMatches >= 65) {
-                    if (detectedKills.length === 0 || (t - detectedKills[detectedKills.length - 1] > 3.5)) {
+                // Eşiği 45'e çekip hem kırmızıyı hem turkuazı rahat yakalamasını sağlıyoruz
+                if (killMatches >= 45) {
+                    if (detectedKills.length === 0 || (t - detectedKills[detectedKills.length - 1] > 2.8)) {
                         detectedKills.push(t);
                     }
                 }
@@ -326,15 +329,15 @@
                 return;
             }
 
-            // Segment oluşturucu: Vuruştan 2.2 sn önce, tam 1.2 sn sonra (Sonrası uzamaz)
+            // Segment kurgusu: Vuruştan 2.0 sn önce, 1.2 sn sonra (Kuyruk uzamaları kesilir)
             let rawSegments = [];
             detectedKills.forEach(kt => {
-                const s = Math.max(0, kt - 2.2);
-                const e = Math.min(duration - 0.5, kt + 1.2);
+                const s = Math.max(0, kt - 2.0);
+                const e = Math.min(duration - 0.2, kt + 1.2);
 
                 if (rawSegments.length > 0) {
                     const lastSeg = rawSegments[rawSegments.length - 1];
-                    if (s <= lastSeg.end + 0.5) {
+                    if (s <= lastSeg.end + 0.6) {
                         lastSeg.end = Math.min(lastSeg.start + 5.0, e);
                     } else {
                         rawSegments.push({ start: s, end: e });
@@ -344,8 +347,8 @@
                 }
             });
 
-            if(rawSegments.length > 5) {
-                rawSegments = rawSegments.slice(0, 5);
+            if(rawSegments.length > 6) {
+                rawSegments = rawSegments.slice(0, 6);
             }
 
             pText.innerText = "FFmpeg motoru hazırlanıyor...";
@@ -373,7 +376,7 @@
                         partName
                     );
                 } else {
-                    // GERÇEK SHORTS: Oynanışı dikey 9:16 ekrana tam doldurur + killfeed'i büyütüp üste bindirir
+                    // Dikey Shorts: Nişangah merkezli tam ekran zoom + Tepeye büyük killfeed
                     const filter = 
                         `[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:5[bg];` +
                         `[0:v]crop=ih*9/16:ih:(iw-ih*9/16)/2:0,scale=1080:1920[fg];` +
@@ -422,7 +425,7 @@
                 <div class="clip-item" style="border: 2px solid var(--val-red); background: rgba(255, 70, 85, 0.05);">
                     <div class="clip-info">
                         <span class="clip-tag">🔥 Tek Parça Kill Montajı (${selectedFormat === '9-16' ? '9:16 Shorts' : '16:9 Yatay'})</span>
-                        <span class="clip-time">Mod: ${selectedKillMode === 'solo' ? 'Sadece Benim' : 'Tüm Takım'} | ${rawSegments.length} vuruş bağlandı!</span>
+                        <span class="clip-time">Mod: ${selectedKillMode === 'solo' ? 'Sadece Benim' : 'Tüm Takım'} | ${rawSegments.length} seri vuruş bağlandı!</span>
                     </div>
                     <a class="btn-clip-dl" href="${url}" download="valorant_montage_shorts.mp4">Montajı İndir</a>
                 </div>
