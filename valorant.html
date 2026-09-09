@@ -218,7 +218,7 @@
             };
         }
 
-       // SİLAH VE SKİN BAĞIMSIZ YEREL ANİ DEĞİŞİM MOTORU
+       // %100 SAĞ ÜST KILLFEED KIRMIZI BANT DEDEKTÖRÜ (SKİNLERDEN TAMAMEN BAĞIMSIZ)
         async function startScanAndRender() {
             const btn = document.getElementById('btn-scan');
             const pBox = document.getElementById('progress-box');
@@ -236,28 +236,17 @@
             pBox.style.display = 'block';
 
             const duration = player.duration || 10;
-            const step = 0.35; // 350ms aralıklarla sıkı takip
-            const samples = [];
+            const step = 0.3; // 300ms hassas tarama
+            const detectedKills = [];
 
-            // 640x360 Çözünürlük Üzerinden Odak Bölgeleri:
-            // 1. Sağ-Üst Killfeed (Silah ne olursa olsun yeni satır düşüşü)
-            const kfX = Math.floor(640 * 0.74);
-            const kfY = Math.floor(360 * 0.02);
-            const kfW = Math.floor(640 * 0.24);
-            const kfH = Math.floor(360 * 0.16);
+            // 640x360 çözünürlükte sağ üst killfeed tam koordinatı:
+            const kfX = Math.floor(640 * 0.75);
+            const kfY = Math.floor(360 * 0.03);
+            const kfW = Math.floor(640 * 0.23);
+            const kfH = Math.floor(360 * 0.20);
 
-            // 2. Alt-Orta Kill Banner
-            const bX = Math.floor(640 * 0.42);
-            const bY = Math.floor(360 * 0.76);
-            const bW = Math.floor(640 * 0.16);
-            const bH = Math.floor(360 * 0.12);
+            debugStatus.innerText = "Killfeed taranıyor...";
 
-            let prevKf = null;
-            let prevB = null;
-
-            debugStatus.innerText = "Kare analizleri alınıyor...";
-
-            // 1. AŞAMA: KARE KARE DEĞİŞİM ENERJİSİ
             for (let t = 0; t < duration; t += step) {
                 await new Promise(res => {
                     const handler = () => {
@@ -269,71 +258,47 @@
                 });
 
                 scanCtx.drawImage(player, 0, 0, 640, 360);
-                const curKf = scanCtx.getImageData(kfX, kfY, kfW, kfH).data;
-                const curB = scanCtx.getImageData(bX, bY, bW, bH).data;
+                const kfData = scanCtx.getImageData(kfX, kfY, kfW, kfH).data;
 
-                if (prevKf && prevB) {
-                    let kfDiff = 0;
-                    let bDiff = 0;
+                // Valorant'ta rakip öldüğünde sağ üstte çıkan kırmızı/bordo bant pikselleri
+                let redBandPixels = 0;
+                for (let i = 0; i < kfData.length; i += 4) {
+                    const r = kfData[i];
+                    const g = kfData[i + 1];
+                    const b = kfData[i + 2];
 
-                    for (let i = 0; i < curKf.length; i += 8) {
-                        kfDiff += Math.abs(curKf[i] - prevKf[i]) +
-                                  Math.abs(curKf[i+1] - prevKf[i+1]) +
-                                  Math.abs(curKf[i+2] - prevKf[i+2]);
+                    // Kırmızı ton kontrolü (Valorant killfeed kırmızı bildirim şeridi)
+                    if (r > 140 && g < 60 && b < 70) {
+                        redBandPixels++;
                     }
-
-                    for (let i = 0; i < curB.length; i += 8) {
-                        bDiff += Math.abs(curB[i] - prevB[i]) +
-                                 Math.abs(curB[i+1] - prevB[i+1]) +
-                                 Math.abs(curB[i+2] - prevB[i+2]);
-                    }
-
-                    const kfScore = kfDiff / (curKf.length / 8);
-                    const bScore = bDiff / (curB.length / 8);
-                    
-                    // Killfeed değişimine daha yüksek ağırlık (silah ikonları değişse bile satır düşüşü sabittir)
-                    const totalScore = (kfScore * 1.8) + bScore;
-
-                    samples.push({ time: t, score: totalScore, kf: kfScore, b: bScore });
-                    debugMetrics.innerText = `Saniye: ${t.toFixed(1)}s | Skor: ${totalScore.toFixed(1)}`;
                 }
 
-                prevKf = curKf;
-                prevB = curB;
+                debugMetrics.innerText = `Saniye: ${t.toFixed(1)}s | Kırmızı Piksel: ${redBandPixels}`;
+
+                // Kırmızı şerit belirdiğinde kill onaylanır (Eşik: en az 45 piksel kırmızı)
+                if (redBandPixels > 45) {
+                    // Aynı kill için 2 saniye içinde tekrar tetiklenmesin
+                    if (detectedKills.length === 0 || (t - detectedKills[detectedKills.length - 1] > 2.0)) {
+                        detectedKills.push(t);
+                        console.log("✔ Kill Yakalandı -> Saniye:", t.toFixed(2), "Kırmızı Yoğunluğu:", redBandPixels);
+                    }
+                }
 
                 const progress = Math.round((t / duration) * 45);
                 pFill.style.width = progress + '%';
                 pPct.innerText = '%' + progress;
             }
 
-            // 2. AŞAMA: SİLAH BAĞIMSIZ YEREL TEPE TESPİTİ (HER KİLL'İ YAKALAR)
-            const detectedKills = [];
-            for (let i = 1; i < samples.length - 1; i++) {
-                const prev = samples[i - 1].score;
-                const curr = samples[i].score;
-                const next = samples[i + 1].score;
+            debugStatus.innerText = `Toplam Bulunan Kill: ${detectedKills.length}`;
 
-                // Vandal gibi hafif vuruşların skoru 26-35 arasındadır, Operator ise 50+'dir.
-                // Barajı 26'ya çekip yerel sıçrama arıyoruz:
-                if (curr >= 26 && curr >= prev && curr >= next) {
-                    if (detectedKills.length === 0 || (samples[i].time - detectedKills[detectedKills.length - 1] > 2.0)) {
-                        detectedKills.push(samples[i].time);
-                        console.log("✔ Kill Noktası Bulundu:", samples[i].time.toFixed(2), "Skor:", curr.toFixed(1));
-                    }
-                }
-            }
-
-            debugStatus.innerText = `Yakalanan Kill Sayısı: ${detectedKills.length}`;
-
-            // 3. AŞAMA: HER KİLL İÇİN MAKSİMUM 4 SANİYELİK DİLİM (2.5 sn önce, 1.5 sn sonra)
+            // KİLL ANLARINI DİLİMLE (Vuruştan 2.5 sn önce, 1.5 sn sonra = Tam 4 sn)
             let trimSegments = [];
             if (detectedKills.length > 0) {
                 detectedKills.forEach(kt => {
                     const s = Math.max(0, kt - 2.5);
                     const e = Math.min(duration, kt + 1.5);
                     
-                    // Eğer iki kill birbirine çok yakınsa (örneğin 1 saniye) birleştir
-                    if (trimSegments.length > 0 && s <= trimSegments[trimSegments.length - 1].end) {
+                    if (trimSegments.length > 0 && s <= trimSegments[trimSegments.length - 1].end + 0.5) {
                         trimSegments[trimSegments.length - 1].end = e;
                     } else {
                         trimSegments.push({ start: s, end: e });
@@ -343,8 +308,8 @@
                 trimSegments.push({ start: 0, end: Math.min(duration, 8) });
             }
 
-            // 4. AŞAMA: FFMPEG SELECT FİLTRESİ İLE BİRLEŞTİRME
-            pText.innerText = "Vuruşlar tek videoya dikiliyor...";
+            // FFMPEG SELECT İLE BOŞLUKLARI ATIP TEK VİDEO YAP
+            pText.innerText = "Sadece vuruş anları tek videoya dikiliyor...";
             if(!ffmpeg.isLoaded()) await ffmpeg.load();
             ffmpeg.FS('writeFile', 'source.mp4', await fetchFile(selectedFile));
 
@@ -395,13 +360,13 @@
                 <div class="clip-item" style="border: 2px solid var(--val-red); background: rgba(255, 70, 85, 0.05);">
                     <div class="clip-info">
                         <span class="clip-tag">🔥 Tek Parça Kill Montajı (${selectedFormat === '9-16' ? '9:16 Shorts' : '16:9 Yatay'})</span>
-                        <span class="clip-time">Toplam ${detectedKills.length} vuruş birleştirildi, boş anlar atıldı.</span>
+                        <span class="clip-time">${detectedKills.length} vuruş peş peşe bağlandı, boş anlar tamamen kesildi!</span>
                     </div>
                     <a class="btn-clip-dl" href="${url}" download="valorant_montage_shorts.mp4">Montajı İndir</a>
                 </div>
             `;
 
-            pText.innerText = "✔ Hazır!";
+            pText.innerText = "✔ Shorts montajı hazır!";
             pFill.style.width = '100%';
             pPct.innerText = '%100';
             clipsBox.style.display = 'block';
