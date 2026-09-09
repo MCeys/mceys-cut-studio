@@ -218,6 +218,7 @@
 
         // VURUŞ TARAMA VE DÖNÜŞTÜRME MOTORU
         // 1. AŞAMA: GARANTİLİ KARE ÇEKME VE KİLL ANALİZİ
+        // NOKTA ATIŞI CERRAHİ KILL TARAYICI (YANLIŞ ALARMLAR ENGELLENDİ)
         async function startScanAndRender() {
             const btn = document.getElementById('btn-scan');
             const pBox = document.getElementById('progress-box');
@@ -234,25 +235,25 @@
 
             const duration = player.duration || 10;
             const detectedKillTimestamps = [];
-            const step = 0.4; // 400ms aralıklarla tara
+            const step = 0.35; // 350ms aralık
 
-            // Alt-orta ve Sağ-üst bölgeleri
-            const bannerX = Math.floor(scanCanvas.width * 0.38);
-            const bannerY = Math.floor(scanCanvas.height * 0.72);
-            const bannerW = Math.floor(scanCanvas.width * 0.24);
-            const bannerH = Math.floor(scanCanvas.height * 0.16);
+            // 1. Alan: Alt-Orta Tam Merkez Kuru Kafa / Efekt Alanı (Daha dar, hatasız kutu)
+            const bannerX = Math.floor(scanCanvas.width * 0.44);
+            const bannerY = Math.floor(scanCanvas.height * 0.77);
+            const bannerW = Math.floor(scanCanvas.width * 0.12);
+            const bannerH = Math.floor(scanCanvas.height * 0.09);
 
-            const kfX = Math.floor(scanCanvas.width * 0.74);
-            const kfY = Math.floor(scanCanvas.height * 0.02);
-            const kfW = Math.floor(scanCanvas.width * 0.24);
-            const kfH = Math.floor(scanCanvas.height * 0.18);
+            // 2. Alan: Sağ Üst Killfeed Tam İsabet Kutusu
+            const kfX = Math.floor(scanCanvas.width * 0.80);
+            const kfY = Math.floor(scanCanvas.height * 0.03);
+            const kfW = Math.floor(scanCanvas.width * 0.16);
+            const kfH = Math.floor(scanCanvas.height * 0.10);
 
-            pText.innerText = "Kareler tek tek taranıyor...";
+            pText.innerText = "Gerçek vuruş anları ayıklanıyor...";
 
             let prevBannerData = null;
             let prevKfData = null;
 
-            // Kare bekleme fonksiyonu (Tarayıcı render garantisi)
             const seekFrame = (time) => new Promise((resolve) => {
                 const onSeek = () => {
                     player.removeEventListener('seeked', onSeek);
@@ -275,14 +276,12 @@
                         let bannerDelta = 0;
                         let kfDelta = 0;
 
-                        // Alt-orta değişim
                         for (let i = 0; i < currentBanner.length; i += 16) {
                             bannerDelta += Math.abs(currentBanner[i] - prevBannerData[i]) +
                                            Math.abs(currentBanner[i+1] - prevBannerData[i+1]) +
                                            Math.abs(currentBanner[i+2] - prevBannerData[i+2]);
                         }
 
-                        // Sağ-üst killfeed değişim
                         for (let i = 0; i < currentKf.length; i += 16) {
                             kfDelta += Math.abs(currentKf[i] - prevKfData[i]) +
                                        Math.abs(currentKf[i+1] - prevKfData[i+1]) +
@@ -292,12 +291,12 @@
                         const avgBannerDiff = bannerDelta / (currentBanner.length / 16);
                         const avgKfDiff = kfDelta / (currentKf.length / 16);
 
-                        // Eşik değerleri: Kill anında bu alanlarda belirgin hareket olur
-                        if (avgBannerDiff > 28 || avgKfDiff > 24) {
-                            // En az 2 saniye arayla yeni kill kabul et
-                            if (detectedKillTimestamps.length === 0 || (t - detectedKillTimestamps[detectedKillTimestamps.length - 1] > 2.0)) {
+                        // EŞİK YÜKSELTİLDİ: Sadece patlayan efekt ve killfeed yazısı bu eşiği aşabilir (fare çevirme aşamaz)
+                        if (avgBannerDiff > 58 || avgKfDiff > 48) {
+                            // En az 2.5 saniye arayla tekil kill onayla
+                            if (detectedKillTimestamps.length === 0 || (t - detectedKillTimestamps[detectedKillTimestamps.length - 1] > 2.5)) {
                                 detectedKillTimestamps.push(t);
-                                console.log("Kill yakalandı saniye:", t.toFixed(2));
+                                console.log("✔ Gerçek Kill Yakalandı -> Saniye:", t.toFixed(2));
                             }
                         }
                     }
@@ -305,7 +304,7 @@
                     prevBannerData = currentBanner;
                     prevKfData = currentKf;
                 } catch(e) {
-                    console.error("Piksel okuma hatası:", e);
+                    console.error(e);
                 }
 
                 const progress = Math.round((t / duration) * 45);
@@ -313,48 +312,31 @@
                 pPct.innerText = '%' + progress;
             }
 
-            console.log("Toplam yakalanan kill anları:", detectedKillTimestamps);
+            console.log("Onaylanan Kill Noktaları:", detectedKillTimestamps);
 
-            // 2. AŞAMA: KLİPLERİ AKILLI DİLİMLEME (Her kill için 6-8 saniyelik odaklı klip)
+            // 2. AŞAMA: SADECE VURUŞ ANLARINI AL (3.5 sn önce + 2.0 sn sonra = ~5.5 sn klip)
             const rawClips = [];
 
             if (detectedKillTimestamps.length > 0) {
-                // Her tespit edilen kill anının 4 sn öncesi + 2.5 sn sonrasını al
-                let currentStart = Math.max(0, detectedKillTimestamps[0] - 4);
-                let currentEnd = Math.min(duration, detectedKillTimestamps[0] + 2.5);
-
-                for (let i = 1; i < detectedKillTimestamps.length; i++) {
+                for (let i = 0; i < detectedKillTimestamps.length; i++) {
                     const killTime = detectedKillTimestamps[i];
-                    const nextStart = Math.max(0, killTime - 4);
-                    const nextEnd = Math.min(duration, killTime + 2.5);
+                    const start = Math.max(0, killTime - 3.5);
+                    const end = Math.min(duration, killTime + 2.0);
 
-                    // Eğer bir sonraki kill ile aralarında 3 saniyeden az varsa birleştir (Combo/Seri kill)
-                    if (nextStart <= currentEnd + 1.5) {
-                        currentEnd = Math.min(duration, nextEnd);
-                        // Tek bir klip 35 saniyeyi geçmesin, geçerse böl
-                        if (currentEnd - currentStart > 35) {
-                            rawClips.push({ start: currentStart, end: currentEnd });
-                            currentStart = nextStart;
-                            currentEnd = nextEnd;
-                        }
+                    // Eğer önceki klibin bittiği yer ile bu klip çakışıyorsa (seri kill / ace) birleştir
+                    if (rawClips.length > 0 && start <= rawClips[rawClips.length - 1].end + 1.0) {
+                        rawClips[rawClips.length - 1].end = end;
                     } else {
-                        // Araya mesafe girdiyse (örneğin 10 saniye boş koştuysa) ayrı klip yap
-                        rawClips.push({ start: currentStart, end: currentEnd });
-                        currentStart = nextStart;
-                        currentEnd = nextEnd;
+                        rawClips.push({ start, end });
                     }
                 }
-                rawClips.push({ start: currentStart, end: currentEnd });
             } else {
-                // Hiç yakalayamazsa tüm videoyu tek parça almak yerine 10'ar saniyelik 2 demo klip ver
-                rawClips.push({ start: 0, end: Math.min(duration, 10) });
-                if (duration > 15) {
-                    rawClips.push({ start: Math.min(duration - 10, 15), end: Math.min(duration, 25) });
-                }
+                // Eğer videoda sıfır kill yakalandıysa, boş dönmemek için sadece ilk 6 saniyeyi ver
+                rawClips.push({ start: 0, end: Math.min(duration, 6) });
             }
 
-            // 3. AŞAMA: FFMPEG KESİM VE DIŞA AKTARMA
-            pText.innerText = "Klipler tek tek kesiliyor...";
+            // 3. AŞAMA: FFMPEG HIZLI KESİM
+            pText.innerText = "Klipler üretiliyor...";
             if(!ffmpeg.isLoaded()) await ffmpeg.load();
             ffmpeg.FS('writeFile', 'source.mp4', await fetchFile(selectedFile));
 
@@ -363,10 +345,9 @@
                 const clipDur = Math.max(1, (clip.end - clip.start)).toFixed(2);
                 const outFileName = `val_clip_${idx + 1}.mp4`;
 
-                pText.innerText = `Klip #${idx + 1} işleniyor (${clipDur} sn)...`;
+                pText.innerText = `Vuruş Klipi #${idx + 1} hazırlanıyor (${clipDur} sn)...`;
 
                 if (selectedFormat === '16-9') {
-                    // Kayıpsız hızlı kesim
                     await ffmpeg.run(
                         '-ss', clip.start.toFixed(2),
                         '-i', 'source.mp4',
@@ -375,7 +356,6 @@
                         outFileName
                     );
                 } else {
-                    // 9:16 Shorts + Killfeed Zoom
                     const filter = 
                         "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:5[bg];" +
                         "[0:v]scale=1080:-1[fg];" +
@@ -418,7 +398,7 @@
                 pPct.innerText = '%' + currentProgress;
             }
 
-            pText.innerText = "✔ Tüm klipler ayrı ayrı hazırlandı!";
+            pText.innerText = "✔ Sadece vuruş anları kesildi!";
             pFill.style.width = '100%';
             pPct.innerText = '%100';
             clipsBox.style.display = 'block';
