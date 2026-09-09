@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCEYS VALORANT STUDIO - Otomatik Kill Bulucu & Format Dönüştürücü</title>
+    <title>MCEYS VALORANT STUDIO - Akıllı Highlight Kesici</title>
 
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -63,7 +63,6 @@
         .custom-file-upload { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 30px; border: 2px dashed var(--border-color); border-radius: 14px; background: var(--bg-input); cursor: pointer; text-align: center; margin-bottom: 20px; transition: all 0.2s; }
         .custom-file-upload:hover, .custom-file-upload.dragover { border-color: var(--val-red); background: rgba(255, 70, 85, 0.05); }
 
-        /* Format Seçiciler */
         .format-selector { display: flex; gap: 12px; margin-bottom: 20px; }
         .format-card { flex: 1; background: var(--bg-input); border: 2px solid var(--border-color); border-radius: 12px; padding: 14px; cursor: pointer; text-align: center; transition: 0.2s; }
         .format-card.selected { border-color: var(--val-red); background: rgba(255, 70, 85, 0.08); box-shadow: 0 0 16px var(--val-glow); }
@@ -71,8 +70,10 @@
         .format-desc { font-size: 11px; color: var(--text-muted); }
 
         .workspace { display: none; margin-top: 10px; }
-        .player-frame { width: 100%; max-height: 380px; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); margin-bottom: 16px; display: flex; justify-content: center; }
+        .player-frame { width: 100%; max-height: 380px; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); margin-bottom: 16px; display: flex; justify-content: center; position: relative; }
         .player-frame video { width: 100%; max-height: 380px; }
+
+        .debug-panel { display: flex; justify-content: space-between; align-items: center; background: #0b0d13; border: 1px solid #1f2535; border-radius: 8px; padding: 8px 14px; font-size: 11px; font-family: monospace; color: var(--accent-cyan, #00f2fe); margin-bottom: 14px; }
 
         .btn-submit { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--val-red), var(--val-red-hover)); border: none; border-radius: 10px; color: #fff; font-size: 15px; font-weight: 800; cursor: pointer; text-transform: uppercase; box-shadow: 0 8px 24px var(--val-glow); transition: 0.2s; }
         .btn-submit:hover { transform: translateY(-2px); }
@@ -141,6 +142,11 @@
                     <video id="val-player" controls playsinline></video>
                 </div>
 
+                <div class="debug-panel" id="debug-panel">
+                    <span id="debug-status">Durum: Bekleniyor</span>
+                    <span id="debug-metrics">Killfeed: 0 | Banner: 0</span>
+                </div>
+
                 <button type="button" class="btn-submit" id="btn-scan" onclick="startScanAndRender()">🎯 VURUŞLARI TARA VE KLİPLERİ OLUŞTUR</button>
             </div>
 
@@ -172,7 +178,7 @@
         const ffmpeg = createFFmpeg({ log: false });
         const player = document.getElementById('val-player');
         const scanCanvas = document.getElementById('scanCanvas');
-        const scanCtx = scanCanvas.getContext('2d');
+        const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
         const fileInput = document.getElementById('v-video-file');
         const dropZone = document.getElementById('drop-zone');
         
@@ -185,7 +191,6 @@
             document.getElementById('opt-16-9').classList.toggle('selected', fmt === '16-9');
         }
 
-        // Dosya Seçme ve Sürükle-Bırak Olayları
         fileInput.addEventListener('change', function() {
             if(this.files && this.files[0]) handleFile(this.files[0]);
         });
@@ -202,23 +207,18 @@
             selectedFile = file;
             document.getElementById('v-file-name').innerText = "✔ " + file.name;
             document.getElementById('v-file-name').style.color = "var(--success)";
-            
-            // Çalışma alanını anında aç
             document.getElementById('workspace').style.display = 'block';
 
-            const videoUrl = URL.createObjectURL(file);
-            player.src = videoUrl;
+            player.src = URL.createObjectURL(file);
             player.load();
 
             player.onloadedmetadata = () => {
-                scanCanvas.width = player.videoWidth || 1920;
-                scanCanvas.height = player.videoHeight || 1080;
+                scanCanvas.width = 640;
+                scanCanvas.height = 360; // Hızlı ve hafif tarama için normalize çözünürlük
             };
         }
 
-        // VURUŞ TARAMA VE DÖNÜŞTÜRME MOTORU
-        // 1. AŞAMA: GARANTİLİ KARE ÇEKME VE KİLL ANALİZİ
-        // NOKTA ATIŞI CERRAHİ KILL TARAYICI (YANLIŞ ALARMLAR ENGELLENDİ)
+        // AKILLI ENERJİ TEPE NOKTASI (PEAK DETECTION) MOTORU
         async function startScanAndRender() {
             const btn = document.getElementById('btn-scan');
             const pBox = document.getElementById('progress-box');
@@ -227,6 +227,8 @@
             const pPct = document.getElementById('progress-pct');
             const clipsBox = document.getElementById('clips-container');
             const clipsList = document.getElementById('clips-list');
+            const debugStatus = document.getElementById('debug-status');
+            const debugMetrics = document.getElementById('debug-metrics');
 
             btn.disabled = true;
             clipsBox.style.display = 'none';
@@ -234,108 +236,120 @@
             pBox.style.display = 'block';
 
             const duration = player.duration || 10;
-            const detectedKillTimestamps = [];
-            const step = 0.35; // 350ms aralık
+            const step = 0.5; // Her 0.5 saniyede bir analiz
+            const energyTimeline = [];
 
-            // 1. Alan: Alt-Orta Tam Merkez Kuru Kafa / Efekt Alanı (Daha dar, hatasız kutu)
-            const bannerX = Math.floor(scanCanvas.width * 0.44);
-            const bannerY = Math.floor(scanCanvas.height * 0.77);
-            const bannerW = Math.floor(scanCanvas.width * 0.12);
-            const bannerH = Math.floor(scanCanvas.height * 0.09);
+            // 640x360 üzerinden orantılı bölgeler:
+            // Sağ Üst Killfeed
+            const kfX = Math.floor(640 * 0.76);
+            const kfY = Math.floor(360 * 0.03);
+            const kfW = Math.floor(640 * 0.22);
+            const kfH = Math.floor(360 * 0.16);
 
-            // 2. Alan: Sağ Üst Killfeed Tam İsabet Kutusu
-            const kfX = Math.floor(scanCanvas.width * 0.80);
-            const kfY = Math.floor(scanCanvas.height * 0.03);
-            const kfW = Math.floor(scanCanvas.width * 0.16);
-            const kfH = Math.floor(scanCanvas.height * 0.10);
+            // Alt-Orta Banner / Vuruş Çelengi
+            const bX = Math.floor(640 * 0.40);
+            const bY = Math.floor(360 * 0.74);
+            const bW = Math.floor(640 * 0.20);
+            const bH = Math.floor(360 * 0.16);
 
-            pText.innerText = "Gerçek vuruş anları ayıklanıyor...";
+            let prevKf = null;
+            let prevB = null;
 
-            let prevBannerData = null;
-            let prevKfData = null;
+            debugStatus.innerText = "Tarama başladı...";
 
-            const seekFrame = (time) => new Promise((resolve) => {
-                const onSeek = () => {
-                    player.removeEventListener('seeked', onSeek);
-                    resolve();
-                };
-                player.addEventListener('seeked', onSeek);
-                player.currentTime = time;
-            });
-
+            // 1. AŞAMA: TÜM VİDEONUN HAREKET ENERJİSİNİ ÇIKAR
             for (let t = 0; t < duration; t += step) {
-                await seekFrame(t);
+                // Güvenilir Seek
+                await new Promise(res => {
+                    const handler = () => {
+                        player.removeEventListener('seeked', handler);
+                        res();
+                    };
+                    player.addEventListener('seeked', handler);
+                    player.currentTime = t;
+                });
 
-                scanCtx.drawImage(player, 0, 0, scanCanvas.width, scanCanvas.height);
-                
-                try {
-                    const currentBanner = scanCtx.getImageData(bannerX, bannerY, bannerW, bannerH).data;
-                    const currentKf = scanCtx.getImageData(kfX, kfY, kfW, kfH).data;
+                // Canvassa çiz
+                scanCtx.drawImage(player, 0, 0, 640, 360);
+                const currentKf = scanCtx.getImageData(kfX, kfY, kfW, kfH).data;
+                const currentB = scanCtx.getImageData(bX, bY, bW, bH).data;
 
-                    if (prevBannerData && prevKfData) {
-                        let bannerDelta = 0;
-                        let kfDelta = 0;
+                if (prevKf && prevB) {
+                    let kfDiff = 0;
+                    let bDiff = 0;
 
-                        for (let i = 0; i < currentBanner.length; i += 16) {
-                            bannerDelta += Math.abs(currentBanner[i] - prevBannerData[i]) +
-                                           Math.abs(currentBanner[i+1] - prevBannerData[i+1]) +
-                                           Math.abs(currentBanner[i+2] - prevBannerData[i+2]);
-                        }
-
-                        for (let i = 0; i < currentKf.length; i += 16) {
-                            kfDelta += Math.abs(currentKf[i] - prevKfData[i]) +
-                                       Math.abs(currentKf[i+1] - prevKfData[i+1]) +
-                                       Math.abs(currentKf[i+2] - prevKfData[i+2]);
-                        }
-
-                        const avgBannerDiff = bannerDelta / (currentBanner.length / 16);
-                        const avgKfDiff = kfDelta / (currentKf.length / 16);
-
-                        // EŞİK YÜKSELTİLDİ: Sadece patlayan efekt ve killfeed yazısı bu eşiği aşabilir (fare çevirme aşamaz)
-                        if (avgBannerDiff > 58 || avgKfDiff > 48) {
-                            // En az 2.5 saniye arayla tekil kill onayla
-                            if (detectedKillTimestamps.length === 0 || (t - detectedKillTimestamps[detectedKillTimestamps.length - 1] > 2.5)) {
-                                detectedKillTimestamps.push(t);
-                                console.log("✔ Gerçek Kill Yakalandı -> Saniye:", t.toFixed(2));
-                            }
-                        }
+                    for (let i = 0; i < currentKf.length; i += 8) {
+                        kfDiff += Math.abs(currentKf[i] - prevKf[i]) +
+                                  Math.abs(currentKf[i+1] - prevKf[i+1]) +
+                                  Math.abs(currentKf[i+2] - prevKf[i+2]);
                     }
 
-                    prevBannerData = currentBanner;
-                    prevKfData = currentKf;
-                } catch(e) {
-                    console.error(e);
+                    for (let i = 0; i < currentB.length; i += 8) {
+                        bDiff += Math.abs(currentB[i] - prevB[i]) +
+                                 Math.abs(currentB[i+1] - prevB[i+1]) +
+                                 Math.abs(currentB[i+2] - prevB[i+2]);
+                    }
+
+                    const score = (kfDiff / (currentKf.length / 8)) * 1.5 + (bDiff / (currentB.length / 8));
+                    energyTimeline.push({ time: t, score: score });
+                    debugMetrics.innerText = `Zaman: ${t.toFixed(1)}s | Skor: ${score.toFixed(1)}`;
                 }
+
+                prevKf = currentKf;
+                prevB = currentB;
 
                 const progress = Math.round((t / duration) * 45);
                 pFill.style.width = progress + '%';
                 pPct.innerText = '%' + progress;
             }
 
-            console.log("Onaylanan Kill Noktaları:", detectedKillTimestamps);
+            // 2. AŞAMA: İSTATİSTİKSEL TEPE NOKTALARINI (KILL MOMENTS) BUL
+            // Ortalama skorun 1.8 katı olan ani sıçramalar gerçek kill'dir
+            let totalScore = 0;
+            energyTimeline.forEach(e => totalScore += e.score);
+            const avgScore = totalScore / (energyTimeline.length || 1);
+            const dynamicThreshold = Math.max(28, avgScore * 1.7);
 
-            // 2. AŞAMA: SADECE VURUŞ ANLARINI AL (3.5 sn önce + 2.0 sn sonra = ~5.5 sn klip)
+            console.log("Ortalama Enerji:", avgScore, "Belirlenen Eşik:", dynamicThreshold);
+
+            const detectedKills = [];
+            for (let i = 1; i < energyTimeline.length - 1; i++) {
+                const prev = energyTimeline[i - 1].score;
+                const curr = energyTimeline[i].score;
+                const next = energyTimeline[i + 1].score;
+
+                // Tepe noktası kontrolü (Local Maxima) ve dinamik eşik aşımı
+                if (curr > dynamicThreshold && curr >= prev && curr >= next) {
+                    // Yakın zamanlı mükerrerleri engelle (en az 2.5 sn aralık)
+                    if (detectedKills.length === 0 || (energyTimeline[i].time - detectedKills[detectedKills.length - 1] > 2.5)) {
+                        detectedKills.push(energyTimeline[i].time);
+                    }
+                }
+            }
+
+            debugStatus.innerText = `Bulunan Vuruş: ${detectedKills.length} adet`;
+            console.log("Onaylanan Kill Zamanları:", detectedKills);
+
+            // 3. AŞAMA: SADECE VURUŞ ANLARINI 6-8 SANİYELİK KES
             const rawClips = [];
+            if (detectedKills.length > 0) {
+                detectedKills.forEach(kt => {
+                    const start = Math.max(0, kt - 4.0);
+                    const end = Math.min(duration, kt + 2.5);
 
-            if (detectedKillTimestamps.length > 0) {
-                for (let i = 0; i < detectedKillTimestamps.length; i++) {
-                    const killTime = detectedKillTimestamps[i];
-                    const start = Math.max(0, killTime - 3.5);
-                    const end = Math.min(duration, killTime + 2.0);
-
-                    // Eğer önceki klibin bittiği yer ile bu klip çakışıyorsa (seri kill / ace) birleştir
+                    // Eğer önceki kliple çakışıyorsa birleştir
                     if (rawClips.length > 0 && start <= rawClips[rawClips.length - 1].end + 1.0) {
                         rawClips[rawClips.length - 1].end = end;
                     } else {
                         rawClips.push({ start, end });
                     }
-                }
+                });
             } else {
-                // Eğer videoda sıfır kill yakalandıysa, boş dönmemek için sadece ilk 6 saniyeyi ver
-                rawClips.push({ start: 0, end: Math.min(duration, 6) });
+                // Eğer videoda killfeed hiç kıpırdamadıysa en azından kullanıcının seçtiği bir anı 8 sn kes
+                rawClips.push({ start: 0, end: Math.min(duration, 8) });
             }
 
-            // 3. AŞAMA: FFMPEG HIZLI KESİM
+            // 4. AŞAMA: FFMPEG EXPORT
             pText.innerText = "Klipler üretiliyor...";
             if(!ffmpeg.isLoaded()) await ffmpeg.load();
             ffmpeg.FS('writeFile', 'source.mp4', await fetchFile(selectedFile));
@@ -345,9 +359,10 @@
                 const clipDur = Math.max(1, (clip.end - clip.start)).toFixed(2);
                 const outFileName = `val_clip_${idx + 1}.mp4`;
 
-                pText.innerText = `Vuruş Klipi #${idx + 1} hazırlanıyor (${clipDur} sn)...`;
+                pText.innerText = `Vuruş Klipi #${idx + 1} (${clipDur} sn) kesiliyor...`;
 
                 if (selectedFormat === '16-9') {
+                    // Kayıpsız orijinal yatay kesim
                     await ffmpeg.run(
                         '-ss', clip.start.toFixed(2),
                         '-i', 'source.mp4',
@@ -356,6 +371,7 @@
                         outFileName
                     );
                 } else {
+                    // 9:16 Shorts + Killfeed Zoom
                     const filter = 
                         "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:5[bg];" +
                         "[0:v]scale=1080:-1[fg];" +
@@ -387,7 +403,7 @@
                 item.innerHTML = `
                     <div class="clip-info">
                         <span class="clip-tag">⚡ Vuruş Klipi #${idx + 1} (${selectedFormat === '9-16' ? '9:16 Shorts' : '16:9 Yatay'})</span>
-                        <span class="clip-time">Zaman Aralığı: ${clip.start.toFixed(1)}s - ${clip.end.toFixed(1)}s (Süre: ${clipDur} sn)</span>
+                        <span class="clip-time">Aralık: ${clip.start.toFixed(1)}s - ${clip.end.toFixed(1)}s (${clipDur} saniye)</span>
                     </div>
                     <a class="btn-clip-dl" href="${url}" download="valorant_highlight_${idx+1}.mp4">İndir</a>
                 `;
@@ -398,7 +414,7 @@
                 pPct.innerText = '%' + currentProgress;
             }
 
-            pText.innerText = "✔ Sadece vuruş anları kesildi!";
+            pText.innerText = "✔ Tam isabet! Sadece vuruş anları kesildi.";
             pFill.style.width = '100%';
             pPct.innerText = '%100';
             clipsBox.style.display = 'block';
