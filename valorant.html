@@ -188,13 +188,31 @@
         function loadVideo(input) {
             if(!input.files || !input.files[0]) return;
             selectedFile = input.files[0];
-            document.getElementById('v-file-name').innerText = "✔ " + selectedFile.name;
-            document.getElementById('v-file-name').style.color = "var(--success)";
-            player.src = URL.createObjectURL(selectedFile);
+            
+            const fileNameEl = document.getElementById('v-file-name');
+            if(fileNameEl) {
+                fileNameEl.innerText = "✔ " + selectedFile.name;
+                fileNameEl.style.color = "var(--success)";
+            }
+
+            // Çalışma alanını beklemeden doğrudan aç
+            const workspace = document.getElementById('workspace');
+            if(workspace) workspace.style.display = 'block';
+
+            // Blob URL bağla
+            const videoUrl = URL.createObjectURL(selectedFile);
+            player.src = videoUrl;
+            player.load();
+
             player.onloadedmetadata = () => {
-                document.getElementById('workspace').style.display = 'block';
                 scanCanvas.width = player.videoWidth || 1920;
                 scanCanvas.height = player.videoHeight || 1080;
+                console.log("Video yüklendi:", scanCanvas.width, "x", scanCanvas.height, "Süre:", player.duration);
+            };
+
+            player.onerror = (e) => {
+                console.error("Video yüklenirken hata:", e);
+                alert("Tarayıcı bu video formatını doğrudan oynatamadı. MP4 (H.264) formatında olduğundan emin ol kanka.");
             };
         }
 
