@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MCEYS CUT STUDIO - Professional CS2 & Video Creator Suite</title>
     <style>
         :root {
@@ -26,113 +26,107 @@
             display: flex; 
             flex-direction: column; 
             justify-content: space-between;
+            overflow-x: hidden;
         }
 
         header { 
-            padding: 20px 32px; 
+            width: 100%;
+            padding: 16px 20px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            background: rgba(19, 22, 31, 0.7);
+            background: rgba(19, 22, 31, 0.85);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border-color);
             flex-wrap: wrap;
-            gap: 16px;
+            gap: 12px;
         }
-        .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-main); transition: 0.2s; }
-        .brand:hover { opacity: 0.9; }
+        .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text-main); }
         .header-logo {
-            height: 44px; width: 44px;
+            height: 38px; width: 38px;
             object-fit: cover; border-radius: 50%;
             border: 2px solid var(--accent);
-            box-shadow: 0 0 12px var(--accent-glow);
+            box-shadow: 0 0 10px var(--accent-glow);
         }
         .logo-box { 
-            width: 44px; height: 44px; 
+            width: 38px; height: 38px; 
             background: linear-gradient(135deg, var(--accent), #ff9f1c); 
             border-radius: 50%; 
             display: flex; align-items: center; justify-content: center; 
-            font-weight: 900; font-size: 18px; color: #fff; 
-            box-shadow: 0 0 12px var(--accent-glow); 
+            font-weight: 900; font-size: 16px; color: #fff; 
         }
-        .brand h1 { font-size: 16px; font-weight: 800; letter-spacing: 0.6px; }
+        .brand h1 { font-size: 14px; font-weight: 800; letter-spacing: 0.5px; }
 
-        .header-right { display: flex; align-items: center; gap: 16px; }
-        .global-badge { font-size: 12px; color: var(--success); font-weight: 800; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+        .global-badge { font-size: 11px; color: var(--success); font-weight: 800; }
         
         .lang-switch {
             display: flex; background: var(--bg-input);
-            border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;
+            border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden;
         }
         .lang-btn {
             background: transparent; border: none; color: var(--text-muted);
-            padding: 5px 10px; font-size: 11px; font-weight: 800; cursor: pointer;
-            transition: 0.2s; border-right: 1px solid rgba(255,255,255,0.05);
+            padding: 4px 8px; font-size: 10px; font-weight: 800; cursor: pointer;
+            border-right: 1px solid rgba(255,255,255,0.05);
         }
         .lang-btn:last-child { border-right: none; }
-        .lang-btn:hover { color: #fff; background: rgba(255,255,255,0.04); }
         .lang-btn.active { background: var(--accent); color: #fff; }
 
         .hero { 
             flex: 1; display: flex; flex-direction: column; 
             align-items: center; justify-content: center; 
-            text-align: center; padding: 40px 16px; max-width: 900px; margin: 0 auto; 
+            text-align: center; padding: 30px 16px; max-width: 800px; margin: 0 auto; 
+            width: 100%;
         }
         .hero-badge {
             background: rgba(16, 185, 129, 0.12); color: var(--success);
-            font-size: 11px; padding: 5px 14px; border-radius: 20px;
+            font-size: 10px; padding: 4px 12px; border-radius: 20px;
             font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.3);
-            margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.8px;
+            margin-bottom: 16px; text-transform: uppercase;
         }
         .hero h2 { 
-            font-size: clamp(28px, 5vw, 46px); 
-            font-weight: 900; line-height: 1.2; 
-            margin-bottom: 16px; letter-spacing: -0.5px; 
+            font-size: clamp(24px, 6vw, 42px); 
+            font-weight: 900; line-height: 1.15; 
+            margin-bottom: 14px; 
         }
         .hero h2 span { color: var(--accent); }
         .hero p { 
-            font-size: clamp(14px, 2vw, 17px); 
+            font-size: clamp(13px, 3.5vw, 16px); 
             color: var(--text-muted); 
-            line-height: 1.5; margin-bottom: 32px; max-width: 680px; 
+            line-height: 1.5; margin-bottom: 28px; padding: 0 10px;
         }
 
         .cta-btn { 
-            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-            padding: 16px 36px; background: linear-gradient(135deg, var(--accent), var(--accent-hover)); 
-            color: #fff; text-decoration: none; border-radius: 12px; 
-            font-size: 15px; font-weight: 900; text-transform: uppercase; 
-            letter-spacing: 0.8px; transition: all 0.2s; 
-            box-shadow: 0 8px 24px var(--accent-glow); 
-            width: 100%; max-width: 360px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 14px 28px; background: linear-gradient(135deg, var(--accent), var(--accent-hover)); 
+            color: #fff; text-decoration: none; border-radius: 10px; 
+            font-size: 14px; font-weight: 900; text-transform: uppercase; 
+            box-shadow: 0 6px 20px var(--accent-glow); 
+            width: 100%; max-width: 320px;
+            margin-bottom: 30px;
         }
-        .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(255,107,53,0.5); }
 
         .features-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px; width: 100%; max-width: 1100px; margin: 40px auto 0 auto; padding: 0 16px;
+            display: grid; grid-template-columns: 1fr;
+            gap: 14px; width: 100%; max-width: 900px; padding: 0 4px;
+        }
+        @media(min-width: 640px) {
+            .features-grid { grid-template-columns: repeat(3, 1fr); }
         }
         .feature-card {
             background: var(--bg-card); border: 1px solid var(--border-color);
-            border-radius: 14px; padding: 22px; text-align: left;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            border-radius: 12px; padding: 18px; text-align: left;
         }
-        .feature-icon { font-size: 24px; margin-bottom: 12px; display: block; }
-        .feature-card h3 { font-size: 15px; font-weight: 800; margin-bottom: 6px; color: #fff; }
-        .feature-card p { font-size: 12px; color: var(--text-muted); line-height: 1.45; }
+        .feature-icon { font-size: 22px; margin-bottom: 10px; display: block; }
+        .feature-card h3 { font-size: 14px; font-weight: 800; margin-bottom: 4px; color: #fff; }
+        .feature-card p { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
 
         footer { 
-            padding: 20px 32px; text-align: center; font-size: 12px; 
+            padding: 16px; text-align: center; font-size: 11px; 
             color: var(--text-muted); border-top: 1px solid var(--border-color); 
             background: rgba(19, 22, 31, 0.5);
         }
         footer span { color: var(--accent); font-weight: 700; }
-        
-        @media(max-width: 640px) {
-            header { padding: 16px; justify-content: center; }
-            .header-right { width: 100%; justify-content: space-between; }
-            .hero { padding: 24px 12px; }
-            .features-grid { padding: 0 12px; }
-        }
     </style>
 </head>
 <body>
@@ -144,7 +138,7 @@
             <h1>MCEYS CUT STUDİO</h1>
         </a>
         <div class="header-right">
-            <div class="global-badge">● GLOBAL EDITION</div>
+            <div class="global-badge">● GLOBAL</div>
             <div class="lang-switch">
                 <button class="lang-btn active" id="btn-lang-en" onclick="setLandingLang('en')">EN</button>
                 <button class="lang-btn" id="btn-lang-tr" onclick="setLandingLang('tr')">TR</button>
@@ -157,7 +151,7 @@
     <div class="hero">
         <div class="hero-badge" data-i18n="l_badge">⚡ 100% Client-Side WebAssembly Power</div>
         <h2 data-i18n="l_title">Create Pro CS2 Shorts & Covers <span>Without Server Lag</span></h2>
-        <p data-i18n="l_desc">The ultimate browser-based content studio for gamers and creators. Crop vertical shorts with auto-zoom killfeeds, generate 16:9 YouTube thumbnails instantly, and manage your history with zero server costs.</p>
+        <p data-i18n="l_desc">The ultimate browser-based content studio for gamers and creators. Crop vertical shorts with auto-zoom killfeeds, generate 16:9 YouTube thumbnails instantly.</p>
         
         <a href="studio.html" class="cta-btn" data-i18n="l_cta">🚀 LAUNCH STUDIO NOW</a>
 
@@ -165,17 +159,17 @@
             <div class="feature-card">
                 <span class="feature-icon">🎯</span>
                 <h3 data-i18n="f1_title">CS2 Killfeed Zoom</h3>
-                <p data-i18n="f1_desc">Automatically isolate and highlight top frags with optimized vertical 9:16 framing and blurred cinematic backgrounds.</p>
+                <p data-i18n="f1_desc">Automatically isolate and highlight top frags with optimized vertical 9:16 framing.</p>
             </div>
             <div class="feature-card">
                 <span class="feature-icon">🖥️</span>
-                <h3 data-i18n="f2_title">Instant 16:9 Thumbnails</h3>
-                <p data-i18n="f2_desc">Grab high-res frames directly from your gameplay video, overlay custom badges, titles, and logos in seconds.</p>
+                <h3 data-i18n="f2_title">Instant Thumbnails</h3>
+                <p data-i18n="f2_desc">Grab high-res frames directly from your video, overlay custom badges in seconds.</p>
             </div>
             <div class="feature-card">
                 <span class="feature-icon">🌍</span>
-                <h3 data-i18n="f3_title">Global & Multi-Language</h3>
-                <p data-i18n="f3_desc">Fully localized for English, Turkish, German, and Russian gaming communities with one-click direct platform upload.</p>
+                <h3 data-i18n="f3_title">Multi-Language</h3>
+                <p data-i18n="f3_desc">Fully localized for EN, TR, DE, and RU gaming communities.</p>
             </div>
         </div>
     </div>
@@ -189,53 +183,53 @@
             en: {
                 l_badge: "⚡ 100% Client-Side WebAssembly Power",
                 l_title: "Create Pro CS2 Shorts & Covers <span>Without Server Lag</span>",
-                l_desc: "The ultimate browser-based content studio for gamers and creators. Crop vertical shorts with auto-zoom killfeeds, generate 16:9 YouTube thumbnails instantly, and manage your history with zero server costs.",
+                l_desc: "The ultimate browser-based content studio for gamers and creators. Crop vertical shorts with auto-zoom killfeeds, generate 16:9 YouTube thumbnails instantly.",
                 l_cta: "🚀 LAUNCH STUDIO NOW",
                 f1_title: "CS2 Killfeed Zoom",
-                f1_desc: "Automatically isolate and highlight top frags with optimized vertical 9:16 framing and blurred cinematic backgrounds.",
-                f2_title: "Instant 16:9 Thumbnails",
-                f2_desc: "Grab high-res frames directly from your gameplay video, overlay custom badges, titles, and logos in seconds.",
-                f3_title: "Global & Multi-Language",
-                f3_desc: "Fully localized for English, Turkish, German, and Russian gaming communities with one-click direct platform upload.",
+                f1_desc: "Automatically isolate and highlight top frags with optimized vertical 9:16 framing.",
+                f2_title: "Instant Thumbnails",
+                f2_desc: "Grab high-res frames directly from your video, overlay custom badges in seconds.",
+                f3_title: "Multi-Language",
+                f3_desc: "Fully localized for EN, TR, DE, and RU gaming communities.",
                 footer_pres: "MCEYS PRESENT"
             },
             tr: {
                 l_badge: "⚡ %100 Tarayıcı Tabanlı WebAssembly Gücü",
                 l_title: "Sunucu Yükü Olmadan Profesyonel CS2 Shorts & Kapak Tasarla",
-                l_desc: "Oyuncular ve içerik üreticileri için nihai tarayıcı stüdyosu. Killfeed zoom özellikli dikey shorts'lar kırp, saniyeler içinde 16:9 YouTube kapağı üret ve geçmişini sıfır sunucu maliyetiyle yönet.",
+                l_desc: "Oyuncular ve içerik üreticileri için nihai tarayıcı stüdyosu. Killfeed zoom özellikli dikey shorts'lar kırp, saniyeler içinde kapağını üret.",
                 l_cta: "🚀 STÜDYOYU BAŞLAT",
                 f1_title: "CS2 Killfeed Yakınlaştırma",
-                f1_desc: "En iyi vuruşlarını 9:16 dikey çerçeve ve bulanık sinematik arka plan ile otomatik olarak öne çıkar.",
-                f2_title: "Anında 16:9 Kapaklar (Thumbnail)",
-                f2_desc: "Oynanış videosundan yüksek çözünürlüklü kareler yakala, özel rozet, başlık ve logoları saniyeler içinde ekle.",
-                f3_title: "Küresel & Çoklu Dil Desteği",
-                f3_desc: "İngilizce, Türkçe, Almanca ve Rusça topluluklar için tam uyumlu, tek tıkla platformlara gönderim imkanı.",
+                f1_desc: "En iyi vuruşlarını 9:16 dikey çerçeve ile otomatik olarak öne çıkar.",
+                f2_title: "Anında Kapaklar",
+                f2_desc: "Videodan yüksek çözünürlüklü kareler yakala, rozetleri saniyeler içinde ekle.",
+                f3_title: "Çoklu Dil Desteği",
+                f3_desc: "İngilizce, Türkçe, Almanca ve Rusça topluluklar için tam uyumlu.",
                 footer_pres: "MCEYS SUNAR"
             },
             de: {
                 l_badge: "⚡ 100% Client-Side WebAssembly Power",
                 l_title: "Erstelle Pro CS2 Shorts & Cover <span>Ohne Server-Lags</span>",
-                l_desc: "Das ultimative browserbasierte Content-Studio für Gamer und Creator. Schneide vertikale Shorts mit Auto-Zoom-Killfeeds, generiere sofort 16:9 YouTube-Thumbnails.",
+                l_desc: "Das ultimative browserbasierte Content-Studio für Gamer und Creator. Schneide vertikale Shorts mit Auto-Zoom.",
                 l_cta: "🚀 STUDIO STARTEN",
                 f1_title: "CS2 Killfeed Zoom",
-                f1_desc: "Isoliere und markiere Top-Frags automatisch mit optimiertem vertikalen 9:16-Framing und unscharfen cinematischen Hintergründen.",
-                f2_title: "Sofortige 16:9 Thumbnails",
-                f2_desc: "Schnappe dir hochauflösende Frames direkt aus deinem Gameplay-Video und füge in Sekunden Custom-Badges und Titel hinzu.",
-                f3_title: "Global & Mehrsprachig",
-                f3_desc: "Vollständig lokalisiert für englische, türkische, deutsche und russische Gaming-Communities.",
+                f1_desc: "Isoliere und markiere Top-Frags automatisch im 9:16 Format.",
+                f2_title: "Sofortige Thumbnails",
+                f2_desc: "Schnappe dir hochauflösende Frames direkt aus dem Video.",
+                f3_title: "Mehrsprachig",
+                f3_desc: "Vollständig lokalisiert für EN, TR, DE und RU.",
                 footer_pres: "MCEYS PRÄSENTIERT"
             },
             ru: {
                 l_badge: "⚡ 100% Мощность WebAssembly в браузере",
                 l_title: "Создавай профи Shorts и обложки CS2 <span>Без задержек сервера</span>",
-                l_desc: "Лучшая браузерная студия для геймеров и креаторов. Монтируй вертикальные шортсы с зумом киллфида, создавай превью 16:9 мгновенно.",
+                l_desc: "Лучшая браузерная студия для геймеров и креаторов. Монтируй вертикальные шортсы с зумом.",
                 l_cta: "🚀 ЗАПУСТИТЬ СТУДИЮ",
                 f1_title: "Зум киллфида CS2",
-                f1_desc: "Автоматически выделяй лучшие моменты с вертикальным кадрированием 9:16 и размытым кинематографичным фоном.",
-                f2_title: "Мгновенные превью 16:9",
-                f2_desc: "Захватывай кадры высокого разрешения прямо из видео геймплея и добавляй свои значки и заголовки за секунды.",
-                f3_title: "Глобально и мультиязычно",
-                f3_desc: "Полная локализация для английского, турецкого, немецкого и русского игровых сообществ.",
+                f1_desc: "Автоматически выделяй лучшие моменты в формате 9:16.",
+                f2_title: "Мгновенные превью",
+                f2_desc: "Захватывай кадры высокого разрешения прямо из видео.",
+                f3_title: "Мультиязычно",
+                f3_desc: "Полная локализация для EN, TR, DE и RU сообществ.",
                 footer_pres: "MCEYS ПРЕДСТАВЛЯЕТ"
             }
         };
