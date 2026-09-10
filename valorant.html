@@ -120,7 +120,7 @@
                 <video src="site_logo.webm" class="header-logo" autoplay loop muted playsinline></video>
                 <h1>VALORANT AUTO-STUDIO</h1>
             </a>
-            <span class="badge-val">⚡ V9.0 TWO-STEP ENGINE</span>
+            <span class="badge-val">⚡ V10.0 ANTI-LOOP TS</span>
         </div>
 
         <div class="header-right">
@@ -136,7 +136,7 @@
     <main>
         <div class="studio-card">
             <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 6px; text-align: center;">Valorant Akıllı Highlight Kesici</h2>
-            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Çift aşamalı donanım korumalı motor: Asla takılmaz, döngü yapmaz ve tarayıcıyı dondurmaz.</p>
+            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Başa sarma ve Keyframe hataları kökten çözüldü: TS Formatı ile piksel hassasiyetinde kesim yapar.</p>
 
             <div class="custom-file-upload" id="drop-zone" onclick="document.getElementById('v-video-file').click()">
                 <span style="font-size: 32px;">🎯</span>
@@ -272,6 +272,7 @@
             const step = 0.35;
             const detectedKills = [];
 
+            // Sağ üst dar killfeed koridoru
             const kfX = Math.floor(640 * 0.80);
             const kfY = Math.floor(360 * 0.015);
             const kfW = Math.floor(640 * 0.18);
@@ -280,7 +281,6 @@
             debugStatus.innerText = "Killfeed taranıyor...";
 
             let prevKfData = null;
-            // Sahte vuruşları (Kick ekranı/Round bitişi) engellemek için son 6 saniyeyi tarama
             const scanLimit = Math.max(0, duration - 6.5);
 
             for (let t = 0; t < scanLimit; t += step) {
@@ -317,7 +317,6 @@
                     const avgDelta = kfDelta / (curKfData.length / 4);
                     
                     let isKill = false;
-                    // Hassasiyet artırıldı: Yanlış altyazı vb. sahte vuruş sayılmasını önler
                     if (selectedKillMode === 'solo') {
                         if (avgDelta > 26 && redPixels >= 22) isKill = true;
                     } else {
@@ -348,6 +347,7 @@
                 return;
             }
 
+            // Gelişmiş Segment Planlama
             let intervals = detectedKills.map(kt => ({
                 start: Math.max(0, kt - 3.5),
                 end: Math.min(duration, kt + 1.2)
@@ -371,40 +371,39 @@
                 rawSegments = rawSegments.slice(0, 4);
             }
 
-            pText.innerText = "İki aşamalı render motoru başlatılıyor...";
+            pText.innerText = "FFmpeg motoru (TS Mode) başlatılıyor...";
             if(!ffmpeg.isLoaded()) await ffmpeg.load();
+            
+            // Önceki denemeden kalan çöpleri (eğer varsa) temizle ki eski dosya ile karışmasın
+            try { ffmpeg.FS('unlink', 'source.mp4'); } catch(e) {}
             ffmpeg.FS('writeFile', 'source.mp4', await fetchFile(selectedFile));
 
-            let concatListContent = "";
+            let tsFiles = [];
 
+            // AŞAMA: VİDEOYU TS FORMATINDA PARÇALARA BÖL (Bu adım keyframe sorununu yok eder)
             for (let i = 0; i < rawSegments.length; i++) {
                 const seg = rawSegments[i];
-                const segStart = seg.start.toFixed(2);
-                const segDur = Math.max(1.0, (seg.end - seg.start)).toFixed(2);
-                const partName = `part_${i}.mp4`;
+                const segStart = seg.start.toFixed(3);
+                const segDur = Math.max(1.0, (seg.end - seg.start)).toFixed(3);
+                const partName = `part_${i}.ts`;
+                tsFiles.push(partName);
 
-                // AŞAMA 1: SADECE HIZLI KESİM (Tarayıcıyı yormaz, OOM çöküşünü ve Loop'u engeller)
-                pText.innerText = `[Aşama 1/2] Vuruş ${i+1}/${rawSegments.length} izole ediliyor...`;
-                const rawPartName = `raw_${i}.mp4`;
-                
-                await ffmpeg.run(
-                    '-ss', segStart,
-                    '-t', segDur,
-                    '-i', 'source.mp4',
-                    '-c:v', 'libx264',
-                    '-preset', 'ultrafast',
-                    '-crf', '18',
-                    '-pix_fmt', 'yuv420p',
-                    '-c:a', 'aac',
-                    rawPartName
-                );
+                pText.innerText = `Vuruş Sekansı ${i+1}/${rawSegments.length} İşleniyor (${segStart}s - ${segDur}s)...`;
 
-                // AŞAMA 2: MİNİ VİDEOYA FİLTRE (Büyük videoda kilitlenme yaşanmaması için)
                 if (selectedFormat === '16-9') {
-                    pText.innerText = `[Aşama 2/2] Vuruş ${i+1}/${rawSegments.length} işleniyor (Yatay)...`;
-                    await ffmpeg.run('-i', rawPartName, '-c', 'copy', partName);
+                    // -ss inputtan SONRA: Gerçek kareye sarar, keyframe takıntısı yapmaz
+                    await ffmpeg.run(
+                        '-i', 'source.mp4',
+                        '-ss', segStart,
+                        '-t', segDur,
+                        '-c:v', 'libx264',
+                        '-preset', 'ultrafast',
+                        '-crf', '22',
+                        '-c:a', 'aac',
+                        '-f', 'mpegts',
+                        partName
+                    );
                 } else {
-                    pText.innerText = `[Aşama 2/2] Vuruş ${i+1}/${rawSegments.length} işleniyor (Dikey Filtre)...`;
                     const filter = 
                         `[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:5[bg];` +
                         `[0:v]crop=ih*9/16:ih:(iw-ih*9/16)/2:0,scale=1080:1920[fg];` +
@@ -412,35 +411,36 @@
                         `[bg][fg]overlay=0:0[base];` +
                         `[base][killfeed]overlay=0:160[vFinal]`;
 
+                    // -ss inputtan SONRA
                     await ffmpeg.run(
-                        '-i', rawPartName,
+                        '-i', 'source.mp4',
+                        '-ss', segStart,
+                        '-t', segDur,
                         '-filter_complex', filter,
                         '-map', '[vFinal]',
                         '-map', '0:a?',
                         '-c:v', 'libx264',
                         '-preset', 'ultrafast',
                         '-crf', '24',
-                        '-pix_fmt', 'yuv420p',
-                        '-c:a', 'copy',
+                        '-c:a', 'aac',
+                        '-f', 'mpegts',
                         partName
                     );
                 }
-
-                concatListContent += `file '${partName}'\n`;
 
                 const partProgress = 35 + Math.round(((i + 1) / rawSegments.length) * 55);
                 pFill.style.width = partProgress + '%';
                 pPct.innerText = '%' + partProgress;
             }
 
-            pText.innerText = "Son montaj birleştiriliyor...";
-            ffmpeg.FS('writeFile', 'concat_list.txt', concatListContent);
-
+            pText.innerText = "Parçalar birleştiriliyor (Kayıpsız TS Concat)...";
+            
+            // concat_list.txt DOSYASI YOK: TS dosyalarını doğrudan protocol ile bağlıyoruz (Loop imkansız)
+            const concatStr = 'concat:' + tsFiles.join('|');
             const outFileName = "valorant_montage_shorts.mp4";
+
             await ffmpeg.run(
-                '-f', 'concat',
-                '-safe', '0',
-                '-i', 'concat_list.txt',
+                '-i', concatStr,
                 '-c', 'copy',
                 outFileName
             );
@@ -453,7 +453,7 @@
                 <div class="clip-item" style="border: 2px solid var(--val-red); background: rgba(255, 70, 85, 0.05);">
                     <div class="clip-info">
                         <span class="clip-tag">🔥 Tek Parça Kill Montajı (${selectedFormat === '9-16' ? '9:16 Shorts' : '16:9 Yatay'})</span>
-                        <span class="clip-time">Çift Aşama Başarılı! Takılmadan ${rawSegments.length} sekans bağlandı.</span>
+                        <span class="clip-time">Anti-Loop Aktif: TS formatıyla ${rawSegments.length} sekans kayıpsız bağlandı.</span>
                     </div>
                     <a class="btn-clip-dl" href="${url}" download="valorant_montage_shorts.mp4">Montajı İndir</a>
                 </div>
