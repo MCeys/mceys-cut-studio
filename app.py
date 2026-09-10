@@ -248,6 +248,47 @@ def process_video(input_video, output_video, format_type='9-16', game='valorant'
     print(f"[{job_id}] BİTTİ! Dosya hazır: {output_video}")
     return True
 
+def detect_cs2_kills(video_path):
+    cap = cv2.VideoCapture(video_path)
+    fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+
+    lower_red1 = np.array([0, 120, 70])
+    upper_red1 = np.array([10, 255, 255])
+    lower_red2 = np.array([170, 120, 70])
+    upper_red2 = np.array([180, 255, 255])
+
+    detected_kills = []
+    frame_step = max(1, int(fps * 0.15))
+    current_frame = 0
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    while current_frame < total_frames:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, current_frame)
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        frame_1080 = cv2.resize(frame, (1920, 1080))
+        # CS2 sağ üst killfeed kutusu
+        roi = frame_1080[20:250, 1350:1900]
+        hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+
+        mask = cv2.inRange(hsv, lower_red1, upper_red1) | cv2.inRange(hsv, lower_red2, upper_red2)
+        red_pixels = cv2.countNonZero(mask)
+
+        if red_pixels > 450:
+            timestamp = current_frame / fps
+            if len(detected_kills) == 0 or (timestamp - detected_kills[-1] > 2.5):
+                detected_kills.append(timestamp)
+                print(f"[!] CS2 Kill Yakalandı: {timestamp:.2f}. sn (Piksel: {red_pixels})", flush=True)
+                current_frame += int(fps * 2.0)
+                continue
+
+        current_frame += frame_step
+
+    cap.release()
+    return detected_kills
+
 # ---------------- API ENDPOINT ----------------
 @app.route('/api/process', methods=['POST'])
 def handle_process():
