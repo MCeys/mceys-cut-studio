@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MCEYS CUT STUDIO - CS2 & Universal Shorts Maker</title>
     
-<meta name="description" content="CS2 vuruşlarınızı WebAssembly gücüyle otomatik işleyin. Killfeed zoom özellikli 9:16 Shorts veya 16:9 yatay fragmovie kliplerini saniyeler içinde oluşturun.">
-    <meta name="keywords" content="CS2 fragmovie maker, CS2 killfeed kırpma, CS2 otomatik shorts, CS2 WebAssembly editör, CS2 16:9 thumbnail, CS2 video to shorts, CS2 ace clipping">
+    <meta name="description" content="CS2 vuruşlarınızı otomatik killfeed tespitiyle işleyin. 9:16 Shorts veya 16:9 kliplerini saniyeler içinde oluşturun.">
+    <meta name="keywords" content="CS2 fragmovie maker, CS2 killfeed kırpma, CS2 otomatik shorts, CS2 video to shorts, CS2 ace clipping">
     <meta name="author" content="MCEYS">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://www.cutmakeshorts.com/studio.html">
@@ -15,13 +15,13 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://www.cutmakeshorts.com/studio.html">
     <meta property="og:title" content="CS2 Akıllı Shorts & Fragmovie Stüdyosu | MCEYS">
-    <meta property="og:description" content="CS2 killfeed'ini otomatik büyüt, yatay ve dikey formattaki en iyi vuruşlarını anında render al.">
+    <meta property="og:description" content="CS2 killfeed'ini otomatik algıla ve dikey vuruşlarını anında montajla.">
     <meta property="og:image" content="https://www.cutmakeshorts.com/site_logo.png">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="CS2 Akıllı Shorts & Fragmovie Stüdyosu | MCEYS">
-    <meta name="twitter:description" content="CS2 killfeed'ini otomatik büyüt, yatay ve dikey formattaki en iyi vuruşlarını anında render al.">
+    <meta name="twitter:description" content="CS2 killfeed'ini otomatik algıla ve dikey vuruşlarını anında montajla.">
     <meta name="twitter:image" content="https://www.cutmakeshorts.com/site_logo.png">
     
     <!-- Google tag (gtag.js) -->
@@ -33,8 +33,6 @@
       gtag('config', 'G-T4H7EHSR4T');
     </script>
     
-    <!-- FFmpeg.wasm Engine -->
-    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <style>
         :root {
@@ -290,6 +288,21 @@
         .upload-hint { font-size: 11px; color: var(--text-muted); }
         .hidden-file-input { display: none; }
 
+        /* AI INFO BANNER */
+        .ai-banner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            border-radius: 10px;
+            margin-bottom: 22px;
+        }
+        .ai-banner-icon { font-size: 20px; }
+        .ai-banner-title { font-size: 13px; font-weight: 800; color: var(--success); }
+        .ai-banner-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
         .btn-submit { 
             width: 100%; padding: 18px; 
             background: linear-gradient(135deg, var(--accent), var(--accent-hover)); 
@@ -350,7 +363,7 @@
         .progress-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent), #10b981); transition: width 0.2s; }
         .status-msg { font-size: 14px; color: var(--accent); font-weight: 700; display: flex; align-items: center; gap: 8px; }
 
-        /* ÇIKTI VE OYNATICI */
+        /* RESULT */
         .result-box { display: none; margin: 0 36px 30px 36px; padding: 24px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 14px; }
         .result-title { color: var(--success); font-weight: 800; font-size: 17px; margin-bottom: 16px; }
         .media-preview-container { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; align-items: flex-start; }
@@ -361,7 +374,6 @@
         .download-btn { padding: 12px 20px; background: #1c2230; color: #fff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 700; border: 1px solid #2d364d; transition: all 0.2s; }
         .download-btn:hover { background: #262e42; border-color: var(--accent); transform: translateY(-1px); }
 
-        /* PAYLAŞIM ALANI */
         .share-section {
             border-top: 1px solid var(--border-color);
             padding-top: 18px;
@@ -401,7 +413,6 @@
         .share-btn.discord:hover { background: var(--discord); border-color: var(--discord); }
         .share-btn.webshare { background: linear-gradient(135deg, #10b981, #059669); border-color: #10b981; }
 
-        /* GALERİ */
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 10px 0; }
         .gallery-item { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
         .gallery-thumb { height: 180px; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
@@ -480,63 +491,61 @@
                     <button class="tab-btn" onclick="switchTab('gallery')" data-i18n="tab_history">📁 HISTORY</button>
                 </div>
 
-                <!-- 1. CS2 SHORTS -->
+                <!-- 1. CS2 SHORTS (OTOMATİK KILLFEED MOTORU) -->
                 <div id="tab-shorts" class="tab-content active">
-                    <form id="form-shorts" onsubmit="handleWasmExecution(event, 'cs2')">
-                        <label data-i18n="mode_label">Process Mode:</label>
+                    <form id="form-shorts" onsubmit="handleBackendExecution(event)">
+                        <label data-i18n="mode_label">İşlem Modu:</label>
                         <div class="mode-selector">
-                            <div class="mode-card active" onclick="selectProcessMode('both', this)" data-i18n="mode_both">🎬 Video + 🖼️ Cover</div>
-                            <div class="mode-card" onclick="selectProcessMode('video_only', this)" data-i18n="mode_video">🎬 Video Only</div>
-                            <div class="mode-card" onclick="selectProcessMode('cover_only', this)" data-i18n="mode_cover">🖼️ Cover Only</div>
+                            <div class="mode-card active" onclick="selectProcessMode('both', this)" data-i18n="mode_both">🎬 Video + 🖼️ Kapak</div>
+                            <div class="mode-card" onclick="selectProcessMode('video_only', this)" data-i18n="mode_video">🎬 Sadece Video</div>
+                            <div class="mode-card" onclick="selectProcessMode('cover_only', this)" data-i18n="mode_cover">🖼️ Sadece Kapak</div>
                         </div>
 
                         <div class="form-group">
-                            <label data-i18n="cs2_video_label">CS2 Gameplay Video (.mp4 / .mov):</label>
+                            <label data-i18n="cs2_video_label">CS2 Oynanış Videosu (.mp4 / .mov):</label>
                             <label class="custom-file-upload" for="s-video">
                                 <span class="upload-icon">📁</span>
-                                <span class="upload-title" id="s-video-name" data-i18n="choose_video">Choose Video File</span>
-                                <span class="upload-hint" data-i18n="drag_hint">MP4, MOV or MKV (Max 60s)</span>
+                                <span class="upload-title" id="s-video-name" data-i18n="choose_video">Video Dosyası Seç</span>
+                                <span class="upload-hint" data-i18n="drag_hint">MP4, MOV veya MKV</span>
                                 <input type="file" id="s-video" class="hidden-file-input" accept="video/mp4,video/quicktime,video/mkv" required onchange="updateFileName(this, 's-video-name', 'choose_video')">
                             </label>
                         </div>
 
-                        <div class="form-row">
-                            <div class="form-group" style="flex: 1;">
-                                <label data-i18n="start_time_label">Start Time (e.g. 01:15):</label>
-                                <input type="text" id="s-start" placeholder="Default: 00:00" data-i18n-ph="ph_start">
-                            </div>
-                            <div class="form-group" style="flex: 1;">
-                                <label data-i18n="end_time_label">End Time (e.g. 02:15):</label>
-                                <input type="text" id="s-end" placeholder="Default: +60s" data-i18n-ph="ph_end">
+                        <!-- OTOMATİK KILLFEED BİLGİ ROZETİ (MANUEL SÜRE KUTULARI KALDIRILDI) -->
+                        <div class="ai-banner">
+                            <div class="ai-banner-icon">🎯</div>
+                            <div>
+                                <div class="ai-banner-title" data-i18n="ai_active_title">AI OTOMATİK KILLFEED ALGILAMA AKTİF</div>
+                                <div class="ai-banner-desc" data-i18n="ai_active_desc">Videonuzdaki vuruş anları akıllı renk ve piksel motoruyla otomatik kırpılır. Süre girmenize gerek yoktur.</div>
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label data-i18n="shorts_sub_label">Shorts Subtitle:</label>
-                            <input type="text" id="s-text" placeholder="e.g. 1V4 CLUTCH ACE!" value="1V4 CLUTCH ACE!" oninput="updatePreview()">
+                            <label data-i18n="shorts_sub_label">Shorts Alt Başlığı:</label>
+                            <input type="text" id="s-text" placeholder="Örn: 1V4 CLUTCH ACE!" value="1V4 CLUTCH ACE!" oninput="updatePreview()">
                         </div>
                         <div class="form-group">
-                            <label data-i18n="badge_txt_label">Top Badge Text:</label>
-                            <input type="text" id="s-badge" placeholder="e.g. FACEIT LEVEL 10" value="FACEIT LEVEL 10" oninput="updatePreview()">
+                            <label data-i18n="badge_txt_label">Üst Rozet Metni:</label>
+                            <input type="text" id="s-badge" placeholder="Örn: FACEIT LEVEL 10" value="FACEIT LEVEL 10" oninput="updatePreview()">
                         </div>
                         <div class="form-row">
                             <div class="form-group" style="flex: 2;">
-                                <label data-i18n="logo_upload_label">Custom Logo (PNG):</label>
+                                <label data-i18n="logo_upload_label">Özel Logo (PNG):</label>
                                 <label class="custom-file-upload compact" for="s-logo">
                                     <span class="upload-icon">🖼️</span>
-                                    <span class="upload-title" id="s-logo-name" data-i18n="choose_logo">Choose PNG Logo</span>
+                                    <span class="upload-title" id="s-logo-name" data-i18n="choose_logo">PNG Logo Seç</span>
                                     <input type="file" id="s-logo" class="hidden-file-input" accept="image/png" onchange="loadLogo(event); updateFileName(this, 's-logo-name', 'choose_logo')">
                                 </label>
                             </div>
                             <div class="form-group" style="flex: 1;">
-                                <label data-i18n="logo_pos_label">Logo Position:</label>
+                                <label data-i18n="logo_pos_label">Logo Konumu:</label>
                                 <select id="s-pos" onchange="updatePreview()">
-                                    <option value="L" data-i18n="pos_tl">Top-Left</option>
-                                    <option value="R" data-i18n="pos_tr">Top-Right</option>
+                                    <option value="L" data-i18n="pos_tl">Sol Üst</option>
+                                    <option value="R" data-i18n="pos_tr">Sağ Üst</option>
                                 </select>
                             </div>
                         </div>
-                        <button type="submit" class="btn-submit" id="btn-shorts" data-i18n="btn_cs2_submit">START RENDERING (VIDEO + COVER)</button>
+                        <button type="submit" class="btn-submit" id="btn-shorts" data-i18n="btn_cs2_submit">OTOMATİK MONTAJI BAŞLAT (AI ENGINE)</button>
                     </form>
                 </div>
 
@@ -544,109 +553,98 @@
                 <div id="tab-horizontal" class="tab-content">
                     <form id="form-horizontal" onsubmit="handleCanvasThumbnail(event)">
                         <div class="form-group">
-                            <label data-i18n="uni_video_label">Select Video (.mp4 / .mov):</label>
+                            <label data-i18n="uni_video_label">Videonuzu Seçin (.mp4 / .mov):</label>
                             <label class="custom-file-upload" for="h-video">
                                 <span class="upload-icon">📁</span>
-                                <span class="upload-title" id="h-video-name" data-i18n="choose_video">Choose Video File</span>
-                                <span class="upload-hint" data-i18n="drag_hint">MP4, MOV or MKV (Max 60s)</span>
+                                <span class="upload-title" id="h-video-name" data-i18n="choose_video">Video Dosyası Seç</span>
+                                <span class="upload-hint" data-i18n="drag_hint">MP4, MOV veya MKV</span>
                                 <input type="file" id="h-video" class="hidden-file-input" accept="video/mp4,video/quicktime,video/mkv" required onchange="updateFileName(this, 'h-video-name', 'choose_video')">
                             </label>
                         </div>
                         <div class="form-group">
-                            <label data-i18n="thumb_sec_label">Frame Timestamp (e.g. 01:25 or 85):</label>
-                            <input type="text" id="h-time" placeholder="Default: 00:03" data-i18n-ph="ph_thumb_sec">
+                            <label data-i18n="thumb_sec_label">Kapak Alınacak Kare Saniyesi (Örn: 01:25 veya 85):</label>
+                            <input type="text" id="h-time" placeholder="Varsayılan: 00:03">
                         </div>
                         <div class="form-group">
-                            <label data-i18n="yt_title_label">YouTube Cover Title:</label>
-                            <input type="text" id="h-text" placeholder="e.g. INSANE AWP PLAY!" value="INSANE AWP PLAY!" oninput="updatePreview()">
+                            <label data-i18n="yt_title_label">YouTube Kapak Başlığı:</label>
+                            <input type="text" id="h-text" placeholder="Örn: INSANE AWP PLAY!" value="INSANE AWP PLAY!" oninput="updatePreview()">
                         </div>
                         <div class="form-group">
-                            <label data-i18n="corner_badge_label">Corner Badge:</label>
-                            <input type="text" id="h-badge" placeholder="e.g. 1V5 CLUTCH" value="1V5 CLUTCH" oninput="updatePreview()">
+                            <label data-i18n="corner_badge_label">Köşe Rozeti:</label>
+                            <input type="text" id="h-badge" placeholder="Örn: 1V5 CLUTCH" value="1V5 CLUTCH" oninput="updatePreview()">
                         </div>
                         <div class="form-row">
                             <div class="form-group" style="flex: 2;">
-                                <label data-i18n="channel_logo_label">Channel / FACEIT Logo (PNG):</label>
+                                <label data-i18n="channel_logo_label">Kanal / FACEIT Logosu (PNG):</label>
                                 <label class="custom-file-upload compact" for="h-logo">
                                     <span class="upload-icon">🖼️</span>
-                                    <span class="upload-title" id="h-logo-name" data-i18n="choose_logo">Choose PNG Logo</span>
+                                    <span class="upload-title" id="h-logo-name" data-i18n="choose_logo">PNG Logo Seç</span>
                                     <input type="file" id="h-logo" class="hidden-file-input" accept="image/png" onchange="loadLogo(event); updateFileName(this, 'h-logo-name', 'choose_logo')">
                                 </label>
                             </div>
                             <div class="form-group" style="flex: 1;">
-                                <label data-i18n="logo_pos_label">Logo Position:</label>
+                                <label data-i18n="logo_pos_label">Logo Konumu:</label>
                                 <select id="h-pos" onchange="updatePreview()">
-                                    <option value="L" data-i18n="pos_tl">Top-Left</option>
-                                    <option value="R" selected data-i18n="pos_tr">Top-Right</option>
+                                    <option value="L" data-i18n="pos_tl">Sol Üst</option>
+                                    <option value="R" selected data-i18n="pos_tr">Sağ Üst</option>
                                 </select>
                             </div>
                         </div>
-                        <button type="submit" class="btn-submit" id="btn-horizontal" data-i18n="btn_create_thumb">GENERATE 16:9 THUMBNAIL (INSTANT)</button>
+                        <button type="submit" class="btn-submit" id="btn-horizontal" data-i18n="btn_create_thumb">16:9 THUMBNAIL OLUŞTUR (ANINDA)</button>
                     </form>
                 </div>
 
                 <!-- 3. UNIVERSAL SHORTS -->
                 <div id="tab-universal" class="tab-content">
-                    <form id="form-universal" onsubmit="handleWasmExecution(event, 'universal')">
+                    <form id="form-universal" onsubmit="handleUniversalManual(event)">
                         <div class="form-group">
-                            <label data-i18n="any_video_label">Any Video File (.mp4 / .mov):</label>
+                            <label data-i18n="any_video_label">Herhangi Bir Video (.mp4 / .mov):</label>
                             <label class="custom-file-upload" for="u-video">
                                 <span class="upload-icon">📁</span>
-                                <span class="upload-title" id="u-video-name" data-i18n="choose_video">Choose Video File</span>
-                                <span class="upload-hint" data-i18n="drag_hint">MP4, MOV or MKV (Max 60s)</span>
+                                <span class="upload-title" id="u-video-name" data-i18n="choose_video">Video Dosyası Seç</span>
+                                <span class="upload-hint" data-i18n="drag_hint">MP4, MOV veya MKV</span>
                                 <input type="file" id="u-video" class="hidden-file-input" accept="video/mp4,video/quicktime,video/mkv" required onchange="updateFileName(this, 'u-video-name', 'choose_video')">
                             </label>
                         </div>
-                        <div class="form-row">
-                            <div class="form-group" style="flex: 1;">
-                                <label data-i18n="start_time_label">Start Time:</label>
-                                <input type="text" id="u-start" placeholder="Default: 00:00" data-i18n-ph="ph_start_uni">
-                            </div>
-                            <div class="form-group" style="flex: 1;">
-                                <label data-i18n="end_time_label">End Time:</label>
-                                <input type="text" id="u-end" placeholder="Default: +60s" data-i18n-ph="ph_end">
-                            </div>
-                        </div>
                         <div class="form-group">
-                            <label data-i18n="shorts_txt_opt">Shorts Text (Optional):</label>
-                            <input type="text" id="u-text" placeholder="e.g. HIGHLIGHT OF THE DAY" oninput="updatePreview()">
+                            <label data-i18n="shorts_txt_opt">Shorts Metni (Opsiyonel):</label>
+                            <input type="text" id="u-text" placeholder="Örn: HIGHLIGHT OF THE DAY" oninput="updatePreview()">
                         </div>
-                        <button type="submit" class="btn-submit" id="btn-universal" data-i18n="btn_create_uni">RENDER VERTICAL SHORTS (MAX 60S)</button>
+                        <button type="submit" class="btn-submit" id="btn-universal" data-i18n="btn_create_uni">DİKEY SHORTS OLUŞTUR (SUNUCU)</button>
                     </form>
                 </div>
 
                 <!-- 4. HISTORY -->
                 <div id="tab-gallery" class="tab-content">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3 style="font-size: 16px; font-weight: 800;" data-i18n="history_title">Your Browser Renders</h3>
-                        <button onclick="renderGalleryUI()" style="background: #1f2937; color: #fff; border: 1px solid var(--border-color); padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;" data-i18n="btn_refresh">🔄 Refresh</button>
+                        <h3 style="font-size: 16px; font-weight: 800;" data-i18n="history_title">Tarayıcıdaki Çıktılarınız</h3>
+                        <button onclick="renderGalleryUI()" style="background: #1f2937; color: #fff; border: 1px solid var(--border-color); padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;" data-i18n="btn_refresh">🔄 Yenile</button>
                     </div>
                     <div id="gallery-container" class="gallery-grid">
-                        <div style="color: var(--text-muted); font-size: 13px;" data-i18n="no_renders">No renders yet.</div>
+                        <div style="color: var(--text-muted); font-size: 13px;" data-i18n="no_renders">Henüz bir çıktı üretmediniz.</div>
                     </div>
                 </div>
 
                 <!-- PROGRESS -->
                 <div id="progress-box" class="progress-box">
                     <div class="progress-meta">
-                        <span id="progress-title">Initializing...</span>
+                        <span id="progress-title">Hazırlanıyor...</span>
                         <span id="progress-percent">%0</span>
                     </div>
                     <div class="progress-bar-bg">
                         <div id="progress-bar-fill" class="progress-bar-fill"></div>
                     </div>
-                    <div id="status-msg" class="status-msg">⚡ Preparing...</div>
+                    <div id="status-msg" class="status-msg">⚡ Sunucuya bağlanılıyor...</div>
                 </div>
 
                 <!-- RESULT & PAYLAŞIM ALANI -->
                 <div id="result-box" class="result-box">
-                    <div class="result-title" data-i18n="result_done">✔ Task Finished Successfully!</div>
+                    <div class="result-title" data-i18n="result_done">✔ İşlem Başarıyla Tamamlandı!</div>
                     <div id="media-preview-container" class="media-preview-container"></div>
                     <div id="result-actions" class="actions"></div>
 
-                    <!-- ENTEGRE PAYLAŞIM PANELİ -->
                     <div class="share-section">
-                        <div class="share-title" data-i18n="share_headline">🚀 Share / Upload To Platforms:</div>
+                        <div class="share-title" data-i18n="share_headline">🚀 Platformlarda Paylaş / Yükle:</div>
                         <div class="share-buttons">
                             <a href="https://studio.youtube.com/channel/UC/videos/upload?d=ud" target="_blank" class="share-btn yt">
                                 ▶️ YouTube Studio
@@ -658,7 +656,7 @@
                                 💬 Discord
                             </a>
                             <button onclick="shareDeviceNative()" class="share-btn webshare" id="btn-device-share">
-                                📱 <span data-i18n="share_device">Share on Device (Apps)</span>
+                                📱 <span data-i18n="share_device">Cihazda Paylaş (Uygulamalar)</span>
                             </button>
                         </div>
                     </div>
@@ -667,18 +665,18 @@
 
             <!-- PREVIEW MOCKUP -->
             <div id="preview-panel" class="preview-card">
-                <div class="preview-title" data-i18n="preview_title">Live Layout Preview</div>
+                <div class="preview-title" data-i18n="preview_title">Tasarım Önizlemesi</div>
                 <div class="mockup-wrapper">
                     <div id="mockup" class="mockup-frame">
                         <div class="mockup-bg-blur"></div>
-                        <div class="mockup-center-game" data-i18n="mockup_center">[ GAMEPLAY FOCUS AREA ]</div>
+                        <div class="mockup-center-game" data-i18n="mockup_center">[ VİDEO ODAK KARESI ]</div>
                         <img id="mockup-logo-img" class="mockup-logo left" style="display: none;">
                         <div id="mockup-badge-txt" class="mockup-badge">FACEIT LEVEL 10</div>
                         <div id="mockup-main-txt" class="mockup-text">1V4 CLUTCH ACE!</div>
                     </div>
                 </div>
                 <div style="font-size: 12px; color: var(--text-muted); margin-top: 14px; text-align: center;" data-i18n="preview_footnote">
-                    Text and logo update instantly on this preview.
+                    Girdiğin metinler ve logon anlık buraya yansıtılır.
                 </div>
             </div>
         </div>
@@ -686,7 +684,7 @@
 
     <footer>
         <p style="display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
-            <span data-i18n="footer_title">CS2 & Universal Shorts Generation System</span> | <span>MCEYS PRESENT</span> &copy; 2026
+            <span data-i18n="footer_title">CS2 ve Genel Shorts oluşturma sistemi</span> | <span>MCEYS PRESENT</span> &copy; 2026
             <a href="https://youtube.com/@mceyss" target="_blank" class="yt-badge">▶️ YOUTUBE.COM/@MCEYSS</a>
             <a href="https://kick.com/mceys" target="_blank" class="kick-badge">🟢 KICK.COM/MCEYS</a>
         </p>
@@ -695,9 +693,6 @@
     <canvas id="hidden-canvas" style="display: none;"></canvas>
 
     <script>
-        const { createFFmpeg, fetchFile } = FFmpeg;
-        const ffmpeg = createFFmpeg({ log: true });
-
         let currentTab = 'shorts';
         let logoDataUrl = null;
         let selectedCs2Mode = 'both';
@@ -705,7 +700,8 @@
         let lastRenderedBlob = null;
         let lastRenderedFilename = "shorts.mp4";
 
-        // ================= 5 DİLLİ SÖZLÜK (TR / EN / DE / ES / RU) =================
+        const BACKEND_URL = '/api/process';
+
         const translations = {
             tr: {
                 nav_home: "Ana Sayfa",
@@ -724,17 +720,15 @@
                 mode_video: "🎬 Sadece Video",
                 mode_cover: "🖼️ Sadece Kapak",
                 cs2_video_label: "CS2 Oynanış Videosu (.mp4 / .mov):",
-                start_time_label: "Başlangıç Zamanı (Örn: 01:15):",
-                end_time_label: "Bitiş Zamanı (Örn: 02:15):",
+                ai_active_title: "AI OTOMATİK KILLFEED ALGILAMA AKTİF",
+                ai_active_desc: "Videonuzdaki vuruş anları akıllı renk ve piksel motoruyla otomatik kırpılır. Süre girmenize gerek yoktur.",
                 shorts_sub_label: "Shorts Alt Başlığı:",
                 badge_txt_label: "Üst Rozet Metni:",
                 logo_upload_label: "Özel Logo (PNG):",
                 logo_pos_label: "Logo Konumu:",
                 pos_tl: "Sol Üst",
                 pos_tr: "Sağ Üst",
-                btn_cs2_both: "İŞLEMİ BAŞLAT (VİDEO + KAPAK)",
-                btn_cs2_vid: "SADECE VİDEO OLUŞTUR",
-                btn_cs2_cov: "SADECE KAPAK OLUŞTUR (ANINDA)",
+                btn_cs2_submit: "OTOMATİK MONTAJI BAŞLAT (AI ENGINE)",
                 uni_video_label: "Videonuzu Seçin (.mp4 / .mov):",
                 thumb_sec_label: "Kapak Alınacak Kare Saniyesi (Örn: 01:25):",
                 yt_title_label: "YouTube Kapak Başlığı:",
@@ -743,7 +737,7 @@
                 btn_create_thumb: "16:9 THUMBNAIL OLUŞTUR (ANINDA)",
                 any_video_label: "Herhangi Bir Video (.mp4 / .mov):",
                 shorts_txt_opt: "Shorts Metni (Opsiyonel):",
-                btn_create_uni: "DİKEY SHORTS OLUŞTUR (MAKS 60 SN)",
+                btn_create_uni: "DİKEY SHORTS OLUŞTUR (SUNUCU)",
                 history_title: "Tarayıcıdaki Çıktılarınız",
                 btn_refresh: "🔄 Yenile",
                 no_renders: "Henüz bir çıktı üretmediniz.",
@@ -752,13 +746,9 @@
                 mockup_center: "[ VİDEO ODAK KARESI ]",
                 preview_footnote: "Girdiğin metinler ve logon anlık buraya yansıtılır.",
                 footer_title: "CS2 ve Genel Shorts oluşturma sistemi",
-                ph_start: "Boşsa: 00:00",
-                ph_end: "Boşsa: Otomatik (+60 sn)",
-                ph_thumb_sec: "Boşsa: 00:03",
-                ph_start_uni: "Boşsa: 00:00",
                 choose_video: "Video Dosyası Seç",
                 choose_logo: "PNG Logo Seç",
-                drag_hint: "MP4, MOV veya MKV (Maks 60 sn)",
+                drag_hint: "MP4, MOV veya MKV",
                 dl_vid: "🎬 Videoyu İndir",
                 dl_cov: "🖼️ Kapağı İndir",
                 dl_thumb: "🖼️ 16:9 Kapağı İndir",
@@ -786,26 +776,24 @@
                 mode_video: "🎬 Video Only",
                 mode_cover: "🖼️ Cover Only",
                 cs2_video_label: "CS2 Gameplay Video (.mp4 / .mov):",
-                start_time_label: "Start Time (e.g. 01:15):",
-                end_time_label: "End Time (e.g. 02:15):",
+                ai_active_title: "AI KILLFEED AUTO-DETECT ACTIVE",
+                ai_active_desc: "Kills are detected automatically via pixel engine. No manual timestamps required.",
                 shorts_sub_label: "Shorts Subtitle:",
                 badge_txt_label: "Top Badge Text:",
                 logo_upload_label: "Custom Logo (PNG):",
                 logo_pos_label: "Logo Position:",
                 pos_tl: "Top-Left",
                 pos_tr: "Top-Right",
-                btn_cs2_both: "START RENDERING (VIDEO + COVER)",
-                btn_cs2_vid: "RENDER VIDEO ONLY",
-                btn_cs2_cov: "CREATE COVER ONLY (INSTANT)",
+                btn_cs2_submit: "START AUTO-MONTAGE (AI ENGINE)",
                 uni_video_label: "Select Video (.mp4 / .mov):",
-                thumb_sec_label: "Frame Timestamp (e.g. 01:25 or 85):",
+                thumb_sec_label: "Frame Timestamp (e.g. 01:25):",
                 yt_title_label: "YouTube Cover Title:",
                 corner_badge_label: "Corner Badge:",
                 channel_logo_label: "Channel / FACEIT Logo (PNG):",
                 btn_create_thumb: "GENERATE 16:9 THUMBNAIL (INSTANT)",
                 any_video_label: "Any Video File (.mp4 / .mov):",
                 shorts_txt_opt: "Shorts Text (Optional):",
-                btn_create_uni: "RENDER VERTICAL SHORTS (MAX 60S)",
+                btn_create_uni: "RENDER VERTICAL SHORTS (SERVER)",
                 history_title: "Your Browser Renders",
                 btn_refresh: "🔄 Refresh",
                 no_renders: "No renders created yet.",
@@ -814,13 +802,9 @@
                 mockup_center: "[ GAMEPLAY FOCUS AREA ]",
                 preview_footnote: "Text and logo update instantly on this preview.",
                 footer_title: "CS2 & Universal Shorts Generation System",
-                ph_start: "Default: 00:00",
-                ph_end: "Default: +60s",
-                ph_thumb_sec: "Default: 00:03",
-                ph_start_uni: "Default: 00:00",
                 choose_video: "Choose Video File",
                 choose_logo: "Choose PNG Logo",
-                drag_hint: "MP4, MOV or MKV (Max 60s)",
+                drag_hint: "MP4, MOV or MKV",
                 dl_vid: "🎬 Download Video",
                 dl_cov: "🖼️ Download Cover",
                 dl_thumb: "🖼️ Download 16:9 Cover",
@@ -830,192 +814,6 @@
                 alert_no_file: "Please select a video file!",
                 share_headline: "🚀 Share / Upload To Platforms:",
                 share_device: "Share on Device (Apps)"
-            },
-            de: {
-                nav_home: "Startseite",
-                nav_cs2: "CS2 Shorts",
-                nav_val: "Valorant Shorts",
-                nav_trim: "Verlustfreier Cutter",
-                badge_fast: "⚡ SCHNELLE ENGINE",
-                servers_label: "Server:",
-                servers_active: "● AKTIV",
-                tab_cs2: "📱 CS2 SHORTS",
-                tab_thumb: "🖥️ 16:9 THUMBNAIL",
-                tab_uni: "🎬 CLIP / SHORTS",
-                tab_history: "📁 VERLAUF",
-                mode_label: "Verarbeitungsmodus:",
-                mode_both: "🎬 Video + 🖼️ Cover",
-                mode_video: "🎬 Nur Video",
-                mode_cover: "🖼️ Nur Cover",
-                cs2_video_label: "CS2 Gameplay Video (.mp4 / .mov):",
-                start_time_label: "Startzeit (z.B. 01:15):",
-                end_time_label: "Endzeit (z.B. 02:15):",
-                shorts_sub_label: "Shorts Untertitel:",
-                badge_txt_label: "Oberer Badge-Text:",
-                logo_upload_label: "Eigenes Logo (PNG):",
-                logo_pos_label: "Logo-Position:",
-                pos_tl: "Oben Links",
-                pos_tr: "Oben Rechts",
-                btn_cs2_both: "RENDERN STARTEN (VIDEO + COVER)",
-                btn_cs2_vid: "NUR VIDEO RENDERN",
-                btn_cs2_cov: "NUR COVER ERSTELLEN (SOFORT)",
-                uni_video_label: "Video Auswählen (.mp4 / .mov):",
-                thumb_sec_label: "Frame-Sekunde (z.B. 01:25 oder 85):",
-                yt_title_label: "YouTube Cover-Titel:",
-                corner_badge_label: "Ecken-Badge:",
-                channel_logo_label: "Kanal / FACEIT Logo (PNG):",
-                btn_create_thumb: "16:9 THUMBNAIL ERSTELLEN (SOFORT)",
-                any_video_label: "Beliebige Videodatei (.mp4 / .mov):",
-                shorts_txt_opt: "Shorts-Text (Optional):",
-                btn_create_uni: "VERTIKALE SHORTS ERSTELLEN (MAX 60S)",
-                history_title: "Ihre Browser-Renderings",
-                btn_refresh: "🔄 Aktualisieren",
-                no_renders: "Noch keine Renderings erstellt.",
-                result_done: "✔ Erfolgreich Abgeschlossen!",
-                preview_title: "Live-Layout-Vorschau",
-                mockup_center: "[ GAMEPLAY-FOKUSBEREICH ]",
-                preview_footnote: "Text und Logo werden sofort in der Vorschau aktualisiert.",
-                footer_title: "CS2 & Universal Shorts Erstellungssystem",
-                ph_start: "Standard: 00:00",
-                ph_end: "Standard: +60s",
-                ph_thumb_sec: "Standard: 00:03",
-                ph_start_uni: "Standard: 00:00",
-                choose_video: "Videodatei Auswählen",
-                choose_logo: "PNG-Logo Auswählen",
-                drag_hint: "MP4, MOV oder MKV (Max. 60s)",
-                dl_vid: "🎬 Video Herunterladen",
-                dl_cov: "🖼️ Cover Herunterladen",
-                dl_thumb: "🖼️ 16:9 Cover Herunterladen",
-                btn_open: "Öffnen",
-                btn_del: "Löschen",
-                confirm_del: "Sind Sie sicher, dass Sie dieses Rendering löschen möchten?",
-                alert_no_file: "Bitte wählen Sie eine Videodatei aus!",
-                share_headline: "🚀 Auf Plattformen Teilen:",
-                share_device: "Auf Gerät teilen (Apps)"
-            },
-            es: {
-                nav_home: "Inicio",
-                nav_cs2: "CS2 Shorts",
-                nav_val: "Valorant Shorts",
-                nav_trim: "Cortador sin Pérdidas",
-                badge_fast: "⚡ MOTOR RÁPIDO",
-                servers_label: "Servidores:",
-                servers_active: "● ACTIVOS",
-                tab_cs2: "📱 SHORTS CS2",
-                tab_thumb: "🖥️ MINIATURA 16:9",
-                tab_uni: "🎬 CLIP / SHORTS",
-                tab_history: "📁 HISTORIAL",
-                mode_label: "Modo de Procesamiento:",
-                mode_both: "🎬 Video + 🖼️ Portada",
-                mode_video: "🎬 Solo Video",
-                mode_cover: "🖼️ Solo Portada",
-                cs2_video_label: "Video Gameplay CS2 (.mp4 / .mov):",
-                start_time_label: "Tiempo de Inicio (ej. 01:15):",
-                end_time_label: "Tiempo de Fin (ej. 02:15):",
-                shorts_sub_label: "Subtítulo del Short:",
-                badge_txt_label: "Texto de la Insignia Superior:",
-                logo_upload_label: "Logo Personalizado (PNG):",
-                logo_pos_label: "Posición del Logo:",
-                pos_tl: "Arriba Izquierda",
-                pos_tr: "Arriba Derecha",
-                btn_cs2_both: "INICIAR RENDER (VIDEO + PORTADA)",
-                btn_cs2_vid: "RENDERIZAR SOLO VIDEO",
-                btn_cs2_cov: "CREAR SOLO PORTADA (INSTANTÁNEO)",
-                uni_video_label: "Seleccionar Video (.mp4 / .mov):",
-                thumb_sec_label: "Segundo del Fotograma (ej. 01:25 o 85):",
-                yt_title_label: "Título Portada YouTube:",
-                corner_badge_label: "Insignia de Esquina:",
-                channel_logo_label: "Logo Canal / FACEIT (PNG):",
-                btn_create_thumb: "GENERAR MINIATURA 16:9 (INSTANTÁNEO)",
-                any_video_label: "Cualquier Archivo de Video (.mp4 / .mov):",
-                shorts_txt_opt: "Texto Shorts (Opcional):",
-                btn_create_uni: "RENDERIZAR SHORTS VERTICALES (MÁX 60S)",
-                history_title: "Tus Trabajos en el Navegador",
-                btn_refresh: "🔄 Actualizar",
-                no_renders: "Aún no se han generado archivos.",
-                result_done: "✔ ¡Tarea Finalizada con Éxito!",
-                preview_title: "Vista Previa en Vivo",
-                mockup_center: "[ ÁREA DE ENFOQUE DE GAMEPLAY ]",
-                preview_footnote: "El texto y el logotipo se actualizan al instante aquí.",
-                footer_title: "Sistema de Creación de Shorts CS2 y Universal",
-                ph_start: "Por defecto: 00:00",
-                ph_end: "Por defecto: +60s",
-                ph_thumb_sec: "Por defecto: 00:03",
-                ph_start_uni: "Por defecto: 00:00",
-                choose_video: "Elegir Archivo de Video",
-                choose_logo: "Elegir Logo PNG",
-                drag_hint: "MP4, MOV o MKV (Máx. 60s)",
-                dl_vid: "🎬 Descargar Video",
-                dl_cov: "🖼️ Descargar Portada",
-                dl_thumb: "🖼️ Descargar Portada 16:9",
-                btn_open: "Abrir",
-                btn_del: "Eliminar",
-                confirm_del: "¿Estás seguro de que deseas eliminar este render?",
-                alert_no_file: "¡Por favor selecciona un archivo de video!",
-                share_headline: "🚀 Compartir en Plataformas:",
-                share_device: "Compartir en Dispositivo (Apps)"
-            },
-            ru: {
-                nav_home: "Главная",
-                nav_cs2: "CS2 Shorts",
-                nav_val: "Valorant Shorts",
-                nav_trim: "Без потери качества",
-                badge_fast: "⚡ БЫСТРЫЙ ДВИЖОК",
-                servers_label: "Серверы:",
-                servers_active: "● АКТИВНЫ",
-                tab_cs2: "📱 CS2 SHORTS",
-                tab_thumb: "🖥️ 16:9 ПРЕВЬЮ",
-                tab_uni: "🎬 КЛИП / SHORTS",
-                tab_history: "📁 ИСТОРИЯ",
-                mode_label: "Режим обработки:",
-                mode_both: "🎬 Видео + 🖼️ Обложка",
-                mode_video: "🎬 Только видео",
-                mode_cover: "🖼️ Только обложка",
-                cs2_video_label: "Геймплей CS2 (.mp4 / .mov):",
-                start_time_label: "Время начала (напр. 01:15):",
-                end_time_label: "Время конца (напр. 02:15):",
-                shorts_sub_label: "Текст для Shorts:",
-                badge_txt_label: "Верхний бейдж:",
-                logo_upload_label: "Свой логотип (PNG):",
-                logo_pos_label: "Позиция логотипа:",
-                pos_tl: "Слева вверху",
-                pos_tr: "Справа вверху",
-                btn_cs2_both: "НАЧАТЬ РЕНДЕР (ВИДЕО + ОБЛОЖКА)",
-                btn_cs2_vid: "ТОЛЬКО ВИДЕО",
-                btn_cs2_cov: "ТОЛЬКО ОБЛОЖКА (МГНОВЕННО)",
-                uni_video_label: "Выберите видео (.mp4 / .mov):",
-                thumb_sec_label: "Секунда кадра (напр. 01:25 или 85):",
-                yt_title_label: "Заголовок для YouTube:",
-                corner_badge_label: "Угловой бейдж:",
-                channel_logo_label: "Логотип канала / FACEIT (PNG):",
-                btn_create_thumb: "СОЗДАТЬ 16:9 ПРЕВЬЮ (МГНОВЕННО)",
-                any_video_label: "Любое видео (.mp4 / .mov):",
-                shorts_txt_opt: "Текст Shorts (необязательно):",
-                btn_create_uni: "СОЗДАТЬ ВЕРТИКАЛЬНЫЙ SHORTS (ДО 60С)",
-                history_title: "Ваши готовые работы",
-                btn_refresh: "🔄 Обновить",
-                no_renders: "Пока нет сохраненных работ.",
-                result_done: "✔ Успешно завершено!",
-                preview_title: "Живой предпросмотр",
-                mockup_center: "[ ОБЛАСТЬ ГЕЙМПЛЕЯ ]",
-                preview_footnote: "Текст и логотип обновляются в реальном времени.",
-                footer_title: "Система создания Shorts по CS2 и видео",
-                ph_start: "По умолч: 00:00",
-                ph_end: "По умолч: +60с",
-                ph_thumb_sec: "По умолч: 00:03",
-                ph_start_uni: "По умолч: 00:00",
-                choose_video: "Выберите видеофайл",
-                choose_logo: "Выберите PNG логотип",
-                drag_hint: "MP4, MOV или MKV (До 60 сек)",
-                dl_vid: "🎬 Скачать видео",
-                dl_cov: "🖼️ Скачать обложку",
-                dl_thumb: "🖼️ Скачать 16:9 обложку",
-                btn_open: "Открыть",
-                btn_del: "Удалить",
-                confirm_del: "Вы уверены, что хотите удалить эту запись?",
-                alert_no_file: "Пожалуйста, выберите видеофайл!",
-                share_headline: "🚀 Поделиться на платформах:",
-                share_device: "Поделиться на устройстве"
             }
         };
 
@@ -1025,7 +823,8 @@
                 label.innerText = "✔ " + input.files[0].name;
                 label.style.color = "var(--success)";
             } else {
-                label.innerText = translations[currentLang][defaultKey];
+                const langDict = translations[currentLang] || translations['tr'];
+                label.innerText = langDict[defaultKey];
                 label.style.color = "var(--text-main)";
             }
         }
@@ -1038,43 +837,123 @@
             const activeBtn = document.getElementById('btn-lang-' + lang);
             if(activeBtn) activeBtn.classList.add('active');
 
+            const langDict = translations[lang] || translations['tr'];
+
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const k = el.getAttribute('data-i18n');
-                if(translations[lang] && translations[lang][k]) {
+                if(langDict && langDict[k]) {
                     if((el.id === 's-video-name' || el.id === 'h-video-name' || el.id === 'u-video-name' || el.id === 's-logo-name' || el.id === 'h-logo-name') && el.innerText.startsWith('✔')) {
                         return;
                     }
-                    el.innerText = translations[lang][k];
+                    el.innerText = langDict[k];
                 }
             });
 
-            document.querySelectorAll('[data-i18n-ph]').forEach(el => {
-                const k = el.getAttribute('data-i18n-ph');
-                if(translations[lang] && translations[lang][k]) {
-                    el.placeholder = translations[lang][k];
-                }
-            });
-
-            updateSubmitButtonText();
             renderGalleryUI();
-        }
-
-        function updateSubmitButtonText() {
-            const btn = document.getElementById('btn-shorts');
-            const t = translations[currentLang];
-            if(selectedCs2Mode === 'both') btn.innerText = t.btn_cs2_both;
-            else if(selectedCs2Mode === 'video_only') btn.innerText = t.btn_cs2_vid;
-            else if(selectedCs2Mode === 'cover_only') btn.innerText = t.btn_cs2_cov;
         }
 
         function selectProcessMode(mode, element) {
             selectedCs2Mode = mode;
             document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
             element.classList.add('active');
-            updateSubmitButtonText();
         }
 
-        // ================= CİHAZDA DOĞAL PAYLAŞIM =================
+        // ================= BACKEND'E VİDEO YOLLAMA =================
+        async function handleBackendExecution(e) {
+            e.preventDefault();
+            const t = translations[currentLang] || translations['tr'];
+            const fileInput = document.getElementById('s-video');
+            const videoFile = fileInput.files[0];
+
+            if (!videoFile) return alert(t.alert_no_file);
+
+            const btn = document.getElementById('btn-shorts');
+            const progressBox = document.getElementById('progress-box');
+            const progressBar = document.getElementById('progress-bar-fill');
+            const progressPercent = document.getElementById('progress-percent');
+            const progressTitle = document.getElementById('progress-title');
+            const statusMsg = document.getElementById('status-msg');
+            const resultBox = document.getElementById('result-box');
+            const mediaContainer = document.getElementById('media-preview-container');
+            const resultActions = document.getElementById('result-actions');
+
+            btn.disabled = true;
+            resultBox.style.display = 'none';
+            progressBox.style.display = 'block';
+            mediaContainer.innerHTML = '';
+            resultActions.innerHTML = '';
+
+            progressBar.style.width = '20%';
+            progressPercent.innerText = '%20';
+            progressTitle.innerText = 'Video Yükleniyor...';
+            statusMsg.innerText = '📤 Sunucuya video aktarılıyor...';
+
+            const formData = new FormData();
+            formData.append('video', videoFile);
+            formData.append('format', '9-16');
+            formData.append('game', 'cs2');
+
+            try {
+                progressBar.style.width = '50%';
+                progressPercent.innerText = '%50';
+                progressTitle.innerText = 'AI Killfeed Taraması Yapılıyor...';
+                statusMsg.innerText = '🎯 CS2 bildirimleri tespit ediliyor ve montajlanıyor...';
+
+                const response = await fetch(BACKEND_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errJson = await response.json().catch(() => ({}));
+                    throw new Error(errJson.error || 'İşlem başarısız oldu veya killfeed bulunamadı.');
+                }
+
+                progressBar.style.width = '85%';
+                progressPercent.innerText = '%85';
+                progressTitle.innerText = 'Video Hazırlanıyor...';
+
+                const blob = await response.blob();
+                const videoUrl = URL.createObjectURL(blob);
+                const outVidName = `cs2_shorts_${Date.now()}.mp4`;
+
+                lastRenderedBlob = blob;
+                lastRenderedFilename = outVidName;
+
+                progressBar.style.width = '100%';
+                progressPercent.innerText = '%100';
+                statusMsg.innerText = '✔ ' + t.result_done;
+
+                mediaContainer.innerHTML += `
+                    <div class="player-wrapper">
+                        <video controls autoplay muted playsinline>
+                            <source src="${videoUrl}" type="video/mp4">
+                        </video>
+                    </div>
+                `;
+                resultActions.innerHTML += `<a class="download-btn" href="${videoUrl}" download="${outVidName}">${t.dl_vid}</a>`;
+                saveToLocalHistory({ type: 'video', name: outVidName, url: videoUrl });
+
+                if (selectedCs2Mode === 'both') {
+                    generateVerticalCover(videoFile, 0.0, document.getElementById('s-text').value);
+                }
+
+                resultBox.style.display = 'block';
+            } catch (err) {
+                console.error(err);
+                alert('Hata: ' + err.message);
+                progressBox.style.display = 'none';
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function handleUniversalManual(e) {
+            e.preventDefault();
+            alert("Genel kesitler için CS2 Shorts sekmesini veya Kayıpsız Kesici sekmesini kullanabilirsiniz.");
+        }
+
+        // ================= CİHAZDA PAYLAŞIM =================
         async function shareDeviceNative() {
             if (!lastRenderedBlob) {
                 alert("Önce bir video veya kapak render etmelisin!");
@@ -1091,24 +970,14 @@
                         text: 'Created with MCEYS Cut Studio!'
                     });
                 } catch (error) {
-                    console.log('Paylaşım iptal edildi veya hata:', error);
-                }
-            } else if (navigator.share) {
-                try {
-                    await navigator.share({
-                        title: 'MCEYS Cut Studio',
-                        text: 'Created with MCEYS Cut Studio!',
-                        url: window.location.href
-                    });
-                } catch (error) {
-                    console.log(error);
+                    console.log('İptal edildi:', error);
                 }
             } else {
                 alert("Cihazınız doğrudan dosya paylaşımını desteklemiyor. Lütfen indir butonunu kullanın.");
             }
         }
 
-        // ================= INDEXEDDB STORAGE =================
+        // ================= INDEXEDDB =================
         let db;
         const dbReq = indexedDB.open("MceysStudioDB", 1);
         dbReq.onupgradeneeded = (e) => {
@@ -1126,8 +995,8 @@
         }
 
         function deleteFromLocalHistory(id) {
-            const msg = translations[currentLang].confirm_del;
-            if (!confirm(msg)) return;
+            const t = translations[currentLang] || translations['tr'];
+            if (!confirm(t.confirm_del)) return;
             const tx = db.transaction("outputs", "readwrite");
             tx.objectStore("outputs").delete(id);
             tx.oncomplete = () => renderGalleryUI();
@@ -1141,7 +1010,7 @@
             req.onsuccess = () => {
                 const files = req.result || [];
                 const container = document.getElementById('gallery-container');
-                const t = translations[currentLang];
+                const t = translations[currentLang] || translations['tr'];
                 if (files.length === 0) {
                     container.innerHTML = `<div style="color: var(--text-muted); font-size: 13px;">${t.no_renders}</div>`;
                     return;
@@ -1260,7 +1129,7 @@
         // ================= 16:9 CANVAS THUMBNAIL =================
         async function handleCanvasThumbnail(e) {
             e.preventDefault();
-            const t = translations[currentLang];
+            const t = translations[currentLang] || translations['tr'];
             const file = document.getElementById('h-video').files[0];
             if (!file) return alert(t.alert_no_file);
 
@@ -1276,8 +1145,8 @@
 
             progressBox.style.display = 'block';
             document.getElementById('progress-bar-fill').style.width = '60%';
-            document.getElementById('progress-title').innerText = currentLang === 'tr' ? 'Kare Yakalanıyor...' : (currentLang === 'es' ? 'Capturando fotograma...' : (currentLang === 'ru' ? 'Захват кадра...' : (currentLang === 'de' ? 'Frame wird erfasst...' : 'Capturing Frame...')));
-            document.getElementById('status-msg').innerText = '📸 Scanning video timestamp...';
+            document.getElementById('progress-title').innerText = 'Kare Yakalanıyor...';
+            document.getElementById('status-msg').innerText = '📸 Video karesi taranıyor...';
 
             const video = document.createElement('video');
             video.src = URL.createObjectURL(file);
@@ -1348,154 +1217,9 @@
             };
         }
 
-        // ================= WEBASSEMBLY ENGINE =================
-        async function handleWasmExecution(e, mode) {
-            e.preventDefault();
-            const t = translations[currentLang];
-
-            let videoFile, rawStart, rawEnd, customTxt;
-            let processMode = selectedCs2Mode;
-
-            if(mode === 'cs2') {
-                videoFile = document.getElementById('s-video').files[0];
-                rawStart = document.getElementById('s-start').value;
-                rawEnd = document.getElementById('s-end').value;
-                customTxt = document.getElementById('s-text').value;
-            } else {
-                videoFile = document.getElementById('u-video').files[0];
-                rawStart = document.getElementById('u-start').value;
-                rawEnd = document.getElementById('u-end').value;
-                customTxt = document.getElementById('u-text').value;
-                processMode = 'video_only';
-            }
-
-            if (!videoFile) return alert(t.alert_no_file);
-
-            let startSec = parseTimeToSec(rawStart) || 0.0;
-            let endSec = parseTimeToSec(rawEnd) || (startSec + 60.0);
-            const duration = Math.min(60.0, Math.max(1.0, endSec - startSec));
-
-            const btn = document.getElementById(mode === 'cs2' ? 'btn-shorts' : 'btn-universal');
-            const progressBox = document.getElementById('progress-box');
-            const progressBar = document.getElementById('progress-bar-fill');
-            const progressPercent = document.getElementById('progress-percent');
-            const progressTitle = document.getElementById('progress-title');
-            const statusMsg = document.getElementById('status-msg');
-            const resultBox = document.getElementById('result-box');
-            const mediaContainer = document.getElementById('media-preview-container');
-            const resultActions = document.getElementById('result-actions');
-
-            btn.disabled = true;
-            resultBox.style.display = 'none';
-            progressBox.style.display = 'block';
-            mediaContainer.innerHTML = '';
-            resultActions.innerHTML = '';
-
-            if(processMode === 'cover_only') {
-                progressTitle.innerText = currentLang === 'tr' ? 'Kapak Hazırlanıyor...' : (currentLang === 'es' ? 'Creando portada...' : (currentLang === 'ru' ? 'Создание обложки...' : 'Generating Cover...'));
-                statusMsg.innerText = '🖼️ 9:16 Vertical cover rendered...';
-                progressBar.style.width = '70%';
-                generateVerticalCover(videoFile, startSec, customTxt, () => {
-                    progressBar.style.width = '100%';
-                    progressPercent.innerText = '%100';
-                    statusMsg.innerText = '✔ ' + t.result_done;
-                    btn.disabled = false;
-                });
-                return;
-            }
-
-            progressBar.style.width = '10%';
-            progressPercent.innerText = '%10';
-            progressTitle.innerText = currentLang === 'tr' ? 'Motor Yükleniyor...' : (currentLang === 'es' ? 'Cargando motor...' : (currentLang === 'ru' ? 'Загрузка движка...' : 'Loading Engine...'));
-            statusMsg.innerText = '⚙️ WebAssembly FFmpeg loading...';
-
-            try {
-                if(!ffmpeg.isLoaded()) {
-                    await ffmpeg.load();
-                }
-
-                progressBar.style.width = '30%';
-                progressPercent.innerText = '%30';
-                progressTitle.innerText = currentLang === 'tr' ? 'Video Belleğe Alınıyor...' : (currentLang === 'es' ? 'Cargando video en memoria...' : (currentLang === 'ru' ? 'Загрузка в память...' : 'Loading Video to Memory...'));
-                statusMsg.innerText = '💾 Processing local buffer...';
-
-                ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(videoFile));
-
-                progressBar.style.width = '55%';
-                progressPercent.innerText = '%55';
-                progressTitle.innerText = currentLang === 'tr' ? 'Shorts Render Alınıyor...' : (currentLang === 'es' ? 'Renderizando Shorts...' : (currentLang === 'ru' ? 'Рендеринг Shorts...' : 'Rendering Shorts (Max 60s)...'));
-                statusMsg.innerText = (mode === 'cs2') 
-                    ? '🎯 Scaling killfeed & applying 9:16 layout...' 
-                    : '🎬 Cropping & applying blur background...';
-
-                let filterCmd = '';
-                if(mode === 'cs2') {
-                    filterCmd = '[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=25:5[bg]; ' +
-                                '[0:v]crop=in_h*1080/1400:in_h:(in_w-in_h*1080/1400)/2:0,scale=1080:1400[main]; ' +
-                                '[0:v]crop=465:175:in_w-475:8,scale=480:-1[killfeed]; ' +
-                                '[bg][main]overlay=0:(H-h)/2[mid]; ' +
-                                '[mid][killfeed]overlay=W-w-30:80[outv]';
-                } else {
-                    filterCmd = '[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=25:5[bg]; ' +
-                                '[0:v]scale=1080:-1[main]; ' +
-                                '[bg][main]overlay=0:(H-h)/2[outv]';
-                }
-
-                await ffmpeg.run(
-                    '-ss', `${startSec.toFixed(2)}`,
-                    '-t', `${duration.toFixed(2)}`,
-                    '-i', 'input.mp4',
-                    '-filter_complex', filterCmd,
-                    '-map', '[outv]',
-                    '-map', '0:a?',
-                    '-c:v', 'libx264',
-                    '-preset', 'ultrafast',
-                    '-c:a', 'aac',
-                    'output.mp4'
-                );
-
-                const data = ffmpeg.FS('readFile', 'output.mp4');
-                const videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
-                const videoUrl = URL.createObjectURL(videoBlob);
-                const outVidName = `shorts_${Date.now()}.mp4`;
-
-                lastRenderedBlob = videoBlob;
-                lastRenderedFilename = outVidName;
-
-                mediaContainer.innerHTML += `
-                    <div class="player-wrapper">
-                        <video controls autoplay muted playsinline>
-                            <source src="${videoUrl}" type="video/mp4">
-                        </video>
-                    </div>
-                `;
-                resultActions.innerHTML += `<a class="download-btn" href="${videoUrl}" download="${outVidName}">${t.dl_vid}</a>`;
-                saveToLocalHistory({ type: 'video', name: outVidName, url: videoUrl });
-
-                if(processMode === 'both') {
-                    generateVerticalCover(videoFile, startSec, customTxt, () => {
-                        progressBar.style.width = '100%';
-                        progressPercent.innerText = '%100';
-                        statusMsg.innerText = '✔ ' + t.result_done;
-                    });
-                } else {
-                    progressBar.style.width = '100%';
-                    progressPercent.innerText = '%100';
-                    statusMsg.innerText = '✔ ' + t.result_done;
-                }
-
-                resultBox.style.display = 'block';
-            } catch(err) {
-                console.error(err);
-                alert('Error: ' + err.message);
-            } finally {
-                btn.disabled = false;
-            }
-        }
-
         // ================= VERTICAL COVER (CANVAS) =================
-        function generateVerticalCover(file, timeSec, customTxt, callback) {
-            const t = translations[currentLang];
+        function generateVerticalCover(file, timeSec, customTxt) {
+            const t = translations[currentLang] || translations['tr'];
             const badgeTxt = (document.getElementById('s-badge')?.value || '').toUpperCase();
             const pos = document.getElementById('s-pos')?.value || 'L';
 
@@ -1504,7 +1228,7 @@
             video.muted = true;
             video.playsInline = true;
 
-            video.onloadedmetadata = () => { video.currentTime = timeSec; };
+            video.onloadedmetadata = () => { video.currentTime = timeSec || 0.1; };
             video.onseeked = async () => {
                 const canvas = document.getElementById('hidden-canvas');
                 canvas.width = 1080;
@@ -1569,7 +1293,6 @@
                     document.getElementById('result-box').style.display = 'block';
 
                     saveToLocalHistory({ type: 'image', name: coverName, url: coverUrl });
-                    if(callback) callback();
                 }, 'image/jpeg', 0.95);
             };
         }
