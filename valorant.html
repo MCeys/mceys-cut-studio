@@ -318,5 +318,71 @@
             }
         }
     </script>
+    <script>
+const translations = {
+  tr: {
+    hero_title: "Valorant Kill Kırpma & Shorts Stüdyosu",
+    hero_desc: "Oyun videolarındaki vuruşları otomatik yakala, doğal 9:16 Shorts formatına anında dönüştür.",
+    btn_upload: "Video Yükle",
+    upload_hint: "Maksimum 500MB, MP4 formatında",
+    feat_1_title: "Otomatik Kill Takibi",
+    feat_1_desc: "Bilgisayarlı görü teknolojisiyle killfeed bandını kaçırmadan milimetrik tespit.",
+    feat_2_title: "Doğal 9:16 Odak",
+    feat_2_desc: "Crosshair doğal merkezde kalır, killfeed üstte net başlık olarak yerleşir."
+  },
+  en: {
+    hero_title: "Valorant Kill Clipper & Shorts Studio",
+    hero_desc: "Automatically detect kills from your gameplay and convert them into natural 9:16 Shorts.",
+    btn_upload: "Upload Video",
+    upload_hint: "Maximum 500MB, MP4 format",
+    feat_1_title: "Auto Kill Tracking",
+    feat_1_desc: "Pixel-perfect killfeed banner detection powered by computer vision.",
+    feat_2_title: "Natural 9:16 Focus",
+    feat_2_desc: "Crosshair stays naturally centered while killfeed sits cleanly on top."
+  },
+  de: {
+    hero_title: "Valorant Kill Clipper & Shorts Studio",
+    hero_desc: "Erkenne Kills automatisch und konvertiere Gameplay direkt ins 9:16 Shorts-Format.",
+    btn_upload: "Video Hochladen",
+    upload_hint: "Maximal 500MB, MP4-Format",
+    feat_1_title: "Automatische Kill-Erkennung",
+    feat_1_desc: "Präzise Killfeed-Banner-Erkennung mittels Computer Vision.",
+    feat_2_title: "Natürlicher 9:16 Fokus",
+    feat_2_desc: "Fadenkreuz bleibt zentriert, Killfeed wird oben sauber platziert."
+  },
+  es: {
+    hero_title: "Estudio de Shorts y Clips de Valorant",
+    hero_desc: "Detecta bajas automáticamente y convierte tus partidas al formato vertical 9:16.",
+    btn_upload: "Subir Video",
+    upload_hint: "Máximo 500MB, formato MP4",
+    feat_1_title: "Detección Automática de Bajas",
+    feat_1_desc: "Detección milimétrica del banner de bajas mediante visión artificial.",
+    feat_2_title: "Enfoque Natural 9:16",
+    feat_2_desc: "La mira se mantiene centrada y el feed de bajas se coloca arriba con claridad."
+  }
+};
+
+function changeLanguage(lang) {
+  if (!translations[lang]) return;
+
+  // data-i18n etiketine sahip tüm elemanları güncelle
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.getAttribute("data-i18n");
+    if (translations[lang][key]) {
+      el.textContent = translations[lang][key];
+    }
+  });
+
+  // Seçimi tarayıcı hafızasına kaydet
+  localStorage.setItem("selected_lang", lang);
+  document.getElementById("languageSelect").value = lang;
+}
+
+// Sayfa ilk yüklendiğinde kayıtlı dili ya da tarayıcı dilini getir
+document.addEventListener("DOMContentLoaded", () => {
+  const savedLang = localStorage.getItem("selected_lang") || "tr";
+  changeLanguage(savedLang);
+});
+</script>
 </body>
 </html>
