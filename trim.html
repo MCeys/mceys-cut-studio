@@ -5,17 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MCEYS TRIM STUDIO - Önizlemeli Hızlı Video Kesici</title>
     
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-T4H7EHSR4T"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-T4H7EHSR4T"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-T4H7EHSR4T');
+    </script>
 
-  gtag('config', 'G-T4H7EHSR4T');
-</script>
-
-    
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
 
@@ -56,7 +54,6 @@
         }
         .brand { display: inline-flex; align-items: center; gap: 16px; text-decoration: none; color: inherit; }
         .header-logo { height: 64px; width: 64px; min-width: 64px; border-radius: 50%; border: 2px solid var(--accent); box-shadow: 0 0 16px var(--accent-glow); }
-        .logo-box { width: 64px; height: 64px; min-width: 64px; background: linear-gradient(135deg, var(--accent), #ff9f1c); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 22px; color: #fff; box-shadow: 0 4px 16px var(--accent-glow); }
         .brand h1 { font-size: 22px; font-weight: 800; letter-spacing: 0.8px; line-height: 1; }
 
         .header-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
@@ -115,17 +112,17 @@
         </a>
         <div class="header-right">
             <nav class="nav-pill-group">
-    <a href="index.html" class="nav-link">Ana Sayfa</a>
-    <a href="studio.html" class="nav-link">CS2 Shorts</a>
-    <a href="valorant.html" class="nav-link">Valorant Shorts</a>
-    <a href="trim.html" class="nav-link">Kayıpsız Kesici</a>
-</nav>
+                <a href="index.html" class="nav-link" data-i18n="nav_home">Ana Sayfa</a>
+                <a href="studio.html" class="nav-link" data-i18n="nav_cs2">CS2 Shorts</a>
+                <a href="valorant.html" class="nav-link" data-i18n="nav_val">Valorant Shorts</a>
+                <a href="trim.html" class="nav-link active" data-i18n="nav_trim">Kayıpsız Kesici</a>
+            </nav>
             <span class="header-divider"></span>
             <div class="lang-switch">
                 <button class="lang-btn active" id="btn-lang-tr" onclick="setTrimLang('tr')">TR</button>
                 <button class="lang-btn" id="btn-lang-en" onclick="setTrimLang('en')">EN</button>
                 <button class="lang-btn" id="btn-lang-de" onclick="setTrimLang('de')">DE</button>
-                <button class="lang-btn" id="btn-lang-ru" onclick="setTrimLang('ru')">RU</button>
+                <button class="lang-btn" id="btn-lang-es" onclick="setTrimLang('es')">ES</button>
             </div>
         </div>
     </header>
@@ -142,7 +139,6 @@
                 <input type="file" id="t-video" class="hidden-file-input" accept="video/mp4,video/quicktime,video/mkv" onchange="loadVideoWorkspace(this)">
             </label>
 
-            <!-- Video Workspace -->
             <!-- Video Workspace -->
             <div id="workspace" class="workspace">
                 <div class="player-frame">
@@ -210,7 +206,8 @@
         const trimDict = {
             tr: {
                 nav_home: "Ana Sayfa",
-                nav_studio: "CS2 Shorts",
+                nav_cs2: "CS2 Shorts",
+                nav_val: "Valorant Shorts",
                 nav_trim: "Kayıpsız Kesici",
                 title: "Canlı Önizlemeli Video Kesici",
                 desc: "Videoyu timeline üzerinde oynat, kesmek istediğin başlangıç ve bitiş anını tek tıkla seç.",
@@ -229,7 +226,8 @@
             },
             en: {
                 nav_home: "Home",
-                nav_studio: "CS2 Shorts",
+                nav_cs2: "CS2 Shorts",
+                nav_val: "Valorant Shorts",
                 nav_trim: "Lossless Trimmer",
                 title: "Live Preview Video Trimmer",
                 desc: "Play the video on timeline, select start and end points with one click.",
@@ -248,7 +246,8 @@
             },
             de: {
                 nav_home: "Startseite",
-                nav_studio: "CS2 Shorts",
+                nav_cs2: "CS2 Shorts",
+                nav_val: "Valorant Shorts",
                 nav_trim: "Verlustfreier Cutter",
                 title: "Live-Vorschau Video-Cutter",
                 desc: "Spiele das Video auf der Timeline ab und wähle Start- und Endpunkte mit einem Klick.",
@@ -265,32 +264,33 @@
                 msg_proc: "Verlustfreier Schnitt läuft (-c copy)...",
                 msg_done: "✔ Abgeschlossen!"
             },
-            ru: {
-                nav_home: "Главная",
-                nav_studio: "CS2 Shorts",
-                nav_trim: "Без потери качества",
-                title: "Видео-триммер с живым предпросмотром",
-                desc: "Воспроизводите видео на таймлайне и выбирайте начало и конец в один клик.",
-                upload_title: "Выберите видеофайл",
-                upload_hint: "MP4, MOV или MKV",
-                btn_start: "⏱️ Точка начала",
-                btn_end: "⏱️ Точка конца",
-                lbl_dur: "Длительность:",
-                btn_trim: "⚡ ВЫРЕЗАТЬ БЕЗ ПОТЕРИ КАЧЕСТВА",
-                btn_dl: "🎬 Скачать готовое видео",
-                footer_pres: "MCEYS ПРЕДСТАВЛЯЕТ",
-                msg_load: "Загрузка движка FFmpeg...",
-                msg_mem: "Загрузка видео в память...",
-                msg_proc: "Выполняется быстрая обрезка (-c copy)...",
-                msg_done: "✔ Завершено!"
+            es: {
+                nav_home: "Inicio",
+                nav_cs2: "CS2 Shorts",
+                nav_val: "Valorant Shorts",
+                nav_trim: "Cortador sin Pérdidas",
+                title: "Cortador de Video con Vista Previa en Vivo",
+                desc: "Reproduce el video en la línea de tiempo y selecciona los puntos de inicio y fin con un clic.",
+                upload_title: "Elegir Archivo de Video",
+                upload_hint: "MP4, MOV o MKV",
+                btn_start: "⏱️ Fijar Inicio",
+                btn_end: "⏱️ Fijar Fin",
+                lbl_dur: "Duración:",
+                btn_trim: "⚡ CORTAR RANGO SELECCIONADO (SIN PÉRDIDAS)",
+                btn_dl: "🎬 Descargar Video Cortado",
+                footer_pres: "PRESENTADO POR MCEYS",
+                msg_load: "Cargando motor FFmpeg...",
+                msg_mem: "Cargando video en memoria...",
+                msg_proc: "Corte rápido en curso (-c copy)...",
+                msg_done: "✔ ¡Terminado!"
             }
         };
 
-        let currentLang = localStorage.getItem('mceys_trim_lang') || 'tr';
+        let currentLang = localStorage.getItem('mceys_lang') || 'tr';
 
         function setTrimLang(lang) {
             currentLang = lang;
-            localStorage.setItem('mceys_trim_lang', lang);
+            localStorage.setItem('mceys_lang', lang);
 
             document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
             const btn = document.getElementById('btn-lang-' + lang);
@@ -338,25 +338,25 @@
             player.currentTime = parseFloat(val);
         }
 
-function togglePlay() {
+        function togglePlay() {
             const btn = document.getElementById('btn-play-pause');
             if (player.paused || player.ended) {
                 player.play();
-                if (btn) btn.innerText = "⏸️ Duraklat";
+                if (btn) btn.innerText = "⏸️";
             } else {
                 player.pause();
-                if (btn) btn.innerText = "▶️ Oynat";
+                if (btn) btn.innerText = "▶️";
             }
         }
 
         player.onplay = () => {
             const btn = document.getElementById('btn-play-pause');
-            if (btn) btn.innerText = "⏸️ Duraklat";
+            if (btn) btn.innerText = "⏸️";
         };
 
         player.onpause = () => {
             const btn = document.getElementById('btn-play-pause');
-            if (btn) btn.innerText = "▶️ Oynat";
+            if (btn) btn.innerText = "▶️";
         };
 
         function setMarker(type) {

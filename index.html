@@ -5,15 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MCEYS CUT STUDIO - Professional CS2 & Video Creator Suite</title>
 
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-T4H7EHSR4T"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-T4H7EHSR4T');
-</script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-T4H7EHSR4T"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-T4H7EHSR4T');
+    </script>
 
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <meta name="description" content="MCEYS CUT STUDIO - CS2 ve oyun kliplerinizi tarayıcı üzerinden ücretsiz dikey Shorts, Reels veya YouTube kapaklarına dönüştürün. Sunucu yok, WebAssembly ile %100 gizli ve hızlı.">
@@ -59,168 +58,109 @@
             justify-content: space-between;
             overflow-x: hidden;
         }
-header { 
-    width: 100%;
-    min-height: 96px;
-    padding: 0 36px; 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    background: rgba(19, 22, 31, 0.92);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border-color);
-    box-sizing: border-box;
-    flex-wrap: wrap;
-    gap: 16px;
-}
-
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex-wrap: wrap;
-}
-
-/* Sayfa Geçiş Hapı (Pill Selector) */
-.nav-pill-group {
-    display: flex;
-    background: var(--bg-input);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 3px;
-    gap: 2px;
-}
-
-.nav-link {
-    color: var(--text-muted);
-    text-decoration: none;
-    font-size: 12px;
-    font-weight: 800;
-    padding: 7px 14px;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-}
-
-.nav-link:hover {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.nav-link.active {
-    color: #fff;
-    background: #1c2230;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-}
-
-/* Dikey Ayırıcı Çizgi */
-.header-divider {
-    width: 1px;
-    height: 24px;
-    background: var(--border-color);
-    display: inline-block;
-}
-
-/* Dil Seçici Butonları */
-.lang-switch {
-    display: flex;
-    background: var(--bg-input);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.lang-btn {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
-    padding: 7px 11px;
-    font-size: 11px;
-    font-weight: 800;
-    cursor: pointer;
-    transition: 0.2s;
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.lang-btn:last-child { border-right: none; }
-.lang-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.04); }
-.lang-btn.active {
-    background: var(--accent);
-    color: #fff;
-}
-
-
         header { 
-    width: 100%;
-    min-height: 96px;
-    padding: 0 40px; 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    background: rgba(19, 22, 31, 0.9);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border-color);
-    box-sizing: border-box;
-}
-
-.brand { 
-    display: inline-flex; 
-    align-items: center; 
-    gap: 16px; 
-    text-decoration: none; 
-    color: inherit; 
-    cursor: pointer; 
-}
-
-.header-logo {
-    height: 64px; 
-    width: 64px;
-    min-width: 64px;
-    object-fit: cover; 
-    border-radius: 50%;
-    border: 2px solid var(--accent);
-    box-shadow: 0 0 16px var(--accent-glow);
-    display: block;
-}
-
-.logo-box { 
-    width: 64px; 
-    height: 64px; 
-    min-width: 64px;
-    background: linear-gradient(135deg, var(--accent), #ff9f1c); 
-    border-radius: 50%; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    font-weight: 900; 
-    font-size: 22px; 
-    color: #fff; 
-    box-shadow: 0 4px 16px var(--accent-glow); 
-}
-
-.brand h1 { 
-    font-size: 22px; 
-    font-weight: 800; 
-    letter-spacing: 0.8px; 
-    line-height: 1;
-}
-
-        .header-right { display: flex; align-items: center; gap: 16px; }
-        .global-badge { font-size: 11px; color: var(--success); font-weight: 800; letter-spacing: 0.5px; }
-        
+            width: 100%;
+            min-height: 96px;
+            padding: 0 36px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: rgba(19, 22, 31, 0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            box-sizing: border-box;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .nav-pill-group {
+            display: flex;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 3px;
+            gap: 2px;
+        }
+        .nav-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 800;
+            padding: 7px 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .nav-link:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .nav-link.active {
+            color: #fff;
+            background: #1c2230;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+        .header-divider {
+            width: 1px;
+            height: 24px;
+            background: var(--border-color);
+            display: inline-block;
+        }
         .lang-switch {
-            display: flex; background: var(--bg-input);
-            border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;
+            display: flex;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
         }
         .lang-btn {
-            background: transparent; border: none; color: var(--text-muted);
-            padding: 7px 12px; font-size: 12px; font-weight: 800; cursor: pointer;
-            border-right: 1px solid rgba(255,255,255,0.05);
-            transition: all 0.2s;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 7px 11px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.2s;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
         }
         .lang-btn:last-child { border-right: none; }
-        .lang-btn.active { background: var(--accent); color: #fff; }
+        .lang-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.04); }
+        .lang-btn.active {
+            background: var(--accent);
+            color: #fff;
+        }
+        .brand { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 16px; 
+            text-decoration: none; 
+            color: inherit; 
+            cursor: pointer; 
+        }
+        .header-logo {
+            height: 64px; 
+            width: 64px;
+            min-width: 64px;
+            object-fit: cover; 
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 16px var(--accent-glow);
+            display: block;
+        }
+        .brand h1 { 
+            font-size: 22px; 
+            font-weight: 800; 
+            letter-spacing: 0.8px; 
+            line-height: 1;
+        }
+        .global-badge { font-size: 11px; color: var(--success); font-weight: 800; letter-spacing: 0.5px; }
 
         .hero { 
             flex: 1; display: flex; flex-direction: column; 
@@ -291,18 +231,18 @@ header {
         </a>
         <div class="header-right">
             <nav class="nav-pill-group">
-    <a href="index.html" class="nav-link">Ana Sayfa</a>
-    <a href="studio.html" class="nav-link">CS2 Shorts</a>
-    <a href="valorant.html" class="nav-link">Valorant Shorts</a>
-    <a href="trim.html" class="nav-link">Kayıpsız Kesici</a>
-</nav>
+                <a href="index.html" class="nav-link active" data-i18n="nav_home">Ana Sayfa</a>
+                <a href="studio.html" class="nav-link" data-i18n="nav_cs2">CS2 Shorts</a>
+                <a href="valorant.html" class="nav-link" data-i18n="nav_val">Valorant Shorts</a>
+                <a href="trim.html" class="nav-link" data-i18n="nav_trim">Kayıpsız Kesici</a>
+            </nav>
             <span class="header-divider"></span>
             <div class="global-badge">● GLOBAL</div>
             <div class="lang-switch">
-                <button class="lang-btn active" id="btn-lang-tr" onclick="setLandingLang('tr')">TR</button>
-                <button class="lang-btn" id="btn-lang-en" onclick="setLandingLang('en')">EN</button>
-                <button class="lang-btn" id="btn-lang-de" onclick="setLandingLang('de')">DE</button>
-                <button class="lang-btn" id="btn-lang-ru" onclick="setLandingLang('ru')">RU</button>
+                <button class="lang-btn active" id="btn-lang-tr" onclick="setAppLang('tr')">TR</button>
+                <button class="lang-btn" id="btn-lang-en" onclick="setAppLang('en')">EN</button>
+                <button class="lang-btn" id="btn-lang-de" onclick="setAppLang('de')">DE</button>
+                <button class="lang-btn" id="btn-lang-es" onclick="setAppLang('es')">ES</button>
             </div>
         </div>
     </header>
@@ -328,7 +268,7 @@ header {
             <div class="feature-card">
                 <span class="feature-icon">🌍</span>
                 <h3 data-i18n="f3_title">Çoklu Dil Desteği</h3>
-                <p data-i18n="f3_desc">Türkçe, İngilizce, Almanca ve Rusça topluluklar için tam uyumlu.</p>
+                <p data-i18n="f3_desc">Türkçe, İngilizce, Almanca ve İspanyolca topluluklar için tam uyumlu.</p>
             </div>
         </div>
     </div>
@@ -340,6 +280,10 @@ header {
     <script>
         const landingDict = {
             tr: {
+                nav_home: "Ana Sayfa",
+                nav_cs2: "CS2 Shorts",
+                nav_val: "Valorant Shorts",
+                nav_trim: "Kayıpsız Kesici",
                 l_badge: "⚡ %100 Tarayıcı Tabanlı WebAssembly Gücü",
                 l_title: "Sunucu Yükü Olmadan Profesyonel CS2 Shorts & Kapak Tasarla",
                 l_desc: "Oyuncular ve içerik üreticileri için nihai tarayıcı stüdyosu. Killfeed zoom özellikli dikey shorts'lar kırp, saniyeler içinde YouTube kapağını üret.",
@@ -349,10 +293,14 @@ header {
                 f2_title: "Anında Kapaklar",
                 f2_desc: "Videodan yüksek çözünürlüklü kareler yakala, rozetleri saniyeler içinde ekle.",
                 f3_title: "Çoklu Dil Desteği",
-                f3_desc: "Türkçe, İngilizce, Almanca ve Rusça topluluklar için tam uyumlu.",
+                f3_desc: "Türkçe, İngilizce, Almanca ve İspanyolca topluluklar için tam uyumlu.",
                 footer_pres: "MCEYS SUNAR"
             },
             en: {
+                nav_home: "Home",
+                nav_cs2: "CS2 Shorts",
+                nav_val: "Valorant Shorts",
+                nav_trim: "Lossless Trimmer",
                 l_badge: "⚡ 100% Client-Side WebAssembly Power",
                 l_title: "Create Pro CS2 Shorts & Covers Without Server Lag",
                 l_desc: "The ultimate browser-based content studio for gamers and creators. Crop vertical shorts with auto-zoom killfeeds, generate 16:9 YouTube thumbnails instantly.",
@@ -362,10 +310,14 @@ header {
                 f2_title: "Instant Thumbnails",
                 f2_desc: "Grab high-res frames directly from your video, overlay custom badges in seconds.",
                 f3_title: "Multi-Language",
-                f3_desc: "Fully localized for TR, EN, DE, and RU gaming communities.",
+                f3_desc: "Fully localized for TR, EN, DE, and ES gaming communities.",
                 footer_pres: "MCEYS PRESENT"
             },
             de: {
+                nav_home: "Startseite",
+                nav_cs2: "CS2 Shorts",
+                nav_val: "Valorant Shorts",
+                nav_trim: "Verlustfreier Cutter",
                 l_badge: "⚡ 100% Client-Side WebAssembly Power",
                 l_title: "Erstelle Pro CS2 Shorts & Cover Ohne Server-Lags",
                 l_desc: "Das ultimative browserbasierte Content-Studio für Gamer und Creator. Schneide vertikale Shorts mit Auto-Zoom.",
@@ -375,26 +327,30 @@ header {
                 f2_title: "Sofortige Thumbnails",
                 f2_desc: "Schnappe dir hochauflösende Frames direkt aus dem Video.",
                 f3_title: "Mehrsprachig",
-                f3_desc: "Vollständig lokalisiert für TR, EN, DE und RU.",
+                f3_desc: "Vollständig lokalisiert für TR, EN, DE und ES.",
                 footer_pres: "MCEYS PRÄSENTIERT"
             },
-            ru: {
-                l_badge: "⚡ 100% Мощность WebAssembly в браузере",
-                l_title: "Создавай профи Shorts и обложки CS2 Без задержек сервера",
-                l_desc: "Лучшая браузерная студия для геймеров и креаторов. Монтируй вертикальные шортсы с зумом.",
-                l_cta: "🚀 ЗАПУСТИТЬ СТУДИЮ",
-                f1_title: "Зум киллфида CS2",
-                f1_desc: "Автоматически выделяй лучшие моменты в формате 9:16.",
-                f2_title: "Мгновенные превью",
-                f2_desc: "Захватывай кадры высокого разрешения прямо из видео.",
-                f3_title: "Мультиязычно",
-                f3_desc: "Полная локализация для TR, EN, DE и RU сообществ.",
-                footer_pres: "MCEYS ПРЕДСТАВЛЯЕТ"
+            es: {
+                nav_home: "Inicio",
+                nav_cs2: "CS2 Shorts",
+                nav_val: "Valorant Shorts",
+                nav_trim: "Cortador sin Pérdidas",
+                l_badge: "⚡ 100% Potencia WebAssembly en el Navegador",
+                l_title: "Crea Shorts y Portadas Pro de CS2 sin Carga de Servidor",
+                l_desc: "El estudio de contenido definitivo para jugadores y creadores. Corta shorts verticales con zoom de bajas y crea portadas al instante.",
+                l_cta: "🚀 INICIAR ESTUDIO",
+                f1_title: "Zoom al Feed de Bajas CS2",
+                f1_desc: "Resalta automáticamente tus mejores jugadas con encuadre vertical 9:16.",
+                f2_title: "Miniaturas Instantáneas",
+                f2_desc: "Captura fotogramas de alta resolución y añade insignias en segundos.",
+                f3_title: "Soporte Multilingüe",
+                f3_desc: "Totalmente adaptado para comunidades de TR, EN, DE y ES.",
+                footer_pres: "PRESENTADO POR MCEYS"
             }
         };
 
-        function setLandingLang(lang) {
-            localStorage.setItem('mceys_landing_lang', lang);
+        function setAppLang(lang) {
+            localStorage.setItem('mceys_lang', lang);
             document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
             const activeBtn = document.getElementById('btn-lang-' + lang);
             if (activeBtn) activeBtn.classList.add('active');
@@ -407,8 +363,8 @@ header {
             });
         }
 
-        const savedLang = localStorage.getItem('mceys_landing_lang') || 'tr';
-        setLandingLang(savedLang);
+        const savedLang = localStorage.getItem('mceys_lang') || 'tr';
+        setAppLang(savedLang);
     </script>
 </body>
 </html>

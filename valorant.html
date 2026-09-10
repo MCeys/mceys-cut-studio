@@ -46,6 +46,14 @@
         .nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
         .nav-link.active { color: #fff; background: #1f1a26; border: 1px solid rgba(255, 70, 85, 0.2); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); }
 
+        .header-divider { width: 1px; height: 24px; background: var(--border-color); display: inline-block; }
+
+        .lang-switch { display: flex; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
+        .lang-btn { background: transparent; border: none; color: var(--text-muted); padding: 7px 11px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.2s; border-right: 1px solid rgba(255, 255, 255, 0.05); }
+        .lang-btn:last-child { border-right: none; }
+        .lang-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.04); }
+        .lang-btn.active { background: var(--val-red); color: #fff; }
+
         main { flex: 1; display: flex; justify-content: center; align-items: center; padding: 36px 20px; width: 100%; }
         .studio-card { width: 100%; max-width: 900px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
 
@@ -112,48 +120,55 @@
                 <video src="site_logo.webm" class="header-logo" autoplay loop muted playsinline></video>
                 <h1>VALORANT AUTO-STUDIO</h1>
             </a>
-            <span class="badge-val">⚡ PYTHON OPENCV MOTORU</span>
+            <span class="badge-val" data-i18n="badge_val">⚡ PYTHON OPENCV MOTORU</span>
         </div>
 
         <div class="header-right">
             <nav class="nav-pill-group">
-                <a href="index.html" class="nav-link">Ana Sayfa</a>
-                <a href="studio.html" class="nav-link">CS2 Shorts</a>
-                <a href="valorant.html" class="nav-link active">Valorant Shorts</a>
-                <a href="trim.html" class="nav-link">Kayıpsız Kesici</a>
+                <a href="index.html" class="nav-link" data-i18n="nav_home">Ana Sayfa</a>
+                <a href="studio.html" class="nav-link" data-i18n="nav_cs2">CS2 Shorts</a>
+                <a href="valorant.html" class="nav-link active" data-i18n="nav_val">Valorant Shorts</a>
+                <a href="trim.html" class="nav-link" data-i18n="nav_trim">Kayıpsız Kesici</a>
             </nav>
+            <span class="header-divider"></span>
+            <div class="lang-switch">
+                <button class="lang-btn active" id="btn-lang-tr" onclick="setValLang('tr')">TR</button>
+                <button class="lang-btn" id="btn-lang-en" onclick="setValLang('en')">EN</button>
+                <button class="lang-btn" id="btn-lang-de" onclick="setValLang('de')">DE</button>
+                <button class="lang-btn" id="btn-lang-es" onclick="setValLang('es')">ES</button>
+            </div>
         </div>
     </header>
 
     <main>
         <div class="studio-card">
-            <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 6px; text-align: center;">Valorant Akıllı Highlight Kesici</h2>
-            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Tam Otomatik Sunucu Motoru: Killfeed tespiti ve dikey montaj doğrudan Python tarafından yapılır!</p>
+            <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 6px; text-align: center;" data-i18n="title">Valorant Akıllı Highlight Kesici</h2>
+            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;" data-i18n="desc">Tam Otomatik Sunucu Motoru: Killfeed tespiti ve dikey montaj doğrudan Python tarafından yapılır!</p>
 
             <div class="custom-file-upload" id="drop-zone" onclick="document.getElementById('v-video-file').click()">
                 <span style="font-size: 32px;">🎯</span>
-                <span id="v-file-name" style="font-weight: 700;">Valorant Klibini Seç veya Sürükle</span>
-                <span style="font-size: 11px; color: var(--text-muted);">MP4, MOV veya WebM</span>
+                <span id="v-file-name" style="font-weight: 700;" data-i18n="upload_title">Valorant Klibini Seç veya Sürükle</span>
+                <span style="font-size: 11px; color: var(--text-muted);" data-i18n="upload_hint">MP4, MOV veya WebM</span>
                 <input type="file" id="v-video-file" style="display: none;" accept="video/mp4,video/quicktime,video/webm">
             </div>
 
             <div id="workspace" class="workspace">
                 <div class="format-selector">
                     <div class="format-card selected" id="opt-9-16" onclick="selectFormat('9-16')">
-                        <span class="format-title">📱 Dikey Shorts (9:16)</span>
-                        <span class="format-desc">Dikey Format + Akıllı Arka Plan Blur</span>
+                        <span class="format-title" data-i18n="fmt_9_16_title">📱 Dikey Shorts (9:16)</span>
+                        <span class="format-desc" data-i18n="fmt_9_16_desc">Doğal Odak + Büyütülmüş Killfeed</span>
                     </div>
                     <div class="format-card" id="opt-16-9" onclick="selectFormat('16-9')">
-                        <span class="format-title">🖥️ Orijinal Yatay (16:9)</span>
-                        <span class="format-desc">Kayıpsız orijinal kalite</span>
+                        <span class="format-title" data-i18n="fmt_16_9_title">🖥️ Orijinal Yatay (16:9)</span>
+                        <span class="format-desc" data-i18n="fmt_16_9_desc">Kayıpsız orijinal kalite</span>
                     </div>
                 </div>
 
                 <div class="mode-container">
-                    <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 6px;">🎯 HEDEF KILL TÜRÜ:</span>
+                    <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 6px;" data-i18n="mode_header">🎯 HEDEF KILL TÜRÜ:</span>
                     <div class="mode-buttons">
-                        <button type="button" class="btn-mode selected" id="mode-team" onclick="selectKillMode('team')">👥 Tüm Takım & ACE (Önerilen)</button>
-                        <button type="button" class="btn-mode" id="mode-solo" onclick="selectKillMode('solo')">👤 Sadece Kendi Kill'lerim</button>
+                        <button type="button" class="btn-mode selected" id="mode-team" onclick="selectKillMode('team')" data-i18n="mode_team">👥 Tüm Takım & ACE (Önerilen)</button>
+                        <button type="button" class="btn-mode" id="mode-solo" onclick="selectKillMode('solo')" data-i18n="mode_solo">👤 Sadece Kendi Kill'lerim</button>
                     </div>
                 </div>
 
@@ -162,11 +177,11 @@
                 </div>
 
                 <div class="debug-panel" id="debug-panel">
-                    <span id="debug-status">Durum: Sunucu motoru hazır</span>
-                    <span id="debug-metrics" style="color:#00f2fe;">Mod: Python OpenCV</span>
+                    <span id="debug-status" data-i18n="status_ready">Durum: Sunucu motoru hazır</span>
+                    <span id="debug-metrics" style="color:#00f2fe;" data-i18n="engine_type">Mod: Python OpenCV</span>
                 </div>
 
-                <button type="button" class="btn-submit" id="btn-scan" onclick="startScanAndRender()">🎬 SUNUCUDA OTOMATİK TARA VE MONTAJLA</button>
+                <button type="button" class="btn-submit" id="btn-scan" onclick="startScanAndRender()" data-i18n="btn_scan">🎬 SUNUCUDA OTOMATİK TARA VE MONTAJLA</button>
             </div>
 
             <div id="progress-box" class="progress-box">
@@ -180,17 +195,144 @@
             </div>
 
             <div id="clips-container" class="clips-container">
-                <h3 style="font-size: 15px; margin-bottom: 12px; color: var(--val-red);">🔥 Üretilen Montaj</h3>
+                <h3 style="font-size: 15px; margin-bottom: 12px; color: var(--val-red);" data-i18n="res_headline">🔥 Üretilen Montaj</h3>
                 <div id="clips-list"></div>
             </div>
         </div>
     </main>
 
     <footer>
-        <p>MCEYS VALORANT STUDİO &copy; 2026 | <span>MCEYS SUNAR</span></p>
+        <p>MCEYS VALORANT STUDİO &copy; 2026 | <span data-i18n="footer_pres">MCEYS SUNAR</span></p>
     </footer>
 
     <script>
+        const valDict = {
+            tr: {
+                nav_home: "Ana Sayfa",
+                nav_cs2: "CS2 Shorts",
+                nav_val: "Valorant Shorts",
+                nav_trim: "Kayıpsız Kesici",
+                badge_val: "⚡ PYTHON OPENCV MOTORU",
+                title: "Valorant Akıllı Highlight Kesici",
+                desc: "Tam Otomatik Sunucu Motoru: Killfeed tespiti ve dikey montaj doğrudan Python tarafından yapılır!",
+                upload_title: "Valorant Klibini Seç veya Sürükle",
+                upload_hint: "MP4, MOV veya WebM",
+                fmt_9_16_title: "📱 Dikey Shorts (9:16)",
+                fmt_9_16_desc: "Doğal Odak + Büyütülmüş Killfeed",
+                fmt_16_9_title: "🖥️ Orijinal Yatay (16:9)",
+                fmt_16_9_desc: "Kayıpsız orijinal kalite",
+                mode_header: "🎯 HEDEF KILL TÜRÜ:",
+                mode_team: "👥 Tüm Takım & ACE (Önerilen)",
+                mode_solo: "👤 Sadece Kendi Kill'lerim",
+                status_ready: "Durum: Sunucu motoru hazır",
+                engine_type: "Mod: Python OpenCV",
+                btn_scan: "🎬 SUNUCUDA OTOMATİK TARA VE MONTAJLA",
+                res_headline: "🔥 Üretilen Montaj",
+                footer_pres: "MCEYS SUNAR",
+                msg_uploading: "Video sunucuya yükleniyor (Lütfen bekleyin)...",
+                msg_analyzing: "Python OpenCV ile killfeed kare kare taranıyor...",
+                msg_rendering: "FFmpeg doğal 9:16 ve killfeed montajını üretiyor...",
+                msg_done: "Montaj tamamlandı, video indiriliyor!",
+                clip_tag: "🔥 Kusursuz Sunucu Montajı",
+                clip_desc: "OpenCV ile kill aralıkları tam yakalandı, gereksiz kısımlar atıldı!",
+                btn_dl: "Montajı İndir",
+                err_msg: "İşlem sırasında hata: "
+            },
+            en: {
+                nav_home: "Home",
+                nav_cs2: "CS2 Shorts",
+                nav_val: "Valorant Shorts",
+                nav_trim: "Lossless Trimmer",
+                badge_val: "⚡ PYTHON OPENCV ENGINE",
+                title: "Valorant Smart Highlight Clipper",
+                desc: "Fully Automated Server Engine: Killfeed detection and vertical montage powered by Python!",
+                upload_title: "Select or Drag Valorant Clip",
+                upload_hint: "MP4, MOV or WebM",
+                fmt_9_16_title: "📱 Vertical Shorts (9:16)",
+                fmt_9_16_desc: "Natural Focus + Scaled Killfeed",
+                fmt_16_9_title: "🖥️ Original Landscape (16:9)",
+                fmt_16_9_desc: "Lossless original quality",
+                mode_header: "🎯 TARGET KILL TYPE:",
+                mode_team: "👥 Whole Team & ACE (Recommended)",
+                mode_solo: "👤 Only My Kills",
+                status_ready: "Status: Server engine ready",
+                engine_type: "Mode: Python OpenCV",
+                btn_scan: "🎬 AUTO SCAN & MONTAGE ON SERVER",
+                res_headline: "🔥 Generated Montage",
+                footer_pres: "MCEYS PRESENT",
+                msg_uploading: "Uploading video to server (Please wait)...",
+                msg_analyzing: "Scanning killfeed frame by frame with Python OpenCV...",
+                msg_rendering: "FFmpeg generating natural 9:16 layout & killfeed...",
+                msg_done: "Montage completed, downloading video!",
+                clip_tag: "🔥 Flawless Server Montage",
+                clip_desc: "Kill intervals accurately isolated with OpenCV, downtime removed!",
+                btn_dl: "Download Montage",
+                err_msg: "Error during process: "
+            },
+            de: {
+                nav_home: "Startseite",
+                nav_cs2: "CS2 Shorts",
+                nav_val: "Valorant Shorts",
+                nav_trim: "Verlustfreier Cutter",
+                badge_val: "⚡ PYTHON OPENCV ENGINE",
+                title: "Valorant Smart Highlight Cutter",
+                desc: "Vollautomatischer Server-Engine: Killfeed-Erkennung und vertikale Montage direkt über Python!",
+                upload_title: "Valorant Clip Auswählen oder Ziehen",
+                upload_hint: "MP4, MOV oder WebM",
+                fmt_9_16_title: "📱 Vertikale Shorts (9:16)",
+                fmt_9_16_desc: "Natürlicher Fokus + Vergrößerter Killfeed",
+                fmt_16_9_title: "🖥️ Original Querformat (16:9)",
+                fmt_16_9_desc: "Verlustfreie Originalqualität",
+                mode_header: "🎯 ZIEL-KILL-TYP:",
+                mode_team: "👥 Gesamtes Team & ACE (Empfohlen)",
+                mode_solo: "👤 Nur Eigene Kills",
+                status_ready: "Status: Server-Engine bereit",
+                engine_type: "Modus: Python OpenCV",
+                btn_scan: "🎬 AUTOMATISCH SCANNEN & RENDERN",
+                res_headline: "🔥 Erstellte Montage",
+                footer_pres: "MCEYS PRÄSENTIERT",
+                msg_uploading: "Video wird auf den Server hochgeladen...",
+                msg_analyzing: "Killfeed wird Bild für Bild analysiert...",
+                msg_rendering: "FFmpeg generiert natürliches 9:16 Layout...",
+                msg_done: "Montage fertiggestellt, Video wird heruntergeladen!",
+                clip_tag: "🔥 Perfekte Server-Montage",
+                clip_desc: "Kill-Intervalle präzise extrahiert, Leerlauf entfernt!",
+                btn_dl: "Montage Herunterladen",
+                err_msg: "Fehler beim Vorgang: "
+            },
+            es: {
+                nav_home: "Inicio",
+                nav_cs2: "CS2 Shorts",
+                nav_val: "Valorant Shorts",
+                nav_trim: "Cortador sin Pérdidas",
+                badge_val: "⚡ MOTOR PYTHON OPENCV",
+                title: "Cortador Inteligente de Highlights Valorant",
+                desc: "Motor de servidor totalmente automático: ¡Detección de feed de bajas y montaje vertical con Python!",
+                upload_title: "Selecciona o Arrastra el Clip de Valorant",
+                upload_hint: "MP4, MOV o WebM",
+                fmt_9_16_title: "📱 Shorts Verticales (9:16)",
+                fmt_9_16_desc: "Enfoque Natural + Feed de Bajas Ampliado",
+                fmt_16_9_title: "🖥️ Horizontal Original (16:9)",
+                fmt_16_9_desc: "Calidad original sin pérdidas",
+                mode_header: "🎯 TIPO DE BAJA OBJETIVO:",
+                mode_team: "👥 Todo el Equipo y ACE (Recomendado)",
+                mode_solo: "👤 Solo Mis Bajas",
+                status_ready: "Estado: Motor de servidor listo",
+                engine_type: "Modo: Python OpenCV",
+                btn_scan: "🎬 ESCANEAR Y MONTAR AUTOMÁTICAMENTE",
+                res_headline: "🔥 Montaje Generado",
+                footer_pres: "PRESENTADO POR MCEYS",
+                msg_uploading: "Subiendo video al servidor (Por favor espera)...",
+                msg_analyzing: "Escaneando feed de bajas cuadro a cuadro con Python OpenCV...",
+                msg_rendering: "FFmpeg generando formato 9:16 y feed de bajas...",
+                msg_done: "¡Montaje completado, descargando video!",
+                clip_tag: "🔥 Montaje Impecable en Servidor",
+                clip_desc: "¡Intervalos de bajas capturados con precisión, tiempos muertos eliminados!",
+                btn_dl: "Descargar Montaje",
+                err_msg: "Error durante el proceso: "
+            }
+        };
+
         const player = document.getElementById('val-player');
         const fileInput = document.getElementById('v-video-file');
         const dropZone = document.getElementById('drop-zone');
@@ -198,6 +340,25 @@
         let selectedFile = null;
         let selectedFormat = '9-16';
         let selectedKillMode = 'team';
+        let currentLang = localStorage.getItem('mceys_lang') || 'tr';
+
+        function setValLang(lang) {
+            currentLang = lang;
+            localStorage.setItem('mceys_lang', lang);
+
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+            const btn = document.getElementById('btn-lang-' + lang);
+            if (btn) btn.classList.add('active');
+
+            const dict = valDict[lang];
+            if (!dict) return;
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const k = el.getAttribute('data-i18n');
+                if (k === 'upload_title' && selectedFile) return;
+                if (dict[k]) el.innerText = dict[k];
+            });
+        }
 
         function selectFormat(fmt) {
             selectedFormat = fmt;
@@ -236,6 +397,7 @@
         async function startScanAndRender() {
             if (!selectedFile) return;
 
+            const dict = valDict[currentLang];
             const btn = document.getElementById('btn-scan');
             const pBox = document.getElementById('progress-box');
             const pFill = document.getElementById('progress-fill');
@@ -250,10 +412,10 @@
             clipsList.innerHTML = '';
             pBox.style.display = 'block';
 
-            pText.innerText = "Video sunucuya yükleniyor (Lütfen bekleyin)...";
+            pText.innerText = dict.msg_uploading;
             pFill.style.width = '20%';
             pPct.innerText = '%20';
-            debugStatus.innerText = "Yükleniyor...";
+            debugStatus.innerText = "Processing...";
 
             const formData = new FormData();
             formData.append('video', selectedFile);
@@ -261,22 +423,19 @@
             formData.append('mode', selectedKillMode);
 
             try {
-                // Yükleme ve OpenCV analizi simülasyon adımı
                 setTimeout(() => {
                     if (btn.disabled) {
-                        pText.innerText = "Python OpenCV ile killfeed kare kare taranıyor...";
+                        pText.innerText = dict.msg_analyzing;
                         pFill.style.width = '55%';
                         pPct.innerText = '%55';
-                        debugStatus.innerText = "Analiz ediliyor...";
                     }
                 }, 2500);
 
                 setTimeout(() => {
                     if (btn.disabled) {
-                        pText.innerText = "FFmpeg dikey montaj ve blur arka planı üretiyor...";
+                        pText.innerText = dict.msg_rendering;
                         pFill.style.width = '80%';
                         pPct.innerText = '%80';
-                        debugStatus.innerText = "Renderlanıyor...";
                     }
                 }, 7000);
 
@@ -287,10 +446,10 @@
 
                 if (!response.ok) {
                     const errData = await response.json().catch(() => ({}));
-                    throw new Error(errData.error || 'Sunucu render hatası verdi');
+                    throw new Error(errData.error || 'Server render error');
                 }
 
-                pText.innerText = "Montaj tamamlandı, video indiriliyor!";
+                pText.innerText = dict.msg_done;
                 pFill.style.width = '100%';
                 pPct.innerText = '%100';
 
@@ -300,89 +459,25 @@
                 clipsList.innerHTML = `
                     <div class="clip-item" style="border: 2px solid var(--val-red); background: rgba(255, 70, 85, 0.05);">
                         <div class="clip-info">
-                            <span class="clip-tag">🔥 Kusursuz Sunucu Montajı (${selectedFormat === '9-16' ? '9:16 Shorts' : '16:9'})</span>
-                            <span class="clip-time">OpenCV ile kill aralıkları tam yakalandı, gereksiz kısımlar atıldı!</span>
+                            <span class="clip-tag">${dict.clip_tag} (${selectedFormat === '9-16' ? '9:16 Shorts' : '16:9'})</span>
+                            <span class="clip-time">${dict.clip_desc}</span>
                         </div>
-                        <a class="btn-clip-dl" href="${url}" download="valorant_shorts_${Date.now()}.mp4">Montajı İndir</a>
+                        <a class="btn-clip-dl" href="${url}" download="valorant_shorts_${Date.now()}.mp4">${dict.btn_dl}</a>
                     </div>
                 `;
 
                 clipsBox.style.display = 'block';
-                debugStatus.innerText = "İşlem başarılı!";
+                debugStatus.innerText = "Done!";
             } catch (err) {
-                alert("İşlem sırasında hata: " + err.message);
-                pText.innerText = "Hata oluştu!";
-                debugStatus.innerText = "Hata!";
+                alert(dict.err_msg + err.message);
+                pText.innerText = "Error!";
+                debugStatus.innerText = "Error!";
             } finally {
                 btn.disabled = false;
             }
         }
+
+        setValLang(currentLang);
     </script>
-    <script>
-const translations = {
-  tr: {
-    hero_title: "Valorant Kill Kırpma & Shorts Stüdyosu",
-    hero_desc: "Oyun videolarındaki vuruşları otomatik yakala, doğal 9:16 Shorts formatına anında dönüştür.",
-    btn_upload: "Video Yükle",
-    upload_hint: "Maksimum 500MB, MP4 formatında",
-    feat_1_title: "Otomatik Kill Takibi",
-    feat_1_desc: "Bilgisayarlı görü teknolojisiyle killfeed bandını kaçırmadan milimetrik tespit.",
-    feat_2_title: "Doğal 9:16 Odak",
-    feat_2_desc: "Crosshair doğal merkezde kalır, killfeed üstte net başlık olarak yerleşir."
-  },
-  en: {
-    hero_title: "Valorant Kill Clipper & Shorts Studio",
-    hero_desc: "Automatically detect kills from your gameplay and convert them into natural 9:16 Shorts.",
-    btn_upload: "Upload Video",
-    upload_hint: "Maximum 500MB, MP4 format",
-    feat_1_title: "Auto Kill Tracking",
-    feat_1_desc: "Pixel-perfect killfeed banner detection powered by computer vision.",
-    feat_2_title: "Natural 9:16 Focus",
-    feat_2_desc: "Crosshair stays naturally centered while killfeed sits cleanly on top."
-  },
-  de: {
-    hero_title: "Valorant Kill Clipper & Shorts Studio",
-    hero_desc: "Erkenne Kills automatisch und konvertiere Gameplay direkt ins 9:16 Shorts-Format.",
-    btn_upload: "Video Hochladen",
-    upload_hint: "Maximal 500MB, MP4-Format",
-    feat_1_title: "Automatische Kill-Erkennung",
-    feat_1_desc: "Präzise Killfeed-Banner-Erkennung mittels Computer Vision.",
-    feat_2_title: "Natürlicher 9:16 Fokus",
-    feat_2_desc: "Fadenkreuz bleibt zentriert, Killfeed wird oben sauber platziert."
-  },
-  es: {
-    hero_title: "Estudio de Shorts y Clips de Valorant",
-    hero_desc: "Detecta bajas automáticamente y convierte tus partidas al formato vertical 9:16.",
-    btn_upload: "Subir Video",
-    upload_hint: "Máximo 500MB, formato MP4",
-    feat_1_title: "Detección Automática de Bajas",
-    feat_1_desc: "Detección milimétrica del banner de bajas mediante visión artificial.",
-    feat_2_title: "Enfoque Natural 9:16",
-    feat_2_desc: "La mira se mantiene centrada y el feed de bajas se coloca arriba con claridad."
-  }
-};
-
-function changeLanguage(lang) {
-  if (!translations[lang]) return;
-
-  // data-i18n etiketine sahip tüm elemanları güncelle
-  document.querySelectorAll("[data-i18n]").forEach(el => {
-    const key = el.getAttribute("data-i18n");
-    if (translations[lang][key]) {
-      el.textContent = translations[lang][key];
-    }
-  });
-
-  // Seçimi tarayıcı hafızasına kaydet
-  localStorage.setItem("selected_lang", lang);
-  document.getElementById("languageSelect").value = lang;
-}
-
-// Sayfa ilk yüklendiğinde kayıtlı dili ya da tarayıcı dilini getir
-document.addEventListener("DOMContentLoaded", () => {
-  const savedLang = localStorage.getItem("selected_lang") || "tr";
-  changeLanguage(savedLang);
-});
-</script>
 </body>
 </html>
