@@ -25,9 +25,8 @@ def detect_kills_opencv(video_path, mode='team'):
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     detected_kills = []
-    prev_region = None
     
-    # 0.2 saniyede bir tara (daha hassas)
+    # 0.2 saniyede bir tara
     frame_step = max(1, int(fps * 0.20))
     current_frame = 0
 
@@ -37,42 +36,41 @@ def detect_kills_opencv(video_path, mode='team'):
         if not ret:
             break
 
-        resized = cv2.resize(frame, (640, 360))
+        # 1280x720 baz alarak sağ üst killfeed şeridine kilitlen
+        resized = cv2.resize(frame, (1280, 720))
+        # y: 20-140, x: 1000-1260 arası (Doğrudan killfeed şeritleri)
+        kf_roi = resized[20:140, 1000:1260]
 
-        # Sağ üst Valorant Killfeed alanı
-        kf_y1, kf_y2 = int(360 * 0.01), int(360 * 0.16)
-        kf_x1, kf_x2 = int(640 * 0.72), int(640 * 0.99)
-        cur_region = resized[kf_y1:kf_y2, kf_x1:kf_x2]
+        # BGR'dan HSV'ye dönüştür
+        hsv = cv2.cvtColor(kf_roi, cv2.COLOR_BGR2HSV)
 
-        if prev_region is not None:
-            diff = cv2.absdiff(cur_region, prev_region)
-            avg_delta = np.mean(diff)
+        # 1. VALORANT KIRMIZISI (Sağdaki ölen düşman kutusu)
+        red_mask1 = cv2.inRange(hsv, np.array([0, 120, 120]), np.array([10, 255, 255]))
+        red_mask2 = cv2.inRange(hsv, np.array([170, 120, 120]), np.array([180, 255, 255]))
+        red_mask = red_mask1 | red_mask2
 
-            b = cur_region[:, :, 0].astype(int)
-            g = cur_region[:, :, 1].astype(int)
-            r = cur_region[:, :, 2].astype(int)
+        # 2. TURKUAZ / CAMGÖBEĞİ (Soldaki takım/bizim kutu)
+        cyan_mask = cv2.inRange(hsv, np.array([75, 80, 100]), np.array([95, 255, 255]))
 
-            # Eşik değerleri daha hassas hale getirildi
-            red_mask = (r > 125) & (r > g + 25) & (r > b + 20)
-            team_mask = (g > 105) & (b > 95) & (g > r + 15)
+        red_pixels = cv2.countNonZero(red_mask)
+        cyan_pixels = cv2.countNonZero(cyan_mask)
 
-            red_count = np.count_nonzero(red_mask)
-            team_count = np.count_nonzero(team_mask)
+        is_kill = False
+        if mode == 'solo':
+            # Sadece bizim vuruşlarımız (kırmızı hedef + turkuaz katil kutusu)
+            if red_pixels > 80 and cyan_pixels > 80:
+                is_kill = True
+        else:
+            # Tüm takım kill'leri (kırmızı düşman kutusu düştüğü an)
+            if red_pixels > 80:
+                is_kill = True
 
-            is_kill = False
-            if mode == 'solo':
-                if avg_delta > 15 and red_count >= 12:
-                    is_kill = True
-            else:
-                if avg_delta > 15 and (red_count >= 12 or team_count >= 12):
-                    is_kill = True
+        timestamp = current_frame / fps
+        if is_kill:
+            # Aynı kill bandı ekranda kaldığı için mükerrer saymayı engelle (2.5 sn aralık)
+            if len(detected_kills) == 0 or (timestamp - detected_kills[-1] > 2.5):
+                detected_kills.append(timestamp)
 
-            timestamp = current_frame / fps
-            if is_kill:
-                if len(detected_kills) == 0 or (timestamp - detected_kills[-1] > 2.0):
-                    detected_kills.append(timestamp)
-
-        prev_region = cur_region
         current_frame += frame_step
 
     cap.release()
@@ -93,23 +91,22 @@ def process_video():
 
     video_file.save(input_path)
 
-    # 1. OpenCV ile kill anlarını yakala
     kill_times = detect_kills_opencv(input_path, mode=kill_mode)
-    print(f"[{unique_id}] Yakalanan Kill Zamanlari:", kill_times, flush=True)
+    print(f"[{unique_id}] Yakalanan Gercek Kill Zamanlari:", kill_times, flush=True)
 
-    # 2. Kill anlarının 3.5 sn öncesi ve 1.5 sn sonrasını topla
+    # Her kill'in 2.5 sn öncesi ve 1.0 sn sonrasını topla
     segments = []
     for kt in kill_times:
-        start_t = max(0.0, float(kt) - 3.5)
-        end_t = float(kt) + 1.5
+        start_t = max(0.0, float(kt) - 2.5)
+        end_t = float(kt) + 1.0
         if segments and start_t <= segments[-1][1]:
             segments[-1] = (segments[-1][0], max(segments[-1][1], end_t))
         else:
             segments.append((start_t, end_t))
 
-    # Eğer video boyunca tek bir kill bile okuyamadıysa en azından ilk 10 saniyeyi al
+    # Eğer hiç kill bulamazsa videonun ortasından 8 saniyelik bir kesit al
     if not segments:
-        segments = [(0.0, 10.0)]
+        segments = [(2.0, 10.0)]
 
     filter_complex_parts = []
     concat_inputs = []
@@ -119,17 +116,14 @@ def process_video():
         a_trim = f"[0:a]atrim=start={st}:end={et},asetpts=PTS-STARTPTS[a{idx}]"
 
         if target_format == '9-16':
-            # Valorant Profesyonel Shorts Şablonu:
-            # 1. Arka plan: 1080x1920 blur
-            # 2. Orta katman: Oyunun ana aksiyon/crosshair alanı (büyütülmüş ve ortalanmış)
-            # 3. Üst katman: Sağ üstteki Killfeed'in büyütülüp tepeye yapıştırılmış hali
+            # GERÇEK 9:16 SHORTS DÜZENİ:
+            # 1. Ana Ekran: Tam ortaya crosshair ve aksiyon alanı crop edilir (1080x1920 tam ekran)
+            # 2. Üst Bar: Sağ üstteki killfeed şeridi büyütülüp tepeye ortalanır
             filter_complex_parts.append(
-                f"{v_trim},split=3[bg_raw{idx}][fg_raw{idx}][kf_raw{idx}];"
-                f"[bg_raw{idx}]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=25:5[bg{idx}];"
-                f"[fg_raw{idx}]scale=1080:-1[fg{idx}];"
-                f"[bg{idx}][fg{idx}]overlay=(W-w)/2:(H-h)/2[base{idx}];"
-                f"[kf_raw{idx}]crop=iw*0.25:ih*0.20:iw*0.75:0,scale=540:-1[kf_zoom{idx}];"
-                f"[base{idx}][kf_zoom{idx}]overlay=(W-w)/2:120[v{idx}];"
+                f"{v_trim},split=2[main_raw{idx}][kf_raw{idx}];"
+                f"[main_raw{idx}]crop=ih*9/16:ih:(iw-ow)/2:0,scale=1080:1920[main{idx}];"
+                f"[kf_raw{idx}]crop=iw*0.25:ih*0.16:iw*0.75:0,scale=720:-1[kf_zoom{idx}];"
+                f"[main{idx}][kf_zoom{idx}]overlay=(W-w)/2:100[v{idx}];"
                 f"{a_trim}"
             )
         else:
@@ -152,7 +146,7 @@ def process_video():
 
     try:
         subprocess.run(cmd, check=True)
-        return send_file(output_path, as_attachment=True, download_name=f"valorant_highlight_{unique_id}.mp4")
+        return send_file(output_path, as_attachment=True, download_name=f"valorant_shorts_{unique_id}.mp4")
     except subprocess.CalledProcessError as e:
         return jsonify({"error": "FFmpeg montajlama hatasi", "details": str(e)}), 500
     finally:
