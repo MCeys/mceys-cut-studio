@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MCEYS VALORANT STUDIO - Akıllı Highlight Kesici</title>
-
-    sed -i "/if (location.protocol !== 'https:'/,/}/d" /var/www/mceys-cut-studio/valorant.html
-
-    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
 
     <style>
@@ -116,7 +112,7 @@
                 <video src="site_logo.webm" class="header-logo" autoplay loop muted playsinline></video>
                 <h1>VALORANT AUTO-STUDIO</h1>
             </a>
-            <span class="badge-val">⚡ V11.0 ULTIMATE ANTI-LOOP</span>
+            <span class="badge-val">⚡ PYTHON VPS MOTORU</span>
         </div>
 
         <div class="header-right">
@@ -132,7 +128,7 @@
     <main>
         <div class="studio-card">
             <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 6px; text-align: center;">Valorant Akıllı Highlight Kesici</h2>
-            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Tek Geçişli Katman Filtresi: Dosya birleştirme sorunlarını ve baştaki kille sarma bug'ını yok eder.</p>
+            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Sunucu Destekli FFmpeg Motoru: Tarayıcı çökmesi yok, doğrudan VPS hızında montaj!</p>
 
             <div class="custom-file-upload" id="drop-zone" onclick="document.getElementById('v-video-file').click()">
                 <span style="font-size: 32px;">🎯</span>
@@ -145,7 +141,7 @@
                 <div class="format-selector">
                     <div class="format-card selected" id="opt-9-16" onclick="selectFormat('9-16')">
                         <span class="format-title">📱 Dikey Shorts (9:16)</span>
-                        <span class="format-desc">Tam Dikey Zoom + Killfeed Büyütme</span>
+                        <span class="format-desc">Dikey Format + Akıllı Arka Plan Blur</span>
                     </div>
                     <div class="format-card" id="opt-16-9" onclick="selectFormat('16-9')">
                         <span class="format-title">🖥️ Orijinal Yatay (16:9)</span>
@@ -170,7 +166,7 @@
                     <span id="debug-metrics" style="color:#00f2fe;">Takip: Bekleniyor</span>
                 </div>
 
-                <button type="button" class="btn-submit" id="btn-scan" onclick="startScanAndRender()">🎬 KILL'LERİ TARA VE MONTAJ ÜRET</button>
+                <button type="button" class="btn-submit" id="btn-scan" onclick="startScanAndRender()">🎬 KILL'LERİ TARA VE SUNUCUDA RENDER AL</button>
             </div>
 
             <div id="progress-box" class="progress-box">
@@ -197,8 +193,6 @@
     </footer>
 
     <script>
-        const { createFFmpeg, fetchFile } = FFmpeg;
-        const ffmpeg = createFFmpeg({ log: false });
         const player = document.getElementById('val-player');
         const scanCanvas = document.getElementById('scanCanvas');
         const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
@@ -321,14 +315,13 @@
                     if (isKill) {
                         if (detectedKills.length === 0 || (t - detectedKills[detectedKills.length - 1] > 2.0)) {
                             detectedKills.push(t);
-                            console.log("🎯 Kesin Kill:", t.toFixed(2));
                             debugMetrics.innerText = `Son Kill: ${t.toFixed(1)}s | Toplam: ${detectedKills.length}`;
                         }
                     }
                 }
                 prevKfData = curKfData;
 
-                const progress = Math.round((t / duration) * 35);
+                const progress = Math.round((t / duration) * 40);
                 pFill.style.width = progress + '%';
                 pPct.innerText = '%' + progress;
             }
@@ -336,127 +329,60 @@
             debugStatus.innerText = `Doğrulanan Gerçek Kill: ${detectedKills.length} adet`;
 
             if (detectedKills.length === 0) {
-                alert("Killfeed'de geçerli vuruş bulunamadı kanka.");
+                alert("Killfeed'de geçerli vuruş tespit edilemedi kanka.");
                 btn.disabled = false;
                 pBox.style.display = 'none';
                 return;
             }
 
-            let intervals = detectedKills.map(kt => ({
-                start: Math.max(0, kt - 3.5),
-                end: Math.min(duration, kt + 1.2)
-            }));
+            // Sunucuya aktarma ve FFmpeg ile render alma aşaması
+            pText.innerText = "Video sunucuya aktarılıyor ve VPS FFmpeg ile işleniyor...";
+            pFill.style.width = '65%';
+            pPct.innerText = '%65';
 
-            let rawSegments = [];
-            let current = { ...intervals[0] };
+            const formData = new FormData();
+            formData.append('video', selectedFile);
+            formData.append('format', selectedFormat);
+            formData.append('kills', JSON.stringify(detectedKills));
 
-            for (let i = 1; i < intervals.length; i++) {
-                let next = intervals[i];
-                if (next.start <= current.end + 2.0 && (next.end - current.start) <= 8.0) {
-                    current.end = next.end;
-                } else {
-                    rawSegments.push({ start: current.start, end: current.end });
-                    current = { ...next };
+            try {
+                const response = await fetch('/api/process', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(errData.error || 'Sunucu render hatası verdi');
                 }
-            }
-            rawSegments.push({ start: current.start, end: current.end });
 
-            if(rawSegments.length > 4) {
-                rawSegments = rawSegments.slice(0, 4);
-            }
+                pText.innerText = "Video indiriliyor...";
+                pFill.style.width = '90%';
+                pPct.innerText = '%90';
 
-            pText.innerText = "FFmpeg Filtre Kompleksi Hazırlanıyor (Tek Geçiş)...";
-            if(!ffmpeg.isLoaded()) await ffmpeg.load();
-            
-            try { ffmpeg.FS('unlink', 'source.mp4'); } catch(e) {}
-            ffmpeg.FS('writeFile', 'source.mp4', await fetchFile(selectedFile));
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
 
-            // MUHTEŞEM TEK GEÇİŞLİ FİLTRE MİMARİSİ (Bölmek yok, birleştirmek yok, OOM çökmesi yok)
-            let filter = "";
-            let concatInputs = "";
-
-            for (let i = 0; i < rawSegments.length; i++) {
-                const s = rawSegments[i];
-                const start = s.start.toFixed(2);
-                const dur = Math.max(1.0, (s.end - s.start)).toFixed(2);
-                
-                // Zaman damgalarını sıfırlayarak (PTS-STARTPTS) doğrudan trim işlemi uyguluyoruz
-                filter += `[0:v]trim=start=${start}:duration=${dur},setpts=PTS-STARTPTS[v${i}];`;
-                filter += `[0:a]atrim=start=${start}:duration=${dur},asetpts=PTS-STARTPTS[a${i}];`;
-                concatInputs += `[v${i}][a${i}]`;
-            }
-
-            // Kırpılan segmentleri tek bir yatay videoda topluyoruz
-            filter += `${concatInputs}concat=n=${rawSegments.length}:v=1:a=1[v_concat][a_out]`;
-
-            const outFileName = "valorant_montage_shorts.mp4";
-
-            // Kullanıcıyı bekletmemek için sahte ilerleme çubuğu animasyonu başlatalım
-            let renderProgress = 35;
-            const progressInterval = setInterval(() => {
-                if (renderProgress < 95) {
-                    renderProgress += 2;
-                    pFill.style.width = renderProgress + '%';
-                    pPct.innerText = '%' + renderProgress;
-                    pText.innerText = "Montaj Tek Seferde İşleniyor (Lütfen Bekleyin)...";
-                }
-            }, 1000);
-
-            if (selectedFormat === '16-9') {
-                await ffmpeg.run(
-                    '-i', 'source.mp4',
-                    '-filter_complex', filter,
-                    '-map', '[v_concat]',
-                    '-map', '[a_out]',
-                    '-c:v', 'libx264',
-                    '-preset', 'ultrafast',
-                    '-crf', '22',
-                    '-c:a', 'aac',
-                    outFileName
-                );
-            } else {
-                // Eğer dikey formattaysa, toplanan [v_concat] videosunu üç parçaya ayırıp efekt uyguluyoruz
-                filter += `;[v_concat]split=3[v_bg][v_fg][v_kf];` +
-                          `[v_bg]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:5[bg];` +
-                          `[v_fg]crop=ih*9/16:ih:(iw-ih*9/16)/2:0,scale=1080:1920[fg];` +
-                          `[v_kf]crop=iw*0.24:ih*0.16:iw*0.75:ih*0.02,scale=1080:-1[killfeed];` +
-                          `[bg][fg]overlay=0:0[base];` +
-                          `[base][killfeed]overlay=0:160[v_out]`;
-
-                await ffmpeg.run(
-                    '-i', 'source.mp4',
-                    '-filter_complex', filter,
-                    '-map', '[v_out]',
-                    '-map', '[a_out]',
-                    '-c:v', 'libx264',
-                    '-preset', 'ultrafast',
-                    '-crf', '24',
-                    '-c:a', 'aac',
-                    outFileName
-                );
-            }
-
-            clearInterval(progressInterval);
-
-            const data = ffmpeg.FS('readFile', outFileName);
-            const blob = new Blob([data.buffer], { type: 'video/mp4' });
-            const url = URL.createObjectURL(blob);
-
-            clipsList.innerHTML = `
-                <div class="clip-item" style="border: 2px solid var(--val-red); background: rgba(255, 70, 85, 0.05);">
-                    <div class="clip-info">
-                        <span class="clip-tag">🔥 Tek Parça Kill Montajı (${selectedFormat === '9-16' ? '9:16 Shorts' : '16:9 Yatay'})</span>
-                        <span class="clip-time">Loop Yok Edildi: Kesim ve efektleme tek filtrede hatasız tamamlandı!</span>
+                clipsList.innerHTML = `
+                    <div class="clip-item" style="border: 2px solid var(--val-red); background: rgba(255, 70, 85, 0.05);">
+                        <div class="clip-info">
+                            <span class="clip-tag">🔥 Sunucu Montajı Hazır (${selectedFormat === '9-16' ? '9:16 Shorts' : '16:9 Yatay'})</span>
+                            <span class="clip-time">VPS FFmpeg motoruyla sıfır tarayıcı yüküyle üretildi!</span>
+                        </div>
+                        <a class="btn-clip-dl" href="${url}" download="valorant_shorts_${Date.now()}.mp4">Montajı İndir</a>
                     </div>
-                    <a class="btn-clip-dl" href="${url}" download="valorant_montage_shorts.mp4">Montajı İndir</a>
-                </div>
-            `;
+                `;
 
-            pText.innerText = "✔ Shorts montajı kusursuz hazır!";
-            pFill.style.width = '100%';
-            pPct.innerText = '%100';
-            clipsBox.style.display = 'block';
-            btn.disabled = false;
+                pText.innerText = "✔ Shorts montajı kusursuz hazır!";
+                pFill.style.width = '100%';
+                pPct.innerText = '%100';
+                clipsBox.style.display = 'block';
+            } catch (err) {
+                alert("İşlem sırasında hata: " + err.message);
+                pText.innerText = "Hata oluştu!";
+            } finally {
+                btn.disabled = false;
+            }
         }
     </script>
 </body>
