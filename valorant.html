@@ -5,11 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MCEYS VALORANT STUDIO - Akıllı Highlight Kesici</title>
 
-    <script>
-        if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-            location.replace('https://' + location.hostname + location.pathname + location.search);
-        }
-    </script>
+    sed -i "/if (location.protocol !== 'https:'/,/}/d" /var/www/mceys-cut-studio/valorant.html
 
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
