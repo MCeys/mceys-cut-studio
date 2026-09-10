@@ -114,7 +114,7 @@
                 <video src="site_logo.webm" class="header-logo" autoplay loop muted playsinline></video>
                 <h1>VALORANT AUTO-STUDIO</h1>
             </a>
-            <span class="badge-val">⚡ V5.5 ROUND-CUTTER</span>
+            <span class="badge-val">⚡ V5.8 PURE-KILLFEED</span>
         </div>
 
         <div class="header-right">
@@ -130,7 +130,7 @@
     <main>
         <div class="studio-card">
             <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 6px; text-align: center;">Valorant Akıllı Highlight Kesici</h2>
-            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Yayın veya maç kaydını yükle; vuruşları yakalasın, Round bittiği saniye videoyu kessin.</p>
+            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Sadece gerçek vuruşları yakalar; son vuruştan 1.4 sn sonra round sonunu beklemeden videoyu keser.</p>
 
             <div class="custom-file-upload" id="drop-zone" onclick="document.getElementById('v-video-file').click()">
                 <span style="font-size: 32px;">🎯</span>
@@ -265,25 +265,18 @@
             const duration = player.duration || 10;
             const step = 0.35;
             const detectedKills = [];
-            let roundEndTime = null;
 
-            // 1. SAĞ ÜST DAR KÖŞE (Killfeed)
+            // SAĞ ÜST İZOLE KORİDOR (Killfeed ilk 2 satır)
             const kfX = Math.floor(640 * 0.80);
             const kfY = Math.floor(360 * 0.015);
             const kfW = Math.floor(640 * 0.18);
             const kfH = Math.floor(360 * 0.095);
 
-            // 2. EKRAN ORTASI BANNER BÖLGESİ ("ROUND WON / LOST / CLUTCH")
-            const bannerX = Math.floor(640 * 0.35);
-            const bannerY = Math.floor(360 * 0.18);
-            const bannerW = Math.floor(640 * 0.30);
-            const bannerH = Math.floor(360 * 0.14);
-
-            debugStatus.innerText = "Maç taranıyor...";
+            debugStatus.innerText = "Killfeed taranıyor...";
 
             let prevKfData = null;
-            let prevBannerData = null;
 
+            // Maçın başından sonuna kadar kesintisiz tara (Hatalı erken durdurma YOK)
             for (let t = 0; t < duration; t += step) {
                 await new Promise(res => {
                     const handler = () => {
@@ -295,29 +288,7 @@
                 });
 
                 scanCtx.drawImage(player, 0, 0, 640, 360);
-                
-                // ORTA BANNER KONTROLÜ (ROUND BİTTİ Mİ?)
-                const curBannerData = scanCtx.getImageData(bannerX, bannerY, bannerW, bannerH).data;
-                if (prevBannerData && detectedKills.length > 0) {
-                    let bannerDelta = 0;
-                    for (let i = 0; i < curBannerData.length; i += 8) {
-                        bannerDelta += Math.abs(curBannerData[i] - prevBannerData[i]) +
-                                       Math.abs(curBannerData[i+1] - prevBannerData[i+1]) +
-                                       Math.abs(curBannerData[i+2] - prevBannerData[i+2]);
-                    }
-                    const avgBannerDelta = bannerDelta / (curBannerData.length / 8);
 
-                    // Ekranda devasa "ROUND WON" veya "ROUND LOST" yazısı patladığında banner delta 45'in üstüne uçar
-                    if (avgBannerDelta > 45.0) {
-                        roundEndTime = t;
-                        console.log("🏁 ROUND BİTİŞ YAZISI YAKALANDI! Saniye:", t.toFixed(2));
-                        debugMetrics.innerText = `🏁 Round Sonu: ${t.toFixed(1)}s (Taramayı Durdur)`;
-                        break; // Round bitti, sonrasındaki silah alma menüsünü ASLA tarama!
-                    }
-                }
-                prevBannerData = curBannerData;
-
-                // SAĞ ÜST KILLFEED KONTROLÜ
                 const curKfData = scanCtx.getImageData(kfX, kfY, kfW, kfH).data;
                 if (prevKfData) {
                     let kfDelta = 0;
@@ -347,9 +318,11 @@
                     }
 
                     if (isKill) {
+                        // Aynı kill için 2 saniye koruma
                         if (detectedKills.length === 0 || (t - detectedKills[detectedKills.length - 1] > 2.0)) {
                             detectedKills.push(t);
-                            console.log("🎯 Kill Yakalandı Saniye:", t.toFixed(2));
+                            console.log("🎯 Kill Tespit Edildi:", t.toFixed(2));
+                            debugMetrics.innerText = `Son Kill: ${t.toFixed(1)}s | Toplam: ${detectedKills.length}`;
                         }
                     }
                 }
@@ -363,18 +336,17 @@
             debugStatus.innerText = `Doğrulanan Kill: ${detectedKills.length} adet`;
 
             if (detectedKills.length === 0) {
-                alert("Killfeed'de vuruş yakalanamadı kanka.");
+                alert("Killfeed'de vuruş bulunamadı kanka.");
                 btn.disabled = false;
                 pBox.style.display = 'none';
                 return;
             }
 
-            // KESİN HARD-CUT MİMARİSİ (ROUND SONUNDAN TAM 1.0s SONRA KES AT)
-            const absoluteMaxEnd = roundEndTime ? (roundEndTime + 1.0) : (detectedKills[detectedKills.length - 1] + 1.2);
-
+            // AKILLI HIGHLIGHT KURGUSU:
+            // Her kill'in öncesinden 3.5 sn, sonrasından 1.4 sn al
             let intervals = detectedKills.map(kt => ({
-                start: Math.max(0, kt - 4.2),
-                end: Math.min(absoluteMaxEnd, kt + 1.2)
+                start: Math.max(0, kt - 3.5),
+                end: Math.min(duration, kt + 1.4)
             }));
 
             let rawSegments = [];
@@ -382,23 +354,21 @@
 
             for (let i = 1; i < intervals.length; i++) {
                 let next = intervals[i];
-                // İki kill arası 2.2s azsa bağla ama tek segment asla 8.5 saniyeyi geçmesin (boş koşmayı engeller)
-                if (next.start <= current.end + 2.2 && (next.end - current.start) <= 8.5) {
-                    current.end = Math.min(absoluteMaxEnd, Math.max(current.end, next.end));
+                // İki kill arası 2.5 sn'den azsa tek bir combo sekansı yap
+                if (next.start <= current.end + 2.5) {
+                    current.end = Math.max(current.end, next.end);
                 } else {
                     rawSegments.push({ start: current.start, end: current.end });
                     current = next;
                 }
             }
-            // Son segmentin bitişini Round bitiş yazısının 1 saniye sonrasıyla kilitliyoruz!
-            current.end = Math.min(absoluteMaxEnd, current.end);
             rawSegments.push({ start: current.start, end: current.end });
 
             if(rawSegments.length > 4) {
                 rawSegments = rawSegments.slice(0, 4);
             }
 
-            console.log("Kesilecek Temiz Segmentler:", rawSegments);
+            console.log("Render Edilecek Segmentler:", rawSegments);
 
             pText.innerText = "FFmpeg motoru hazırlanıyor...";
             if(!ffmpeg.isLoaded()) await ffmpeg.load();
@@ -409,7 +379,7 @@
             for (let i = 0; i < rawSegments.length; i++) {
                 const seg = rawSegments[i];
                 const segStart = seg.start.toFixed(2);
-                const segDur = Math.max(1.0, (seg.end - seg.start)).toFixed(2);
+                const segDur = Math.max(1.2, (seg.end - seg.start)).toFixed(2);
                 const partName = `part_${i}.mp4`;
 
                 pText.innerText = `Vuruş Sekansı ${i+1}/${rawSegments.length} renderlanıyor (${segDur}s)...`;
@@ -474,7 +444,7 @@
                 <div class="clip-item" style="border: 2px solid var(--val-red); background: rgba(255, 70, 85, 0.05);">
                     <div class="clip-info">
                         <span class="clip-tag">🔥 Tek Parça Kill Montajı (${selectedFormat === '9-16' ? '9:16 Shorts' : '16:9 Yatay'})</span>
-                        <span class="clip-time">Round Sonu Kesildi! | ${rawSegments.length} vuruş sekansı bağlandı.</span>
+                        <span class="clip-time">Temiz Highlight: ${rawSegments.length} vuruş bağlandı, round sonu kesildi.</span>
                     </div>
                     <a class="btn-clip-dl" href="${url}" download="valorant_montage_shorts.mp4">Montajı İndir</a>
                 </div>
