@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MCEYS VALORANT STUDIO - Akıllı Highlight Kesici</title>
 
+    <!-- KESİN HTTPS ZORLAMA KODU (Kırmızı Güvensiz Hatasını Önler) -->
+    <script>
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+            location.replace('https://' + location.hostname + location.pathname + location.search);
+        }
+    </script>
+
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
 
@@ -114,7 +121,7 @@
                 <video src="site_logo.webm" class="header-logo" autoplay loop muted playsinline></video>
                 <h1>VALORANT AUTO-STUDIO</h1>
             </a>
-            <span class="badge-val">⚡ V5.8 PURE-KILLFEED</span>
+            <span class="badge-val">⚡ V6.0 STRICT-END</span>
         </div>
 
         <div class="header-right">
@@ -130,7 +137,7 @@
     <main>
         <div class="studio-card">
             <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 6px; text-align: center;">Valorant Akıllı Highlight Kesici</h2>
-            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Sadece gerçek vuruşları yakalar; son vuruştan 1.4 sn sonra round sonunu beklemeden videoyu keser.</p>
+            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Sadece gerçek vuruşları yakalar; son vuruştan tam 1.2 saniye sonra videoyu kesip Buy Phase'i çöpe atar.</p>
 
             <div class="custom-file-upload" id="drop-zone" onclick="document.getElementById('v-video-file').click()">
                 <span style="font-size: 32px;">🎯</span>
@@ -266,7 +273,7 @@
             const step = 0.35;
             const detectedKills = [];
 
-            // SAĞ ÜST İZOLE KORİDOR (Killfeed ilk 2 satır)
+            // SAĞ ÜST KÖŞE (Killfeed ilk 2 satır bölgesi)
             const kfX = Math.floor(640 * 0.80);
             const kfY = Math.floor(360 * 0.015);
             const kfW = Math.floor(640 * 0.18);
@@ -276,7 +283,6 @@
 
             let prevKfData = null;
 
-            // Maçın başından sonuna kadar kesintisiz tara (Hatalı erken durdurma YOK)
             for (let t = 0; t < duration; t += step) {
                 await new Promise(res => {
                     const handler = () => {
@@ -318,7 +324,6 @@
                     }
 
                     if (isKill) {
-                        // Aynı kill için 2 saniye koruma
                         if (detectedKills.length === 0 || (t - detectedKills[detectedKills.length - 1] > 2.0)) {
                             detectedKills.push(t);
                             console.log("🎯 Kill Tespit Edildi:", t.toFixed(2));
@@ -342,33 +347,39 @@
                 return;
             }
 
-            // AKILLI HIGHLIGHT KURGUSU:
-            // Her kill'in öncesinden 3.5 sn, sonrasından 1.4 sn al
+            // KESİN VE SERT BİTİŞ KURALI (ROUND SONU & BUY PHASE KESİCİ)
+            // Her kill için çatışma başlangıcı = vuruş - 3.8s, bitişi = vuruş + 1.2s
             let intervals = detectedKills.map(kt => ({
-                start: Math.max(0, kt - 3.5),
-                end: Math.min(duration, kt + 1.4)
+                start: Math.max(0, kt - 3.8),
+                end: kt + 1.2
             }));
 
             let rawSegments = [];
-            let current = intervals[0];
+            let current = { ...intervals[0] };
 
             for (let i = 1; i < intervals.length; i++) {
                 let next = intervals[i];
-                // İki kill arası 2.5 sn'den azsa tek bir combo sekansı yap
-                if (next.start <= current.end + 2.5) {
-                    current.end = Math.max(current.end, next.end);
+                // İki kill arası 2.2 saniyeden azsa ve toplam sekans 8 saniyeyi geçmeyecekse bağla
+                if (next.start <= current.end + 2.2 && (next.end - current.start) <= 8.0) {
+                    current.end = next.end;
                 } else {
                     rawSegments.push({ start: current.start, end: current.end });
-                    current = next;
+                    current = { ...next };
                 }
             }
             rawSegments.push({ start: current.start, end: current.end });
+
+            // SON SEGMENTİN BİTİŞİNE KESİN KİLİT:
+            // Son vuruştan 1.2 saniye sonrasını aşamaz; asla videonun duration'ına uzayamaz!
+            const lastKillTime = detectedKills[detectedKills.length - 1];
+            const strictMontageEnd = Math.min(duration, lastKillTime + 1.2);
+            rawSegments[rawSegments.length - 1].end = strictMontageEnd;
 
             if(rawSegments.length > 4) {
                 rawSegments = rawSegments.slice(0, 4);
             }
 
-            console.log("Render Edilecek Segmentler:", rawSegments);
+            console.log("Rendere Giden Kesin Segmentler:", rawSegments);
 
             pText.innerText = "FFmpeg motoru hazırlanıyor...";
             if(!ffmpeg.isLoaded()) await ffmpeg.load();
@@ -379,7 +390,7 @@
             for (let i = 0; i < rawSegments.length; i++) {
                 const seg = rawSegments[i];
                 const segStart = seg.start.toFixed(2);
-                const segDur = Math.max(1.2, (seg.end - seg.start)).toFixed(2);
+                const segDur = Math.max(1.0, (seg.end - seg.start)).toFixed(2);
                 const partName = `part_${i}.mp4`;
 
                 pText.innerText = `Vuruş Sekansı ${i+1}/${rawSegments.length} renderlanıyor (${segDur}s)...`;
@@ -444,7 +455,7 @@
                 <div class="clip-item" style="border: 2px solid var(--val-red); background: rgba(255, 70, 85, 0.05);">
                     <div class="clip-info">
                         <span class="clip-tag">🔥 Tek Parça Kill Montajı (${selectedFormat === '9-16' ? '9:16 Shorts' : '16:9 Yatay'})</span>
-                        <span class="clip-time">Temiz Highlight: ${rawSegments.length} vuruş bağlandı, round sonu kesildi.</span>
+                        <span class="clip-time">Bıçak Kesimi: Son kill sonrası 1.2 sn'de bitti. Toplam ${rawSegments.length} sekans bağlandı!</span>
                     </div>
                     <a class="btn-clip-dl" href="${url}" download="valorant_montage_shorts.mp4">Montajı İndir</a>
                 </div>
