@@ -1,3 +1,4 @@
+from flask import Flask, request, send_file, jsonify
 import cv2
 import numpy as np
 import subprocess
@@ -5,9 +6,13 @@ import os
 import uuid
 import glob
 
+app = Flask(__name__)
+
 # ---------------- CONFIG ----------------
-TEMPLATES_DIR = 'templates/'
+UPLOAD_DIR = 'uploads/'
 TEMP_DIR = 'temp_clips/'
+OUTPUT_DIR = 'outputs/'
+TEMPLATES_DIR = 'templates/'
 DEBUG_DIR = 'debug_frames/'
 
 # Valorant Killfeed Turkuaz / Nane Yeşili HSV Aralığı
@@ -15,7 +20,7 @@ LOWER_CYAN = np.array([65, 50, 100])
 UPPER_CYAN = np.array([105, 255, 255])
 # ----------------------------------------
 
-for d in [TEMP_DIR, DEBUG_DIR]:
+for d in [UPLOAD_DIR, TEMP_DIR, OUTPUT_DIR, DEBUG_DIR]:
     if not os.path.exists(d):
         os.makedirs(d)
 
@@ -69,15 +74,16 @@ def detect_kills(video_path, templates):
         for cnt in contours:
             x, y, w, h = cv2.boundingRect(cnt)
             
+            # Killfeed kutu ebat şartı
             if (130 < w < 280) and (22 < h < 42):
                 timestamp = frame_count / fps
                 kill_timestamps.append(timestamp)
                 
-                print(f"[!] GERÇEK Killfeed Yakalandı: {timestamp:.2f}. sn (Boyut: {w}x{h})")
+                print(f"[!] Killfeed Yakalandı: {timestamp:.2f}. sn (Boyut: {w}x{h})")
                 
                 debug_frame = roi_bgr.copy()
                 cv2.rectangle(debug_frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-                cv2.imwrite(os.path.join(DEBUG_DIR, f"real_kill_{timestamp:.2f}.png"), debug_frame)
+                cv2.imwrite(os.path.join(DEBUG_DIR, f"feed_{timestamp:.2f}.png"), debug_frame)
                 
                 frame_count += int(fps * 3.0)
                 cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
@@ -105,9 +111,9 @@ def merge_segments(timestamps, pre_roll=3.5, post_roll=2.5):
                 segments.append([start, end])
     return segments
 
-def process_video(input_video, output_video):
+def process_video(input_video, output_video, format_type='9-16'):
     job_id = str(uuid.uuid4())[:8]
-    print(f"[{job_id}] İşlem başladı...")
+    print(f"[{job_id}] İşlem başladı (Format: {format_type})...")
     
     templates = load_templates(TEMPLATES_DIR)
     timestamps = detect_kills(input_video, templates)
@@ -119,10 +125,6 @@ def process_video(input_video, output_video):
     segments = merge_segments(timestamps)
     print(f"[{job_id}] Kırpılacak Kesitler: {segments}")
     
-    # --- 3 KATMANLI DİKEY SHORT FORMATI FİLTRESİ ---
-  # 1. [main]: 16:9 videoyu 1920 yüksekliğe ölçekleyip tam ortadan 1080x1920 doğal dikey kırpar (Crosshair doğal merkezde)
-    # 2. [kf]: Sağ üstteki killfeed alanını kesip 900px genişliğe büyütür
-    # 3. Killfeed'i üst kısma (Y: 140) başlık gibi ortalayarak yerleştirir
     vertical_filter = (
         "[0:v]scale=-1:1920,crop=1080:1920:(iw-1080)/2:0[main];"
         "[0:v]crop=w=iw*0.32:h=ih*0.20:x=iw*0.68:y=ih*0.02,scale=900:-1[kf];"
@@ -137,15 +139,24 @@ def process_video(input_video, output_video):
             duration = end - start
             temp_output = os.path.join(TEMP_DIR, f"clip_{job_id}_{idx}.mp4")
             
-            ffmpeg_cmd = [
-                'ffmpeg', '-y', '-ss', f"{start:.2f}", '-t', f"{duration:.2f}",
-                '-i', input_video,
-                '-filter_complex', vertical_filter,
-                '-map', '[outv]', '-map', '0:a',
-                '-c:v', 'libx264', '-preset', 'fast', '-crf', '22',
-                '-c:a', 'aac',
-                temp_output
-            ]
+            if format_type == '16-9':
+                ffmpeg_cmd = [
+                    'ffmpeg', '-y', '-ss', f"{start:.2f}", '-t', f"{duration:.2f}",
+                    '-i', input_video,
+                    '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20',
+                    '-c:a', 'aac',
+                    temp_output
+                ]
+            else:
+                ffmpeg_cmd = [
+                    'ffmpeg', '-y', '-ss', f"{start:.2f}", '-t', f"{duration:.2f}",
+                    '-i', input_video,
+                    '-filter_complex', vertical_filter,
+                    '-map', '[outv]', '-map', '0:a',
+                    '-c:v', 'libx264', '-preset', 'fast', '-crf', '22',
+                    '-c:a', 'aac',
+                    temp_output
+                ]
             
             print(f"[{job_id}] Kesit hazırlanıyor: {idx+1}/{len(segments)} ({start:.2f}s - {end:.2f}s)")
             subprocess.run(ffmpeg_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -171,10 +182,33 @@ def process_video(input_video, output_video):
     print(f"[{job_id}] BİTTİ! Dosya hazır: {output_video}")
     return True
 
-if __name__ == "__main__":
-    test_video = "test_gameplay.mp4"
-    output_video = "final_shorts.mp4"
-    if os.path.exists(test_video):
-        process_video(test_video, output_video)
-    else:
-        print(f"Hata: {test_video} bulunamadı!")
+# ---------------- API ENDPOINT ----------------
+@app.route('/api/process', methods=['POST'])
+def handle_process():
+    if 'video' not in request.files:
+        return jsonify({'error': 'Video dosyası bulunamadı'}), 400
+        
+    file = request.files['video']
+    if file.filename == '':
+        return jsonify({'error': 'Dosya seçilmedi'}), 400
+
+    selected_format = request.form.get('format', '9-16')
+    
+    uid = str(uuid.uuid4())[:8]
+    input_path = os.path.join(UPLOAD_DIR, f"input_{uid}_{file.filename}")
+    output_path = os.path.join(OUTPUT_DIR, f"montage_{uid}.mp4")
+    
+    file.save(input_path)
+    
+    success = process_video(input_path, output_path, format_type=selected_format)
+    
+    if os.path.exists(input_path):
+        os.remove(input_path)
+        
+    if not success:
+        return jsonify({'error': 'Videoda kill bulunamadı'}), 400
+        
+    return send_file(output_path, mimetype='video/mp4', as_attachment=True, download_name=f"valorant_{selected_format}_{uid}.mp4")
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=False)
