@@ -16,7 +16,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def health():
     return jsonify({"status": "ok", "message": "Python OpenCV motoru devrede!"}), 200
 
-def detect_kills_opencv(video_path, mode='team'):
+def detect_kills_opencv(video_path):
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         return []
@@ -25,8 +25,6 @@ def detect_kills_opencv(video_path, mode='team'):
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     detected_kills = []
-    
-    # 0.2 saniyede bir tara
     frame_step = max(1, int(fps * 0.20))
     current_frame = 0
 
@@ -36,38 +34,29 @@ def detect_kills_opencv(video_path, mode='team'):
         if not ret:
             break
 
-        # 1280x720 baz alarak sağ üst killfeed şeridine kilitlen
-        resized = cv2.resize(frame, (1280, 720))
-        # y: 20-140, x: 1000-1260 arası (Doğrudan killfeed şeritleri)
-        kf_roi = resized[20:140, 1000:1260]
+        # Videoyu 1920x1080 standartına oturt
+        frame_1080 = cv2.resize(frame, (1920, 1080))
 
-        # BGR'dan HSV'ye dönüştür
-        hsv = cv2.cvtColor(kf_roi, cv2.COLOR_BGR2HSV)
+        # ÇİZDİĞİN SİYAH KUTUNUN TAM 1920x1080 PİKSEL KOORDİNATLARI:
+        # Y: 25 ile 150 arası | X: 1520 ile 1905 arası
+        strict_kf = frame_1080[25:150, 1520:1905]
 
-        # 1. VALORANT KIRMIZISI (Sağdaki ölen düşman kutusu)
-        red_mask1 = cv2.inRange(hsv, np.array([0, 120, 120]), np.array([10, 255, 255]))
-        red_mask2 = cv2.inRange(hsv, np.array([170, 120, 120]), np.array([180, 255, 255]))
-        red_mask = red_mask1 | red_mask2
+        hsv = cv2.cvtColor(strict_kf, cv2.COLOR_BGR2HSV)
 
-        # 2. TURKUAZ / CAMGÖBEĞİ (Soldaki takım/bizim kutu)
-        cyan_mask = cv2.inRange(hsv, np.array([75, 80, 100]), np.array([95, 255, 255]))
+        # 1. Valorant Kırmızı Düşman Kutusu
+        r1 = cv2.inRange(hsv, np.array([0, 120, 120]), np.array([10, 255, 255]))
+        r2 = cv2.inRange(hsv, np.array([170, 120, 120]), np.array([180, 255, 255]))
+        red_mask = r1 | r2
+        red_count = cv2.countNonZero(red_mask)
 
-        red_pixels = cv2.countNonZero(red_mask)
-        cyan_pixels = cv2.countNonZero(cyan_mask)
+        # 2. Killfeed İçi Beyaz Silah/Yetenek İkonu
+        white_mask = cv2.inRange(hsv, np.array([0, 0, 185]), np.array([180, 45, 255]))
+        white_count = cv2.countNonZero(white_mask)
 
-        is_kill = False
-        if mode == 'solo':
-            # Sadece bizim vuruşlarımız (kırmızı hedef + turkuaz katil kutusu)
-            if red_pixels > 80 and cyan_pixels > 80:
-                is_kill = True
-        else:
-            # Tüm takım kill'leri (kırmızı düşman kutusu düştüğü an)
-            if red_pixels > 80:
-                is_kill = True
-
-        timestamp = current_frame / fps
-        if is_kill:
-            # Aynı kill bandı ekranda kaldığı için mükerrer saymayı engelle (2.5 sn aralık)
+        # 1920x1080 kutusunda bir kill düşerse:
+        # Kırmızı piksel alanı en az 350 piksel parlar, beyaz silah ikonu en az 60 piksel olur.
+        if (350 <= red_count <= 4500) and white_count >= 60:
+            timestamp = current_frame / fps
             if len(detected_kills) == 0 or (timestamp - detected_kills[-1] > 2.5):
                 detected_kills.append(timestamp)
 
@@ -83,7 +72,6 @@ def process_video():
 
     video_file = request.files['video']
     target_format = request.form.get('format', '9-16')
-    kill_mode = request.form.get('mode', 'team')
 
     unique_id = str(uuid.uuid4())[:8]
     input_path = os.path.join(UPLOAD_FOLDER, f"input_{unique_id}.mp4")
@@ -91,10 +79,9 @@ def process_video():
 
     video_file.save(input_path)
 
-    kill_times = detect_kills_opencv(input_path, mode=kill_mode)
-    print(f"[{unique_id}] Yakalanan Gercek Kill Zamanlari:", kill_times, flush=True)
+    kill_times = detect_kills_opencv(input_path)
+    print(f"[{unique_id}] 1080p Kutudan Yakalanan Kill Zamanlari:", kill_times, flush=True)
 
-    # Her kill'in 2.5 sn öncesi ve 1.0 sn sonrasını topla
     segments = []
     for kt in kill_times:
         start_t = max(0.0, float(kt) - 2.5)
@@ -104,9 +91,8 @@ def process_video():
         else:
             segments.append((start_t, end_t))
 
-    # Eğer hiç kill bulamazsa videonun ortasından 8 saniyelik bir kesit al
     if not segments:
-        segments = [(2.0, 10.0)]
+        segments = [(2.0, 8.0)]
 
     filter_complex_parts = []
     concat_inputs = []
@@ -116,14 +102,13 @@ def process_video():
         a_trim = f"[0:a]atrim=start={st}:end={et},asetpts=PTS-STARTPTS[a{idx}]"
 
         if target_format == '9-16':
-            # GERÇEK 9:16 SHORTS DÜZENİ:
-            # 1. Ana Ekran: Tam ortaya crosshair ve aksiyon alanı crop edilir (1080x1920 tam ekran)
-            # 2. Üst Bar: Sağ üstteki killfeed şeridi büyütülüp tepeye ortalanır
+            # 1. Ana Aksiyon: 1920x1080 videonun ortasındaki 607x1080 alanı alıp 1080x1920'ye büyütür (tam ekran Shorts)
+            # 2. Killfeed: O siyah kutuyu (1520,25) kesip 760 genişliğe ölçekler ve üste yapıştırır
             filter_complex_parts.append(
                 f"{v_trim},split=2[main_raw{idx}][kf_raw{idx}];"
-                f"[main_raw{idx}]crop=ih*9/16:ih:(iw-ow)/2:0,scale=1080:1920[main{idx}];"
-                f"[kf_raw{idx}]crop=iw*0.25:ih*0.16:iw*0.75:0,scale=720:-1[kf_zoom{idx}];"
-                f"[main{idx}][kf_zoom{idx}]overlay=(W-w)/2:100[v{idx}];"
+                f"[main_raw{idx}]crop=607:1080:656:0,scale=1080:1920[main{idx}];"
+                f"[kf_raw{idx}]crop=385:125:1520:25,scale=760:-1[kf_zoom{idx}];"
+                f"[main{idx}][kf_zoom{idx}]overlay=(W-w)/2:120[v{idx}];"
                 f"{a_trim}"
             )
         else:
