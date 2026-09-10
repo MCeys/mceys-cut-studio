@@ -120,7 +120,7 @@
                 <video src="site_logo.webm" class="header-logo" autoplay loop muted playsinline></video>
                 <h1>VALORANT AUTO-STUDIO</h1>
             </a>
-            <span class="badge-val">⚡ V7.0 ULTRA-STABLE</span>
+            <span class="badge-val">⚡ V8.0 TRIM-ENGINE</span>
         </div>
 
         <div class="header-right">
@@ -136,7 +136,7 @@
     <main>
         <div class="studio-card">
             <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 6px; text-align: center;">Valorant Akıllı Highlight Kesici</h2>
-            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Hafifletilmiş kararlı sürüm: Donma yapmadan vuruşları sırasıyla güvenle birleştirir.</p>
+            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Donma ve başa sarma sorunları kökten çözüldü: FFmpeg Trim Motoru ile %100 çerçeve hassasiyeti.</p>
 
             <div class="custom-file-upload" id="drop-zone" onclick="document.getElementById('v-video-file').click()">
                 <span style="font-size: 32px;">🎯</span>
@@ -378,20 +378,26 @@
 
             let concatListContent = "";
 
-            // Kararlı ve hafif parça kesme döngüsü (Tarayıcıyı asla dondurmaz)
+            // FRAME HASSASİYETLİ (TRIM) KESİM DÖNGÜSÜ
             for (let i = 0; i < rawSegments.length; i++) {
                 const seg = rawSegments[i];
                 const segStart = seg.start.toFixed(2);
                 const segDur = Math.max(1.0, (seg.end - seg.start)).toFixed(2);
                 const partName = `part_${i}.mp4`;
 
-                pText.innerText = `Vuruş Sekansı ${i+1}/${rawSegments.length} işleniyor (${segDur}s)...`;
+                pText.innerText = `Vuruş Sekansı ${i+1}/${rawSegments.length} işleniyor (Gelişmiş Kesim: ${segStart}s - ${segDur}s)...`;
 
                 if (selectedFormat === '16-9') {
+                    const filter169 = `[0:v]trim=start=${segStart}:duration=${segDur},setpts=PTS-STARTPTS[vFinal]`;
+                    
                     await ffmpeg.run(
-                        '-i', 'source.mp4',
-                        '-ss', segStart,
+                        '-i', 'source.mp4',               // Input 0: Video için (Trim filtresi okur)
+                        '-ss', segStart,                  // Input 1: Audio için (Kesin seek)
                         '-t', segDur,
+                        '-i', 'source.mp4',
+                        '-filter_complex', filter169,
+                        '-map', '[vFinal]',               // Filtreden çıkan %100 senkronize video
+                        '-map', '1:a?',                   // İkinci inputtan gelen ses (varsa)
                         '-c:v', 'libx264',
                         '-preset', 'ultrafast',
                         '-crf', '22',
@@ -399,29 +405,33 @@
                         partName
                     );
                 } else {
-                    // Hafifletilmiş dikey filtre
+                    // Dikey montaj + trim filtresi bir arada
                     const filter = 
-                        `[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:5[bg];` +
-                        `[0:v]crop=ih*9/16:ih:(iw-ih*9/16)/2:0,scale=1080:1920[fg];` +
-                        `[0:v]crop=iw*0.24:ih*0.16:iw*0.75:ih*0.02,scale=1080:-1[killfeed];` +
+                        `[0:v]trim=start=${segStart}:duration=${segDur},setpts=PTS-STARTPTS[v_trim];` +
+                        `[v_trim]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:5[bg];` +
+                        `[v_trim]crop=ih*9/16:ih:(iw-ih*9/16)/2:0,scale=1080:1920[fg];` +
+                        `[v_trim]crop=iw*0.24:ih*0.16:iw*0.75:ih*0.02,scale=1080:-1[killfeed];` +
                         `[bg][fg]overlay=0:0[base];` +
-                        `[base][killfeed]overlay=0:160[v]`;
+                        `[base][killfeed]overlay=0:160[vFinal]`;
 
                     await ffmpeg.run(
-                        '-i', 'source.mp4',
-                        '-ss', segStart,
+                        '-i', 'source.mp4',               // Input 0: Video için (Trim filtresi ile kayıpsız)
+                        '-ss', segStart,                  // Input 1: Audio için (Hızlı seek)
                         '-t', segDur,
+                        '-i', 'source.mp4',
                         '-filter_complex', filter,
-                        '-map', '[v]',
-                        '-map', '0:a?',
+                        '-map', '[vFinal]',               // Kusursuz kesilmiş ve montajlanmış video
+                        '-map', '1:a?',                   // Tam saniyesinden kırpılmış ses (varsa)
                         '-c:v', 'libx264',
                         '-preset', 'ultrafast',
                         '-crf', '24',
+                        '-c:a', 'aac',
                         partName
                     );
                 }
 
-                concatListContent += `file '${partName}'\n`;
+                concatListContent += `file '${partName}'
+`;
 
                 const partProgress = 35 + Math.round(((i + 1) / rawSegments.length) * 55);
                 pFill.style.width = partProgress + '%';
@@ -448,7 +458,7 @@
                 <div class="clip-item" style="border: 2px solid var(--val-red); background: rgba(255, 70, 85, 0.05);">
                     <div class="clip-info">
                         <span class="clip-tag">🔥 Tek Parça Kill Montajı (${selectedFormat === '9-16' ? '9:16 Shorts' : '16:9 Yatay'})</span>
-                        <span class="clip-time">Ultra Kararlı Sürüm: ${rawSegments.length} vuruş sekansı başarıyla birleştirildi!</span>
+                        <span class="clip-time">Sorunsuz Kesim: ${rawSegments.length} vuruş sekansı başarıyla bağlandı!</span>
                     </div>
                     <a class="btn-clip-dl" href="${url}" download="valorant_montage_shorts.mp4">Montajı İndir</a>
                 </div>
