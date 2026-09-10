@@ -136,6 +136,7 @@
                 <button class="lang-btn" id="btn-lang-en" onclick="setValLang('en')">EN</button>
                 <button class="lang-btn" id="btn-lang-de" onclick="setValLang('de')">DE</button>
                 <button class="lang-btn" id="btn-lang-es" onclick="setValLang('es')">ES</button>
+                <button class="lang-btn" id="btn-lang-ru" onclick="setAppLang('ru')">RU</button>
             </div>
         </div>
     </header>
@@ -332,6 +333,37 @@
                 err_msg: "Error durante el proceso: "
             }
         };
+        ru: {
+                nav_home: "Главная",
+                nav_cs2: "CS2 Shorts",
+                nav_val: "Valorant Shorts",
+                nav_trim: "Без потери качества",
+                badge_val: "⚡ ДВИЖОК PYTHON OPENCV",
+                title: "Умный хайлайт-клипер Valorant",
+                desc: "Полностью автоматический сервер: распознавание киллфида и вертикальный монтаж на Python!",
+                upload_title: "Выберите или перетащите клип",
+                upload_hint: "MP4, MOV или WebM",
+                fmt_9_16_title: "📱 Вертикальные Shorts (9:16)",
+                fmt_9_16_desc: "Естественный фокус + Увеличенный киллфид",
+                fmt_16_9_title: "🖥️ Исходный горизонтальный (16:9)",
+                fmt_16_9_desc: "Без потери качества",
+                mode_header: "🎯 ЦЕЛЬ ДЛЯ КИЛЛОВ:",
+                mode_team: "👥 Вся команда и ACE (Рекомендуется)",
+                mode_solo: "👤 Только мои фраги",
+                status_ready: "Статус: Серверный движок готов",
+                engine_type: "Режим: Python OpenCV",
+                btn_scan: "🎬 АВТОСКАН И МОНТАЖ НА СЕРВЕРЕ",
+                res_headline: "🔥 Готовый монтаж",
+                footer_pres: "MCEYS ПРЕДСТАВЛЯЕТ",
+                msg_uploading: "Загрузка видео на сервер...",
+                msg_analyzing: "Сканирование киллфида по кадрам с помощью Python OpenCV...",
+                msg_rendering: "FFmpeg создает формат 9:16 и киллфид...",
+                msg_done: "Монтаж завершен, скачивание видео!",
+                clip_tag: "🔥 Идеальный монтаж",
+                clip_desc: "Фраги точно определены через OpenCV, лишнее вырезано!",
+                btn_dl: "Скачать монтаж",
+                err_msg: "Ошибка процесса: "
+            }
 
         const player = document.getElementById('val-player');
         const fileInput = document.getElementById('v-video-file');

@@ -123,6 +123,7 @@
                 <button class="lang-btn" id="btn-lang-en" onclick="setTrimLang('en')">EN</button>
                 <button class="lang-btn" id="btn-lang-de" onclick="setTrimLang('de')">DE</button>
                 <button class="lang-btn" id="btn-lang-es" onclick="setTrimLang('es')">ES</button>
+                <button class="lang-btn" id="btn-lang-ru" onclick="setAppLang('ru')">RU</button>
             </div>
         </div>
     </header>
@@ -285,6 +286,26 @@
                 msg_done: "✔ ¡Terminado!"
             }
         };
+        ru: {
+                nav_home: "Главная",
+                nav_cs2: "CS2 Shorts",
+                nav_val: "Valorant Shorts",
+                nav_trim: "Без потери качества",
+                title: "Видео-триммер с живым предпросмотром",
+                desc: "Воспроизводите видео на таймлайне и выбирайте начало и конец в один клик.",
+                upload_title: "Выберите видеофайл",
+                upload_hint: "MP4, MOV или MKV",
+                btn_start: "⏱️ Точка начала",
+                btn_end: "⏱️ Точка конца",
+                lbl_dur: "Длительность:",
+                btn_trim: "⚡ ВЫРЕЗАТЬ БЕЗ ПОТЕРИ КАЧЕСТВА",
+                btn_dl: "🎬 Скачать готовое видео",
+                footer_pres: "MCEYS ПРЕДСТАВЛЯЕТ",
+                msg_load: "Загрузка движка FFmpeg...",
+                msg_mem: "Загрузка видео в память...",
+                msg_proc: "Выполняется быстрая обрезка (-c copy)...",
+                msg_done: "✔ Завершено!"
+            }
 
         let currentLang = localStorage.getItem('mceys_lang') || 'tr';
 
