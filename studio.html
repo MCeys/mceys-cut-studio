@@ -446,7 +446,7 @@
                 <button class="lang-btn" id="btn-lang-en" onclick="setLanguage('en')">EN</button>
                 <button class="lang-btn" id="btn-lang-de" onclick="setLanguage('de')">DE</button>
                 <button class="lang-btn" id="btn-lang-es" onclick="setLanguage('es')">ES</button>
-                <button class="lang-btn" id="btn-lang-ru" onclick="setAppLang('ru')">RU</button>
+                <button class="lang-btn" id="btn-lang-ru" onclick="setLanguage('ru')">RU</button>
             </div>
         </div>
     </header>
@@ -686,7 +686,7 @@
         let lastRenderedBlob = null;
         let lastRenderedFilename = "shorts.mp4";
 
-        // ================= 4 DİLLİ SÖZLÜK (TR / EN / DE / ES) =================
+        // ================= 5 DİLLİ SÖZLÜK (TR / EN / DE / ES / RU) =================
         const translations = {
             tr: {
                 nav_home: "Ana Sayfa",
@@ -935,8 +935,7 @@
                 alert_no_file: "¡Por favor selecciona un archivo de video!",
                 share_headline: "🚀 Compartir en Plataformas:",
                 share_device: "Compartir en Dispositivo (Apps)"
-            }
-        };
+            },
             ru: {
                 nav_home: "Главная",
                 nav_cs2: "CS2 Shorts",
@@ -999,6 +998,7 @@
                 share_headline: "🚀 Поделиться на платформах:",
                 share_device: "Поделиться на устройстве"
             }
+        };
 
         function updateFileName(input, labelId, defaultKey) {
             const label = document.getElementById(labelId);
@@ -1257,7 +1257,7 @@
 
             progressBox.style.display = 'block';
             document.getElementById('progress-bar-fill').style.width = '60%';
-            document.getElementById('progress-title').innerText = currentLang === 'tr' ? 'Kare Yakalanıyor...' : (currentLang === 'es' ? 'Capturando fotograma...' : (currentLang === 'de' ? 'Frame wird erfasst...' : 'Capturing Frame...'));
+            document.getElementById('progress-title').innerText = currentLang === 'tr' ? 'Kare Yakalanıyor...' : (currentLang === 'es' ? 'Capturando fotograma...' : (currentLang === 'ru' ? 'Захват кадра...' : (currentLang === 'de' ? 'Frame wird erfasst...' : 'Capturing Frame...')));
             document.getElementById('status-msg').innerText = '📸 Scanning video timestamp...';
 
             const video = document.createElement('video');
@@ -1373,7 +1373,7 @@
             resultActions.innerHTML = '';
 
             if(processMode === 'cover_only') {
-                progressTitle.innerText = currentLang === 'tr' ? 'Kapak Hazırlanıyor...' : (currentLang === 'es' ? 'Creando portada...' : 'Generating Cover...');
+                progressTitle.innerText = currentLang === 'tr' ? 'Kapak Hazırlanıyor...' : (currentLang === 'es' ? 'Creando portada...' : (currentLang === 'ru' ? 'Создание обложки...' : 'Generating Cover...'));
                 statusMsg.innerText = '🖼️ 9:16 Vertical cover rendered...';
                 progressBar.style.width = '70%';
                 generateVerticalCover(videoFile, startSec, customTxt, () => {
@@ -1387,7 +1387,7 @@
 
             progressBar.style.width = '10%';
             progressPercent.innerText = '%10';
-            progressTitle.innerText = currentLang === 'tr' ? 'Motor Yükleniyor...' : (currentLang === 'es' ? 'Cargando motor...' : 'Loading Engine...');
+            progressTitle.innerText = currentLang === 'tr' ? 'Motor Yükleniyor...' : (currentLang === 'es' ? 'Cargando motor...' : (currentLang === 'ru' ? 'Загрузка движка...' : 'Loading Engine...'));
             statusMsg.innerText = '⚙️ WebAssembly FFmpeg loading...';
 
             try {
@@ -1397,14 +1397,14 @@
 
                 progressBar.style.width = '30%';
                 progressPercent.innerText = '%30';
-                progressTitle.innerText = currentLang === 'tr' ? 'Video Belleğe Alınıyor...' : (currentLang === 'es' ? 'Cargando video en memoria...' : 'Loading Video to Memory...');
+                progressTitle.innerText = currentLang === 'tr' ? 'Video Belleğe Alınıyor...' : (currentLang === 'es' ? 'Cargando video en memoria...' : (currentLang === 'ru' ? 'Загрузка в память...' : 'Loading Video to Memory...'));
                 statusMsg.innerText = '💾 Processing local buffer...';
 
                 ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(videoFile));
 
                 progressBar.style.width = '55%';
                 progressPercent.innerText = '%55';
-                progressTitle.innerText = currentLang === 'tr' ? 'Shorts Render Alınıyor...' : (currentLang === 'es' ? 'Renderizando Shorts...' : 'Rendering Shorts (Max 60s)...');
+                progressTitle.innerText = currentLang === 'tr' ? 'Shorts Render Alınıyor...' : (currentLang === 'es' ? 'Renderizando Shorts...' : (currentLang === 'ru' ? 'Рендеринг Shorts...' : 'Rendering Shorts (Max 60s)...'));
                 statusMsg.innerText = (mode === 'cs2') 
                     ? '🎯 Scaling killfeed & applying 9:16 layout...' 
                     : '🎬 Cropping & applying blur background...';

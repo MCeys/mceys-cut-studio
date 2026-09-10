@@ -123,7 +123,7 @@
                 <button class="lang-btn" id="btn-lang-en" onclick="setTrimLang('en')">EN</button>
                 <button class="lang-btn" id="btn-lang-de" onclick="setTrimLang('de')">DE</button>
                 <button class="lang-btn" id="btn-lang-es" onclick="setTrimLang('es')">ES</button>
-                <button class="lang-btn" id="btn-lang-ru" onclick="setAppLang('ru')">RU</button>
+                <button class="lang-btn" id="btn-lang-ru" onclick="setTrimLang('ru')">RU</button>
             </div>
         </div>
     </header>
@@ -148,7 +148,7 @@
 
                 <div class="timeline-controls">
                     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                        <button type="button" class="marker-btn" id="btn-play-pause" onclick="togglePlay()" style="padding: 6px 14px; font-size: 14px;">▶️ Oynat</button>
+                        <button type="button" class="marker-btn" id="btn-play-pause" onclick="togglePlay()" style="padding: 6px 14px; font-size: 14px;">▶️</button>
                         <input type="range" id="timeline-scrubber" class="timeline-slider" min="0" value="0" step="0.05" oninput="onScrub(this.value)" style="margin-bottom: 0; flex: 1;">
                     </div>
                     
@@ -284,9 +284,8 @@
                 msg_mem: "Cargando video en memoria...",
                 msg_proc: "Corte rápido en curso (-c copy)...",
                 msg_done: "✔ ¡Terminado!"
-            }
-        };
-        ru: {
+            },
+            ru: {
                 nav_home: "Главная",
                 nav_cs2: "CS2 Shorts",
                 nav_val: "Valorant Shorts",
@@ -306,6 +305,7 @@
                 msg_proc: "Выполняется быстрая обрезка (-c copy)...",
                 msg_done: "✔ Завершено!"
             }
+        };
 
         let currentLang = localStorage.getItem('mceys_lang') || 'tr';
 

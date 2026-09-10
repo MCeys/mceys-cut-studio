@@ -136,7 +136,7 @@
                 <button class="lang-btn" id="btn-lang-en" onclick="setValLang('en')">EN</button>
                 <button class="lang-btn" id="btn-lang-de" onclick="setValLang('de')">DE</button>
                 <button class="lang-btn" id="btn-lang-es" onclick="setValLang('es')">ES</button>
-                <button class="lang-btn" id="btn-lang-ru" onclick="setAppLang('ru')">RU</button>
+                <button class="lang-btn" id="btn-lang-ru" onclick="setValLang('ru')">RU</button>
             </div>
         </div>
     </header>
@@ -331,9 +331,8 @@
                 clip_desc: "¡Intervalos de bajas capturados con precisión, tiempos muertos eliminados!",
                 btn_dl: "Descargar Montaje",
                 err_msg: "Error durante el proceso: "
-            }
-        };
-        ru: {
+            },
+            ru: {
                 nav_home: "Главная",
                 nav_cs2: "CS2 Shorts",
                 nav_val: "Valorant Shorts",
@@ -364,6 +363,7 @@
                 btn_dl: "Скачать монтаж",
                 err_msg: "Ошибка процесса: "
             }
+        };
 
         const player = document.getElementById('val-player');
         const fileInput = document.getElementById('v-video-file');
