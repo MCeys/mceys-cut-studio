@@ -27,7 +27,6 @@ def detect_kills_opencv(video_path):
     detected_kills = []
     frame_step = max(1, int(fps * 0.15))
     current_frame = 0
-
     prev_red_count = 0
 
     while current_frame < total_frames:
@@ -37,7 +36,7 @@ def detect_kills_opencv(video_path):
             break
 
         frame_1080 = cv2.resize(frame, (1920, 1080))
-        # Tam çizdiğin 1080p siyah kutu
+        # Tam 1080p siyah kutu koordinatları
         strict_kf = frame_1080[25:150, 1520:1905]
 
         hsv = cv2.cvtColor(strict_kf, cv2.COLOR_BGR2HSV)
@@ -47,17 +46,16 @@ def detect_kills_opencv(video_path):
         r2 = cv2.inRange(hsv, np.array([172, 140, 130]), np.array([180, 255, 255]))
         red_count = cv2.countNonZero(r1 | r2)
 
-        # Beyaz ikon
+        # Beyaz silah ikonu
         white_mask = cv2.inRange(hsv, np.array([0, 0, 200]), np.array([180, 30, 255]))
         white_count = cv2.countNonZero(white_mask)
 
-        # Delta: Kırmızı piksel sayısı aniden en az 400 piksel birden fırlamalı!
-        # Arka plandaki bina sabit kalır ama yeni kill şak diye kutuya düşer.
+        # SIKI DELTA VE HACİM KONTROLÜ
         red_surge = red_count - prev_red_count
-
         timestamp = current_frame / fps
 
-        if red_surge > 400 and white_count >= 50:
+        # 59. saniyedeki çatı (+2222) ve bıçak patlamaları (>950) direkt elenir
+        if (350 <= red_surge <= 950) and (red_count <= 1800) and (white_count >= 50):
             if len(detected_kills) == 0 or (timestamp - detected_kills[-1] > 2.5):
                 detected_kills.append(timestamp)
 
@@ -82,7 +80,7 @@ def process_video():
     video_file.save(input_path)
 
     kill_times = detect_kills_opencv(input_path)
-    print(f"[{unique_id}] Delta ile Filtrelenen Kill Zamanlari:", kill_times, flush=True)
+    print(f"[{unique_id}] Çatı ve Bıçak Elenmiş Kill Zamanlari:", kill_times, flush=True)
 
     segments = []
     for kt in kill_times:
