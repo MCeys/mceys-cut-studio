@@ -14,7 +14,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.route('/api/health', methods=['GET'])
 def health():
-    return jsonify({"status": "ok", "message": "Python OpenCV motoru aktif!"}), 200
+    return jsonify({"status": "ok", "message": "Python OpenCV motoru devrede!"}), 200
 
 def detect_kills_opencv(video_path, mode='team'):
     cap = cv2.VideoCapture(video_path)
@@ -23,13 +23,12 @@ def detect_kills_opencv(video_path, mode='team'):
 
     fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    duration = total_frames / fps
 
     detected_kills = []
     prev_region = None
     
-    # Her 0.3 saniyede 1 kare kontrol et (Sunucuyu yormadan hızlı tarama)
-    frame_step = max(1, int(fps * 0.30))
+    # 0.2 saniyede bir tara (daha hassas)
+    frame_step = max(1, int(fps * 0.20))
     current_frame = 0
 
     while current_frame < total_frames:
@@ -38,41 +37,39 @@ def detect_kills_opencv(video_path, mode='team'):
         if not ret:
             break
 
-        # Standart 640x360 çözünürlüğe ölçekle
         resized = cv2.resize(frame, (640, 360))
 
-        # Sağ üst Valorant Killfeed koordinatları
-        # x: 80% - 98%, y: 1.5% - 11%
-        kf_y1, kf_y2 = int(360 * 0.015), int(360 * 0.11)
-        kf_x1, kf_x2 = int(640 * 0.80), int(640 * 0.98)
+        # Sağ üst Valorant Killfeed alanı
+        kf_y1, kf_y2 = int(360 * 0.01), int(360 * 0.16)
+        kf_x1, kf_x2 = int(640 * 0.72), int(640 * 0.99)
         cur_region = resized[kf_y1:kf_y2, kf_x1:kf_x2]
 
         if prev_region is not None:
             diff = cv2.absdiff(cur_region, prev_region)
             avg_delta = np.mean(diff)
 
-            # BGR formatında renk filtreleri
             b = cur_region[:, :, 0].astype(int)
             g = cur_region[:, :, 1].astype(int)
             r = cur_region[:, :, 2].astype(int)
 
-            red_mask = (r > 140) & (r > g + 35) & (r > b + 25)
-            team_mask = (g > 115) & (b > 105) & (g > r + 20) & (b > r + 15)
+            # Eşik değerleri daha hassas hale getirildi
+            red_mask = (r > 125) & (r > g + 25) & (r > b + 20)
+            team_mask = (g > 105) & (b > 95) & (g > r + 15)
 
             red_count = np.count_nonzero(red_mask)
             team_count = np.count_nonzero(team_mask)
 
             is_kill = False
             if mode == 'solo':
-                if avg_delta > 24 and red_count >= 20:
+                if avg_delta > 15 and red_count >= 12:
                     is_kill = True
             else:
-                if avg_delta > 24 and (red_count >= 20 or team_count >= 20):
+                if avg_delta > 15 and (red_count >= 12 or team_count >= 12):
                     is_kill = True
 
             timestamp = current_frame / fps
             if is_kill:
-                if len(detected_kills) == 0 or (timestamp - detected_kills[-1] > 2.2):
+                if len(detected_kills) == 0 or (timestamp - detected_kills[-1] > 2.0):
                     detected_kills.append(timestamp)
 
         prev_region = cur_region
@@ -96,10 +93,11 @@ def process_video():
 
     video_file.save(input_path)
 
-    # 1. OpenCV ile video içindeki gerçek kill anlarını milimetrik yakala
+    # 1. OpenCV ile kill anlarını yakala
     kill_times = detect_kills_opencv(input_path, mode=kill_mode)
+    print(f"[{unique_id}] Yakalanan Kill Zamanlari:", kill_times, flush=True)
 
-    # 2. Her kill'in 3.5 sn öncesi ve 1.5 sn sonrasını montajla
+    # 2. Kill anlarının 3.5 sn öncesi ve 1.5 sn sonrasını topla
     segments = []
     for kt in kill_times:
         start_t = max(0.0, float(kt) - 3.5)
@@ -109,9 +107,9 @@ def process_video():
         else:
             segments.append((start_t, end_t))
 
-    # Kill yakalanamazsa ilk 15 saniyeyi al
+    # Eğer video boyunca tek bir kill bile okuyamadıysa en azından ilk 10 saniyeyi al
     if not segments:
-        segments = [(0.0, 15.0)]
+        segments = [(0.0, 10.0)]
 
     filter_complex_parts = []
     concat_inputs = []
@@ -121,11 +119,17 @@ def process_video():
         a_trim = f"[0:a]atrim=start={st}:end={et},asetpts=PTS-STARTPTS[a{idx}]"
 
         if target_format == '9-16':
+            # Valorant Profesyonel Shorts Şablonu:
+            # 1. Arka plan: 1080x1920 blur
+            # 2. Orta katman: Oyunun ana aksiyon/crosshair alanı (büyütülmüş ve ortalanmış)
+            # 3. Üst katman: Sağ üstteki Killfeed'in büyütülüp tepeye yapıştırılmış hali
             filter_complex_parts.append(
-                f"{v_trim},split=2[bg_raw{idx}][fg_raw{idx}];"
+                f"{v_trim},split=3[bg_raw{idx}][fg_raw{idx}][kf_raw{idx}];"
                 f"[bg_raw{idx}]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=25:5[bg{idx}];"
                 f"[fg_raw{idx}]scale=1080:-1[fg{idx}];"
-                f"[bg{idx}][fg{idx}]overlay=(W-w)/2:(H-h)/2[v{idx}];"
+                f"[bg{idx}][fg{idx}]overlay=(W-w)/2:(H-h)/2[base{idx}];"
+                f"[kf_raw{idx}]crop=iw*0.25:ih*0.20:iw*0.75:0,scale=540:-1[kf_zoom{idx}];"
+                f"[base{idx}][kf_zoom{idx}]overlay=(W-w)/2:120[v{idx}];"
                 f"{a_trim}"
             )
         else:
