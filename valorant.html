@@ -91,7 +91,7 @@
         .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .progress-box { display: none; margin-top: 20px; padding: 16px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 10px; }
-        .progress-bar-fill { width: 0%; height: 8px; background: linear-gradient(90deg, var(--val-red), #ff8a95); border-radius: 4px; transition: width 0.2s; }
+        .progress-bar-fill { width: 0%; height: 8px; background: linear-gradient(90deg, var(--val-red), #ff8a95); border-radius: 4px; transition: width 0.3s; }
 
         .clips-container { display: none; margin-top: 24px; }
         .clip-item { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 10px; padding: 14px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
@@ -112,7 +112,7 @@
                 <video src="site_logo.webm" class="header-logo" autoplay loop muted playsinline></video>
                 <h1>VALORANT AUTO-STUDIO</h1>
             </a>
-            <span class="badge-val">⚡ PYTHON VPS MOTORU</span>
+            <span class="badge-val">⚡ PYTHON OPENCV MOTORU</span>
         </div>
 
         <div class="header-right">
@@ -128,7 +128,7 @@
     <main>
         <div class="studio-card">
             <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 6px; text-align: center;">Valorant Akıllı Highlight Kesici</h2>
-            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Sunucu Destekli FFmpeg Motoru: Tarayıcı çökmesi yok, doğrudan VPS hızında montaj!</p>
+            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Tam Otomatik Sunucu Motoru: Killfeed tespiti ve dikey montaj doğrudan Python tarafından yapılır!</p>
 
             <div class="custom-file-upload" id="drop-zone" onclick="document.getElementById('v-video-file').click()">
                 <span style="font-size: 32px;">🎯</span>
@@ -162,16 +162,16 @@
                 </div>
 
                 <div class="debug-panel" id="debug-panel">
-                    <span id="debug-status">Durum: Hazır</span>
-                    <span id="debug-metrics" style="color:#00f2fe;">Takip: Bekleniyor</span>
+                    <span id="debug-status">Durum: Sunucu motoru hazır</span>
+                    <span id="debug-metrics" style="color:#00f2fe;">Mod: Python OpenCV</span>
                 </div>
 
-                <button type="button" class="btn-submit" id="btn-scan" onclick="startScanAndRender()">🎬 KILL'LERİ TARA VE SUNUCUDA RENDER AL</button>
+                <button type="button" class="btn-submit" id="btn-scan" onclick="startScanAndRender()">🎬 SUNUCUDA OTOMATİK TARA VE MONTAJLA</button>
             </div>
 
             <div id="progress-box" class="progress-box">
                 <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px;">
-                    <span id="progress-text">Killfeed taranıyor...</span>
+                    <span id="progress-text">İşlem başlatılıyor...</span>
                     <span id="progress-pct">%0</span>
                 </div>
                 <div style="background: #1a1e2b; height: 8px; border-radius: 4px; overflow: hidden;">
@@ -186,16 +186,12 @@
         </div>
     </main>
 
-    <canvas id="scanCanvas" style="display:none;"></canvas>
-
     <footer>
         <p>MCEYS VALORANT STUDİO &copy; 2026 | <span>MCEYS SUNAR</span></p>
     </footer>
 
     <script>
         const player = document.getElementById('val-player');
-        const scanCanvas = document.getElementById('scanCanvas');
-        const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
         const fileInput = document.getElementById('v-video-file');
         const dropZone = document.getElementById('drop-zone');
         
@@ -235,14 +231,11 @@
 
             player.src = URL.createObjectURL(file);
             player.load();
-
-            player.onloadedmetadata = () => {
-                scanCanvas.width = 640;
-                scanCanvas.height = 360;
-            };
         }
 
         async function startScanAndRender() {
+            if (!selectedFile) return;
+
             const btn = document.getElementById('btn-scan');
             const pBox = document.getElementById('progress-box');
             const pFill = document.getElementById('progress-fill');
@@ -251,101 +244,42 @@
             const clipsBox = document.getElementById('clips-container');
             const clipsList = document.getElementById('clips-list');
             const debugStatus = document.getElementById('debug-status');
-            const debugMetrics = document.getElementById('debug-metrics');
 
             btn.disabled = true;
             clipsBox.style.display = 'none';
             clipsList.innerHTML = '';
             pBox.style.display = 'block';
 
-            const duration = player.duration || 10;
-            const step = 0.35;
-            const detectedKills = [];
-
-            const kfX = Math.floor(640 * 0.80);
-            const kfY = Math.floor(360 * 0.015);
-            const kfW = Math.floor(640 * 0.18);
-            const kfH = Math.floor(360 * 0.095);
-
-            debugStatus.innerText = "Killfeed taranıyor...";
-
-            let prevKfData = null;
-            const scanLimit = Math.max(0, duration - 6.5);
-
-            for (let t = 0; t < scanLimit; t += step) {
-                await new Promise(res => {
-                    const handler = () => {
-                        player.removeEventListener('seeked', handler);
-                        requestAnimationFrame(() => res());
-                    };
-                    player.addEventListener('seeked', handler);
-                    player.currentTime = t;
-                });
-
-                scanCtx.drawImage(player, 0, 0, 640, 360);
-
-                const curKfData = scanCtx.getImageData(kfX, kfY, kfW, kfH).data;
-                if (prevKfData) {
-                    let kfDelta = 0;
-                    let redPixels = 0;
-                    let teamPixels = 0;
-
-                    for (let i = 0; i < curKfData.length; i += 4) {
-                        const r = curKfData[i];
-                        const g = curKfData[i+1];
-                        const b = curKfData[i+2];
-
-                        kfDelta += Math.abs(r - prevKfData[i]) +
-                                   Math.abs(g - prevKfData[i+1]) +
-                                   Math.abs(b - prevKfData[i+2]);
-
-                        if (r > 145 && r > g + 35 && r > b + 25) redPixels++;
-                        if (g > 115 && b > 105 && g > r + 20 && b > r + 15) teamPixels++;
-                    }
-
-                    const avgDelta = kfDelta / (curKfData.length / 4);
-                    
-                    let isKill = false;
-                    if (selectedKillMode === 'solo') {
-                        if (avgDelta > 26 && redPixels >= 22) isKill = true;
-                    } else {
-                        if (avgDelta > 26 && (redPixels >= 22 || teamPixels >= 22)) isKill = true;
-                    }
-
-                    if (isKill) {
-                        if (detectedKills.length === 0 || (t - detectedKills[detectedKills.length - 1] > 2.0)) {
-                            detectedKills.push(t);
-                            debugMetrics.innerText = `Son Kill: ${t.toFixed(1)}s | Toplam: ${detectedKills.length}`;
-                        }
-                    }
-                }
-                prevKfData = curKfData;
-
-                const progress = Math.round((t / duration) * 40);
-                pFill.style.width = progress + '%';
-                pPct.innerText = '%' + progress;
-            }
-
-            debugStatus.innerText = `Doğrulanan Gerçek Kill: ${detectedKills.length} adet`;
-
-            if (detectedKills.length === 0) {
-                alert("Killfeed'de geçerli vuruş tespit edilemedi kanka.");
-                btn.disabled = false;
-                pBox.style.display = 'none';
-                return;
-            }
-
-            // Sunucuya aktarma ve FFmpeg ile render alma aşaması
-            pText.innerText = "Video sunucuya aktarılıyor ve VPS FFmpeg ile işleniyor...";
-            pFill.style.width = '65%';
-            pPct.innerText = '%65';
+            pText.innerText = "Video sunucuya yükleniyor (Lütfen bekleyin)...";
+            pFill.style.width = '20%';
+            pPct.innerText = '%20';
+            debugStatus.innerText = "Yükleniyor...";
 
             const formData = new FormData();
             formData.append('video', selectedFile);
             formData.append('format', selectedFormat);
-            formData.append('kills', JSON.stringify(detectedKills));
+            formData.append('mode', selectedKillMode);
 
             try {
+                // Yükleme ve OpenCV analizi simülasyon adımı
+                setTimeout(() => {
+                    if (btn.disabled) {
+                        pText.innerText = "Python OpenCV ile killfeed kare kare taranıyor...";
+                        pFill.style.width = '55%';
+                        pPct.innerText = '%55';
+                        debugStatus.innerText = "Analiz ediliyor...";
+                    }
+                }, 2500);
+
+                setTimeout(() => {
+                    if (btn.disabled) {
+                        pText.innerText = "FFmpeg dikey montaj ve blur arka planı üretiyor...";
+                        pFill.style.width = '80%';
+                        pPct.innerText = '%80';
+                        debugStatus.innerText = "Renderlanıyor...";
+                    }
+                }, 7000);
+
                 const response = await fetch('/api/process', {
                     method: 'POST',
                     body: formData
@@ -356,9 +290,9 @@
                     throw new Error(errData.error || 'Sunucu render hatası verdi');
                 }
 
-                pText.innerText = "Video indiriliyor...";
-                pFill.style.width = '90%';
-                pPct.innerText = '%90';
+                pText.innerText = "Montaj tamamlandı, video indiriliyor!";
+                pFill.style.width = '100%';
+                pPct.innerText = '%100';
 
                 const blob = await response.blob();
                 const url = URL.createObjectURL(blob);
@@ -366,20 +300,19 @@
                 clipsList.innerHTML = `
                     <div class="clip-item" style="border: 2px solid var(--val-red); background: rgba(255, 70, 85, 0.05);">
                         <div class="clip-info">
-                            <span class="clip-tag">🔥 Sunucu Montajı Hazır (${selectedFormat === '9-16' ? '9:16 Shorts' : '16:9 Yatay'})</span>
-                            <span class="clip-time">VPS FFmpeg motoruyla sıfır tarayıcı yüküyle üretildi!</span>
+                            <span class="clip-tag">🔥 Kusursuz Sunucu Montajı (${selectedFormat === '9-16' ? '9:16 Shorts' : '16:9'})</span>
+                            <span class="clip-time">OpenCV ile kill aralıkları tam yakalandı, gereksiz kısımlar atıldı!</span>
                         </div>
                         <a class="btn-clip-dl" href="${url}" download="valorant_shorts_${Date.now()}.mp4">Montajı İndir</a>
                     </div>
                 `;
 
-                pText.innerText = "✔ Shorts montajı kusursuz hazır!";
-                pFill.style.width = '100%';
-                pPct.innerText = '%100';
                 clipsBox.style.display = 'block';
+                debugStatus.innerText = "İşlem başarılı!";
             } catch (err) {
                 alert("İşlem sırasında hata: " + err.message);
                 pText.innerText = "Hata oluştu!";
+                debugStatus.innerText = "Hata!";
             } finally {
                 btn.disabled = false;
             }

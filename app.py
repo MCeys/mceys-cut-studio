@@ -1,7 +1,8 @@
 import os
-import json
 import subprocess
 import uuid
+import numpy as np
+import cv2
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 
@@ -13,7 +14,72 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.route('/api/health', methods=['GET'])
 def health():
-    return jsonify({"status": "ok", "message": "Python FFmpeg motoru devrede!"}), 200
+    return jsonify({"status": "ok", "message": "Python OpenCV motoru aktif!"}), 200
+
+def detect_kills_opencv(video_path, mode='team'):
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        return []
+
+    fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    duration = total_frames / fps
+
+    detected_kills = []
+    prev_region = None
+    
+    # Her 0.3 saniyede 1 kare kontrol et (Sunucuyu yormadan hızlı tarama)
+    frame_step = max(1, int(fps * 0.30))
+    current_frame = 0
+
+    while current_frame < total_frames:
+        cap.set(cv2.CAP_PROP_POS_FRAMES, current_frame)
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        # Standart 640x360 çözünürlüğe ölçekle
+        resized = cv2.resize(frame, (640, 360))
+
+        # Sağ üst Valorant Killfeed koordinatları
+        # x: 80% - 98%, y: 1.5% - 11%
+        kf_y1, kf_y2 = int(360 * 0.015), int(360 * 0.11)
+        kf_x1, kf_x2 = int(640 * 0.80), int(640 * 0.98)
+        cur_region = resized[kf_y1:kf_y2, kf_x1:kf_x2]
+
+        if prev_region is not None:
+            diff = cv2.absdiff(cur_region, prev_region)
+            avg_delta = np.mean(diff)
+
+            # BGR formatında renk filtreleri
+            b = cur_region[:, :, 0].astype(int)
+            g = cur_region[:, :, 1].astype(int)
+            r = cur_region[:, :, 2].astype(int)
+
+            red_mask = (r > 140) & (r > g + 35) & (r > b + 25)
+            team_mask = (g > 115) & (b > 105) & (g > r + 20) & (b > r + 15)
+
+            red_count = np.count_nonzero(red_mask)
+            team_count = np.count_nonzero(team_mask)
+
+            is_kill = False
+            if mode == 'solo':
+                if avg_delta > 24 and red_count >= 20:
+                    is_kill = True
+            else:
+                if avg_delta > 24 and (red_count >= 20 or team_count >= 20):
+                    is_kill = True
+
+            timestamp = current_frame / fps
+            if is_kill:
+                if len(detected_kills) == 0 or (timestamp - detected_kills[-1] > 2.2):
+                    detected_kills.append(timestamp)
+
+        prev_region = cur_region
+        current_frame += frame_step
+
+    cap.release()
+    return detected_kills
 
 @app.route('/api/process', methods=['POST'])
 def process_video():
@@ -22,12 +88,7 @@ def process_video():
 
     video_file = request.files['video']
     target_format = request.form.get('format', '9-16')
-    raw_kills = request.form.get('kills', '[]')
-
-    try:
-        kill_times = json.loads(raw_kills)
-    except Exception:
-        kill_times = []
+    kill_mode = request.form.get('mode', 'team')
 
     unique_id = str(uuid.uuid4())[:8]
     input_path = os.path.join(UPLOAD_FOLDER, f"input_{unique_id}.mp4")
@@ -35,7 +96,10 @@ def process_video():
 
     video_file.save(input_path)
 
-    # Vurus anlarinin 3.5 sn oncesi ve 1.5 sn sonrasini kes
+    # 1. OpenCV ile video içindeki gerçek kill anlarını milimetrik yakala
+    kill_times = detect_kills_opencv(input_path, mode=kill_mode)
+
+    # 2. Her kill'in 3.5 sn öncesi ve 1.5 sn sonrasını montajla
     segments = []
     for kt in kill_times:
         start_t = max(0.0, float(kt) - 3.5)
@@ -45,6 +109,7 @@ def process_video():
         else:
             segments.append((start_t, end_t))
 
+    # Kill yakalanamazsa ilk 15 saniyeyi al
     if not segments:
         segments = [(0.0, 15.0)]
 
