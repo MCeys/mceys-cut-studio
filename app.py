@@ -25,8 +25,10 @@ def detect_kills_opencv(video_path):
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     detected_kills = []
-    frame_step = max(1, int(fps * 0.20))
+    frame_step = max(1, int(fps * 0.15))
     current_frame = 0
+
+    prev_red_count = 0
 
     while current_frame < total_frames:
         cap.set(cv2.CAP_PROP_POS_FRAMES, current_frame)
@@ -34,32 +36,32 @@ def detect_kills_opencv(video_path):
         if not ret:
             break
 
-        # Videoyu 1920x1080 standartına oturt
         frame_1080 = cv2.resize(frame, (1920, 1080))
-
-        # ÇİZDİĞİN SİYAH KUTUNUN TAM 1920x1080 PİKSEL KOORDİNATLARI:
-        # Y: 25 ile 150 arası | X: 1520 ile 1905 arası
+        # Tam çizdiğin 1080p siyah kutu
         strict_kf = frame_1080[25:150, 1520:1905]
 
         hsv = cv2.cvtColor(strict_kf, cv2.COLOR_BGR2HSV)
 
-        # 1. Valorant Kırmızı Düşman Kutusu
-        r1 = cv2.inRange(hsv, np.array([0, 120, 120]), np.array([10, 255, 255]))
-        r2 = cv2.inRange(hsv, np.array([170, 120, 120]), np.array([180, 255, 255]))
-        red_mask = r1 | r2
-        red_count = cv2.countNonZero(red_mask)
+        # Net Valorant Düşman Kırmızısı
+        r1 = cv2.inRange(hsv, np.array([0, 140, 130]), np.array([8, 255, 255]))
+        r2 = cv2.inRange(hsv, np.array([172, 140, 130]), np.array([180, 255, 255]))
+        red_count = cv2.countNonZero(r1 | r2)
 
-        # 2. Killfeed İçi Beyaz Silah/Yetenek İkonu
-        white_mask = cv2.inRange(hsv, np.array([0, 0, 185]), np.array([180, 45, 255]))
+        # Beyaz ikon
+        white_mask = cv2.inRange(hsv, np.array([0, 0, 200]), np.array([180, 30, 255]))
         white_count = cv2.countNonZero(white_mask)
 
-        # 1920x1080 kutusunda bir kill düşerse:
-        # Kırmızı piksel alanı en az 350 piksel parlar, beyaz silah ikonu en az 60 piksel olur.
-        if (350 <= red_count <= 4500) and white_count >= 60:
-            timestamp = current_frame / fps
+        # Delta: Kırmızı piksel sayısı aniden en az 400 piksel birden fırlamalı!
+        # Arka plandaki bina sabit kalır ama yeni kill şak diye kutuya düşer.
+        red_surge = red_count - prev_red_count
+
+        timestamp = current_frame / fps
+
+        if red_surge > 400 and white_count >= 50:
             if len(detected_kills) == 0 or (timestamp - detected_kills[-1] > 2.5):
                 detected_kills.append(timestamp)
 
+        prev_red_count = red_count
         current_frame += frame_step
 
     cap.release()
@@ -80,7 +82,7 @@ def process_video():
     video_file.save(input_path)
 
     kill_times = detect_kills_opencv(input_path)
-    print(f"[{unique_id}] 1080p Kutudan Yakalanan Kill Zamanlari:", kill_times, flush=True)
+    print(f"[{unique_id}] Delta ile Filtrelenen Kill Zamanlari:", kill_times, flush=True)
 
     segments = []
     for kt in kill_times:
@@ -102,8 +104,6 @@ def process_video():
         a_trim = f"[0:a]atrim=start={st}:end={et},asetpts=PTS-STARTPTS[a{idx}]"
 
         if target_format == '9-16':
-            # 1. Ana Aksiyon: 1920x1080 videonun ortasındaki 607x1080 alanı alıp 1080x1920'ye büyütür (tam ekran Shorts)
-            # 2. Killfeed: O siyah kutuyu (1520,25) kesip 760 genişliğe ölçekler ve üste yapıştırır
             filter_complex_parts.append(
                 f"{v_trim},split=2[main_raw{idx}][kf_raw{idx}];"
                 f"[main_raw{idx}]crop=607:1080:656:0,scale=1080:1920[main{idx}];"
