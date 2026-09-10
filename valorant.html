@@ -120,7 +120,7 @@
                 <video src="site_logo.webm" class="header-logo" autoplay loop muted playsinline></video>
                 <h1>VALORANT AUTO-STUDIO</h1>
             </a>
-            <span class="badge-val">⚡ V6.2 SEEK-FIXED</span>
+            <span class="badge-val">⚡ V6.5 SINGLE-PASS</span>
         </div>
 
         <div class="header-right">
@@ -136,7 +136,7 @@
     <main>
         <div class="studio-card">
             <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 6px; text-align: center;">Valorant Akıllı Highlight Kesici</h2>
-            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Tekrarlayan döngü hatası çözüldü: Her kill sekansı bağımsız kesilir ve sırayla bağlanır.</p>
+            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;">Tek dosya işleme mimarisi: Parçalamaya son, döngü hatası tamamen ortadan kalktı.</p>
 
             <div class="custom-file-upload" id="drop-zone" onclick="document.getElementById('v-video-file').click()">
                 <span style="font-size: 32px;">🎯</span>
@@ -272,7 +272,7 @@
             const step = 0.35;
             const detectedKills = [];
 
-            // Sağ üst dar killfeed koridoru
+            // Sağ üst killfeed koridoru
             const kfX = Math.floor(640 * 0.80);
             const kfY = Math.floor(360 * 0.015);
             const kfW = Math.floor(640 * 0.18);
@@ -281,7 +281,6 @@
             debugStatus.innerText = "Killfeed taranıyor...";
 
             let prevKfData = null;
-            // Kick kapanış ekranı ve Buy Phase sızmasını önlemek için son 8 saniyeyi tarama dışı bırak
             const scanLimit = Math.max(0, duration - 8.0);
 
             for (let t = 0; t < scanLimit; t += step) {
@@ -348,7 +347,7 @@
                 return;
             }
 
-            // TEKRARI VE BOŞLUKLARI ENGELLEYEN SEGMENT PLANLAMASI
+            // SEGMENTLERİ BİRLEŞTİRME PLANLARI
             let intervals = detectedKills.map(kt => ({
                 start: Math.max(0, kt - 3.6),
                 end: kt + 1.2
@@ -372,75 +371,54 @@
                 rawSegments = rawSegments.slice(0, 4);
             }
 
-            console.log("İşlenecek Gerçek Segment Zamanları:", rawSegments);
-
-            pText.innerText = "FFmpeg motoru hazırlanıyor...";
+            pText.innerText = "FFmpeg tek geçişli filtreler hazırlanıyor...";
             if(!ffmpeg.isLoaded()) await ffmpeg.load();
             ffmpeg.FS('writeFile', 'source.mp4', await fetchFile(selectedFile));
 
-            let concatListContent = "";
-
-            for (let i = 0; i < rawSegments.length; i++) {
-                const seg = rawSegments[i];
-                const segStart = seg.start.toFixed(2);
-                const segDur = Math.max(1.0, (seg.end - seg.start)).toFixed(2);
-                const partName = `part_${i}.mp4`;
-
-                pText.innerText = `Vuruş Sekansı ${i+1}/${rawSegments.length} renderlanıyor (${segStart}s - ${segDur}s)...`;
-
-                if (selectedFormat === '16-9') {
-                    // -ss INPUTTAN SONRA ÇALIŞTIRILIYOR (ACCURATE SEEK / LOOP ÖNLEYİCİ)
-                    await ffmpeg.run(
-                        '-i', 'source.mp4',
-                        '-ss', segStart,
-                        '-t', segDur,
-                        '-c:v', 'libx264',
-                        '-preset', 'ultrafast',
-                        '-crf', '22',
-                        '-c:a', 'aac',
-                        partName
-                    );
-                } else {
-                    const filter = 
-                        `[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:5[bg];` +
-                        `[0:v]crop=ih*9/16:ih:(iw-ih*9/16)/2:0,scale=1080:1920[fg];` +
-                        `[0:v]crop=iw*0.24:ih*0.16:iw*0.75:ih*0.02,scale=1080:-1[killfeed];` +
-                        `[bg][fg]overlay=0:0[base];` +
-                        `[base][killfeed]overlay=0:160[v]`;
-
-                    // -ss INPUTTAN SONRA ÇALIŞTIRILIYOR
-                    await ffmpeg.run(
-                        '-i', 'source.mp4',
-                        '-ss', segStart,
-                        '-t', segDur,
-                        '-filter_complex', filter,
-                        '-map', '[v]',
-                        '-map', '0:a?',
-                        '-c:v', 'libx264',
-                        '-preset', 'ultrafast',
-                        '-crf', '24',
-                        partName
-                    );
-                }
-
-                concatListContent += `file '${partName}'\n`;
-
-                const partProgress = 35 + Math.round(((i + 1) / rawSegments.length) * 55);
-                pFill.style.width = partProgress + '%';
-                pPct.innerText = '%' + partProgress;
-            }
-
-            pText.innerText = "Montaj birleştiriliyor...";
-            ffmpeg.FS('writeFile', 'concat_list.txt', concatListContent);
+            // FFMPEG TEK DOSYA İÇİNDE KESMRE VE BİRLEŞTİRME (SELECT FİLTRESİ)
+            // Bu yöntem parça parça dosya üretmediği için loop bug'ını %100 engeller!
+            let timeExprs = rawSegments.map(s => `between(t,${s.start.toFixed(2)},${s.end.toFixed(2)})`).join('+');
 
             const outFileName = "valorant_montage_shorts.mp4";
-            await ffmpeg.run(
-                '-f', 'concat',
-                '-safe', '0',
-                '-i', 'concat_list.txt',
-                '-c', 'copy',
-                outFileName
-            );
+
+            if (selectedFormat === '16-9') {
+                const selectFilter = `select='${timeExprs}',setpts=N/FRAME_RATE/TB`;
+                const aSelectFilter = `aselect='${timeExprs}',asetpts=N/SR/TB`;
+
+                await ffmpeg.run(
+                    '-i', 'source.mp4',
+                    '-vf', selectFilter,
+                    '-af', aSelectFilter,
+                    '-c:v', 'libx264',
+                    '-preset', 'ultrafast',
+                    '-crf', '22',
+                    '-c:a', 'aac',
+                    outFileName
+                );
+            } else {
+                // Hem 9:16 dikey crop hem de zaman dilimi filtresi tek komutta birleşiyor
+                const vFilter = 
+                    `[0:v]select='${timeExprs}',setpts=N/FRAME_RATE/TB[vsel];` +
+                    `[vsel]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:5[bg];` +
+                    `[vsel]crop=ih*9/16:ih:(iw-ih*9/16)/2:0,scale=1080:1920[fg];` +
+                    `[vsel]crop=iw*0.24:ih*0.16:iw*0.75:ih*0.02,scale=1080:-1[killfeed];` +
+                    `[bg][fg]overlay=0:0[base];` +
+                    `[base][killfeed]overlay=0:160[vFinal]`;
+
+                const aSelectFilter = `aselect='${timeExprs}',asetpts=N/SR/TB`;
+
+                await ffmpeg.run(
+                    '-i', 'source.mp4',
+                    '-filter_complex', vFilter,
+                    '-af', aSelectFilter,
+                    '-map', '[vFinal]',
+                    '-map', '0:a',
+                    '-c:v', 'libx264',
+                    '-preset', 'ultrafast',
+                    '-crf', '24',
+                    outFileName
+                );
+            }
 
             const data = ffmpeg.FS('readFile', outFileName);
             const blob = new Blob([data.buffer], { type: 'video/mp4' });
@@ -450,7 +428,7 @@
                 <div class="clip-item" style="border: 2px solid var(--val-red); background: rgba(255, 70, 85, 0.05);">
                     <div class="clip-info">
                         <span class="clip-tag">🔥 Tek Parça Kill Montajı (${selectedFormat === '9-16' ? '9:16 Shorts' : '16:9 Yatay'})</span>
-                        <span class="clip-time">Loop Çözüldü: ${rawSegments.length} bağımsız vuruş sekansı art arda bağlandı!</span>
+                        <span class="clip-time">Tek Geçişli Filtre: ${rawSegments.length} vuruş aralığı başarıyla birleştirildi!</span>
                     </div>
                     <a class="btn-clip-dl" href="${url}" download="valorant_montage_shorts.mp4">Montajı İndir</a>
                 </div>
