@@ -34,428 +34,18 @@
     </script>
     
     <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <style>
-        :root {
-            --bg-main: #0a0c10;
-            --bg-card: #13161f;
-            --bg-input: #0e1117;
-            --border-color: #242938;
-            --border-focus: #ff6b35;
-            --accent: #ff6b35;
-            --accent-hover: #ff5419;
-            --accent-glow: rgba(255, 107, 53, 0.35);
-            --text-main: #f3f5f9;
-            --text-muted: #8b93a7;
-            --success: #10b981;
-            --danger: #ef4444;
-            --discord: #5865F2;
-            --tiktok: #00f2fe;
-            --yt: #ff0000;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            background: radial-gradient(circle at 50% 0%, #171b26 0%, var(--bg-main) 70%); 
-            color: var(--text-main); 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            min-height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
-        }
-        
-        header { 
-            width: 100%;
-            min-height: 96px;
-            padding: 0 36px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            background: rgba(19, 22, 31, 0.92);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-color);
-            box-sizing: border-box;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            flex-wrap: wrap;
-        }
-
-        .nav-pill-group {
-            display: flex;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 3px;
-            gap: 2px;
-        }
-
-        .nav-link {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 800;
-            padding: 7px 14px;
-            border-radius: 6px;
-            transition: all 0.2s ease;
-            white-space: nowrap;
-        }
-
-        .nav-link:hover {
-            color: #fff;
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .nav-link.active {
-            color: #fff;
-            background: #1c2230;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-        }
-
-        .header-divider {
-            width: 1px;
-            height: 24px;
-            background: var(--border-color);
-            display: inline-block;
-        }
-
-        .lang-switch {
-            display: flex;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .lang-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            padding: 7px 11px;
-            font-size: 11px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: 0.2s;
-            border-right: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .lang-btn:last-child { border-right: none; }
-        .lang-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.04); }
-        .lang-btn.active {
-            background: var(--accent);
-            color: #fff;
-        }
-
-        .brand { 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 16px; 
-            text-decoration: none; 
-            color: inherit; 
-            cursor: pointer; 
-        }
-
-        .header-logo {
-            height: 64px; 
-            width: 64px;
-            min-width: 64px;
-            object-fit: cover; 
-            border-radius: 50%;
-            border: 2px solid var(--accent);
-            box-shadow: 0 0 16px var(--accent-glow);
-            display: block;
-        }
-
-        .brand h1 { 
-            font-size: 22px; 
-            font-weight: 800; 
-            letter-spacing: 0.8px; 
-            line-height: 1;
-        }
-
-        .badge-version {
-            font-size: 11px;
-            color: var(--accent);
-            background: rgba(255, 107, 53, 0.12);
-            border: 1px solid rgba(255, 107, 53, 0.3);
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-weight: 800;
-        }
-
-        .server-status {
-            font-size: 13px; color: var(--text-muted);
-        }
-
-        main { 
-            flex: 1; display: flex; justify-content: center; align-items: stretch; 
-            padding: 36px 48px; width: 100%; 
-        }
-        .layout-container { 
-            display: flex; gap: 32px; width: 100%; max-width: 1540px; 
-            align-items: stretch;
-        }
-        
-        .studio-card { 
-            flex: 1.35; background: var(--bg-card); 
-            border: 1px solid var(--border-color); border-radius: 18px; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6); overflow: hidden; 
-            display: flex; flex-direction: column;
-        }
-        .preview-card { 
-            flex: 0.95; background: var(--bg-card); 
-            border: 1px solid var(--border-color); border-radius: 18px; 
-            padding: 32px; display: flex; flex-direction: column; 
-            align-items: center; box-shadow: 0 20px 50px rgba(0,0,0,0.6); 
-        }
-
-        .tabs { display: flex; border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.25); }
-        .tab-btn { 
-            flex: 1; padding: 20px 10px; text-align: center; font-size: 13px; 
-            font-weight: 700; color: var(--text-muted); cursor: pointer; 
-            border: none; background: transparent; transition: all 0.2s; 
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-        }
-        .tab-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.02); }
-        .tab-btn.active { 
-            color: var(--accent); border-bottom: 3px solid var(--accent); 
-            background: rgba(255,107,53,0.06); 
-        }
-
-        .tab-content { display: none; padding: 36px; flex: 1; }
-        .tab-content.active { display: block; }
-        .form-group { margin-bottom: 22px; }
-        .form-row { display: flex; gap: 20px; }
-        
-        label { 
-            display: block; font-size: 13px; font-weight: 700; 
-            color: var(--text-muted); text-transform: uppercase; 
-            letter-spacing: 0.6px; margin-bottom: 8px; 
-        }
-        input[type="text"], select { 
-            width: 100%; padding: 14px 18px; background: var(--bg-input); 
-            border: 1px solid var(--border-color); border-radius: 10px; 
-            color: #fff; font-size: 15px; transition: all 0.2s; 
-        }
-        input[type="text"]:focus, select:focus { 
-            outline: none; border-color: var(--border-focus); 
-            box-shadow: 0 0 0 4px var(--accent-glow); 
-        }
-
-        .mode-selector { display: flex; gap: 14px; margin-bottom: 24px; }
-        .mode-card {
-            flex: 1; padding: 14px 12px; background: var(--bg-input); 
-            border: 1px solid var(--border-color); border-radius: 10px; 
-            text-align: center; cursor: pointer; transition: all 0.2s;
-            font-size: 13px; font-weight: 700; color: var(--text-muted);
-            user-select: none;
-        }
-        .mode-card:hover { border-color: rgba(255, 107, 53, 0.4); color: var(--text-main); }
-        .mode-card.active {
-            border-color: var(--accent); color: #fff; 
-            background: rgba(255, 107, 53, 0.12); box-shadow: 0 0 0 2px var(--accent);
-        }
-        
-        .custom-file-upload {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            padding: 22px 16px;
-            border: 2px dashed var(--border-color);
-            border-radius: 12px;
-            background: var(--bg-input);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: center;
-        }
-        .custom-file-upload:hover {
-            border-color: var(--accent);
-            background: rgba(255, 107, 53, 0.04);
-        }
-        .custom-file-upload.compact {
-            padding: 12px 16px;
-            flex-direction: row;
-            gap: 10px;
-        }
-        .upload-icon { font-size: 20px; }
-        .upload-title { font-size: 13px; font-weight: 700; color: var(--text-main); }
-        .upload-hint { font-size: 11px; color: var(--text-muted); }
-        .hidden-file-input { display: none; }
-
-        /* AI INFO BANNER */
-        .ai-banner {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 18px;
-            background: rgba(16, 185, 129, 0.08);
-            border: 1px solid rgba(16, 185, 129, 0.25);
-            border-radius: 10px;
-            margin-bottom: 22px;
-        }
-        .ai-banner-icon { font-size: 20px; }
-        .ai-banner-title { font-size: 13px; font-weight: 800; color: var(--success); }
-        .ai-banner-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-
-        .btn-submit { 
-            width: 100%; padding: 18px; 
-            background: linear-gradient(135deg, var(--accent), var(--accent-hover)); 
-            border: none; border-radius: 10px; color: #fff; font-size: 15px; 
-            font-weight: 800; cursor: pointer; transition: all 0.2s; 
-            text-transform: uppercase; letter-spacing: 0.8px; margin-top: 6px; 
-            box-shadow: 0 8px 24px var(--accent-glow);
-        }
-        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(255,107,53,0.5); }
-        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-
-        /* MOCKUP */
-        .preview-title { 
-            font-size: 14px; font-weight: 800; color: var(--text-muted); 
-            text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 24px; 
-            align-self: flex-start; 
-        }
-        .mockup-wrapper { 
-            width: 100%; flex: 1; display: flex; justify-content: center; 
-            align-items: center; min-height: 520px; 
-        }
-        .mockup-frame { 
-            width: 300px; height: 533px; border: 4px solid #2d3345; 
-            border-radius: 26px; position: relative; background: #191c26; 
-            overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.85); 
-            display: flex; flex-direction: column; justify-content: space-between; 
-            padding: 20px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-        }
-        .mockup-frame.wide { width: 480px; height: 270px; border-radius: 16px; padding: 16px; }
-        
-        .mockup-bg-blur { position: absolute; inset: 0; background: linear-gradient(135deg, #222736, #0e1017); opacity: 0.95; z-index: 1; }
-        .mockup-center-game { 
-            position: absolute; top: 16%; bottom: 16%; left: 0; right: 0; 
-            background: #2b3144; border-top: 1px solid #434c68; border-bottom: 1px solid #434c68; 
-            z-index: 2; display: flex; align-items: center; justify-content: center; 
-            font-size: 13px; color: #7985a6; font-weight: 800; letter-spacing: 1px; text-align: center;
-        }
-        .mockup-frame.wide .mockup-center-game { top: 0; bottom: 0; }
-
-        .mockup-badge { 
-            z-index: 3; align-self: center; background: #f05014; color: #fff; 
-            font-size: 12px; font-weight: 800; padding: 6px 14px; border-radius: 6px; 
-            text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(240, 80, 20, 0.4);
-        }
-        .mockup-logo { position: absolute; top: 18px; width: 44px; height: 44px; z-index: 3; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.8)); }
-        .mockup-logo.left { left: 18px; }
-        .mockup-logo.right { right: 18px; }
-        .mockup-text { 
-            z-index: 3; color: #ffd700; font-size: 18px; font-weight: 900; 
-            text-align: center; text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 0 4px 10px rgba(0,0,0,0.95); 
-            line-height: 1.25; 
-        }
-
-        /* PROGRESS */
-        .progress-box { display: none; margin: 0 36px 30px 36px; padding: 20px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 12px; }
-        .progress-meta { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; }
-        .progress-bar-bg { width: 100%; height: 10px; background: #1a1e2b; border-radius: 5px; overflow: hidden; margin-bottom: 12px; }
-        .progress-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent), #10b981); transition: width 0.2s; }
-        .status-msg { font-size: 14px; color: var(--accent); font-weight: 700; display: flex; align-items: center; gap: 8px; }
-
-        /* RESULT */
-        .result-box { display: none; margin: 0 36px 30px 36px; padding: 24px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 14px; }
-        .result-title { color: var(--success); font-weight: 800; font-size: 17px; margin-bottom: 16px; }
-        .media-preview-container { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; align-items: flex-start; }
-        .player-wrapper { background: #000; border-radius: 10px; overflow: hidden; border: 1px solid var(--border-color); display: flex; flex-direction: column; }
-        .player-wrapper video { max-height: 400px; width: auto; display: block; outline: none; }
-        .cover-preview-wrapper img { max-height: 400px; width: auto; border-radius: 10px; border: 1px solid var(--border-color); display: block; }
-        .actions { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
-        .download-btn { padding: 12px 20px; background: #1c2230; color: #fff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 700; border: 1px solid #2d364d; transition: all 0.2s; }
-        .download-btn:hover { background: #262e42; border-color: var(--accent); transform: translateY(-1px); }
-
-        .share-section {
-            border-top: 1px solid var(--border-color);
-            padding-top: 18px;
-            margin-top: 10px;
-        }
-        .share-title {
-            font-size: 12px;
-            font-weight: 800;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            margin-bottom: 12px;
-        }
-        .share-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .share-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 9px 15px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 800;
-            text-decoration: none;
-            color: #fff;
-            background: #191e2b;
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .share-btn:hover { transform: translateY(-2px); }
-        .share-btn.yt:hover { background: #cc0000; border-color: #ff0000; }
-        .share-btn.tiktok:hover { background: #010101; border-color: #00f2fe; color: #00f2fe; }
-        .share-btn.discord:hover { background: var(--discord); border-color: var(--discord); }
-        .share-btn.webshare { background: linear-gradient(135deg, #10b981, #059669); border-color: #10b981; }
-
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; padding: 10px 0; }
-        .gallery-item { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
-        .gallery-thumb { height: 180px; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .gallery-thumb img, .gallery-thumb video { width: 100%; height: 100%; object-fit: cover; }
-        .gallery-info { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
-        .gallery-filename { font-size: 13px; font-weight: 700; color: var(--text-main); word-break: break-all; }
-        .gallery-actions { display: flex; gap: 8px; }
-        .gallery-actions a, .gallery-actions button { flex: 1; padding: 8px; font-size: 12px; font-weight: 700; text-align: center; border-radius: 6px; border: none; cursor: pointer; text-decoration: none; }
-        .btn-g-download { background: #1f2937; color: #fff; }
-        .btn-g-delete { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3) !important; }
-        .btn-g-delete:hover { background: var(--danger); color: #fff; }
-
-        footer { background: var(--bg-card); border-top: 1px solid var(--border-color); padding: 18px 48px; text-align: center; font-size: 13px; color: var(--text-muted); }
-        footer span { color: var(--accent); font-weight: 700; }
-        .kick-badge {
-            display: inline-flex; align-items: center; gap: 8px;
-            background: rgba(83, 252, 24, 0.1); color: #53fc18;
-            border: 1px solid rgba(83, 252, 24, 0.3); padding: 6px 14px;
-            border-radius: 20px; text-decoration: none; font-weight: 800; font-size: 13px; margin-left: 10px;
-        }
-        .kick-badge:hover { background: #53fc18; color: #000; box-shadow: 0 0 15px rgba(83, 252, 24, 0.5); }
-        .yt-badge {
-            display: inline-flex; align-items: center; gap: 8px;
-            background: rgba(255, 0, 0, 0.1); color: #ff3333;
-            border: 1px solid rgba(255, 0, 0, 0.35); padding: 6px 14px;
-            border-radius: 20px; text-decoration: none; font-weight: 800; font-size: 13px; margin-left: 6px;
-        }
-        .yt-badge:hover { background: #ff0000; color: #fff; box-shadow: 0 0 15px rgba(255, 0, 0, 0.6); }
-
-        @media (max-width: 1080px) {
-            .layout-container { flex-direction: column; }
-            .preview-card { order: -1; }
-            header, main { padding: 20px; }
-        }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" crossorigin>
+    <link rel="stylesheet" href="assets/theme.css">
 </head>
-<body>
+<body class="page-studio">
 
     <header>
-        <div style="display: flex; align-items: center; gap: 16px;">
+        <div class="header-left">
             <a href="index.html" class="brand">
-                <video src="site_logo.webm" class="header-logo" autoplay loop muted playsinline></video>
-                <h1>MCEYS CUT STUDİO</h1>
+                <span class="logo-ring"><video src="site_logo.webm" class="header-logo" autoplay loop muted playsinline></video></span>
+                <span class="brand-text"><h1>MCEYS CUT STUDİO</h1><span class="brand-sub">cutmakeshorts.com</span></span>
             </a>
             <span class="badge-version" data-i18n="badge_fast">⚡ FAST ENGINE</span>
         </div>
@@ -482,7 +72,18 @@
     </header>
 
     <main>
-        <div class="layout-container">
+        <section class="page-hero">
+            <div class="eyebrow reveal"><span class="eyebrow-dot"></span><span data-i18n="hero_eyebrow">AI Killfeed Engine · v2</span></div>
+            <h2 class="hero-title reveal-2" data-i18n="hero_title">Gameplay'ini Saniyeler İçinde Viral Shorts'a Dönüştür</h2>
+            <p class="hero-sub reveal-3" data-i18n="hero_desc">Videonu bırak, AI motoru kill anlarını bulsun, keskin 9:16 montajı ve kapağı hazırlasın.</p>
+            <div class="chip-row reveal-3">
+                <span class="chip">🎯 AI Killfeed</span>
+                <span class="chip">📱 9:16 · 1080×1920</span>
+                <span class="chip">🖼️ 16:9 Thumbnail</span>
+                <span class="chip">⚡ MP4 · MOV · MKV</span>
+            </div>
+        </section>
+        <div class="layout-container reveal-3">
             <div class="studio-card">
                 <div class="tabs">
                     <button class="tab-btn active" onclick="switchTab('shorts')" data-i18n="tab_cs2">📱 CS2 SHORTS</button>
@@ -616,9 +217,9 @@
 
                 <!-- 4. HISTORY -->
                 <div id="tab-gallery" class="tab-content">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3 style="font-size: 16px; font-weight: 800;" data-i18n="history_title">Tarayıcıdaki Çıktılarınız</h3>
-                        <button onclick="renderGalleryUI()" style="background: #1f2937; color: #fff; border: 1px solid var(--border-color); padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;" data-i18n="btn_refresh">🔄 Yenile</button>
+                    <div class="gallery-head">
+                        <h3 data-i18n="history_title">Tarayıcıdaki Çıktılarınız</h3>
+                        <button onclick="renderGalleryUI()" class="btn-ghost" data-i18n="btn_refresh">🔄 Yenile</button>
                     </div>
                     <div id="gallery-container" class="gallery-grid">
                         <div style="color: var(--text-muted); font-size: 13px;" data-i18n="no_renders">Henüz bir çıktı üretmediniz.</div>
@@ -627,6 +228,12 @@
 
                 <!-- PROGRESS -->
                 <div id="progress-box" class="progress-box">
+                    <ol class="stepper" data-progress-source="progress-bar-fill" data-steps="server" aria-hidden="true">
+                        <li class="step"><span class="step-dot">1</span><span class="step-label" data-step-label="0">Yükleniyor</span></li>
+                        <li class="step"><span class="step-dot">2</span><span class="step-label" data-step-label="1">Analiz</span></li>
+                        <li class="step"><span class="step-dot">3</span><span class="step-label" data-step-label="2">Kesiliyor</span></li>
+                        <li class="step"><span class="step-dot">4</span><span class="step-label" data-step-label="3">Hazır</span></li>
+                    </ol>
                     <div class="progress-meta">
                         <span id="progress-title">Hazırlanıyor...</span>
                         <span id="progress-percent">%0</span>
@@ -675,7 +282,7 @@
                         <div id="mockup-main-txt" class="mockup-text">1V4 CLUTCH ACE!</div>
                     </div>
                 </div>
-                <div style="font-size: 12px; color: var(--text-muted); margin-top: 14px; text-align: center;" data-i18n="preview_footnote">
+                <div class="preview-footnote" data-i18n="preview_footnote">
                     Girdiğin metinler ve logon anlık buraya yansıtılır.
                 </div>
             </div>
@@ -757,7 +364,10 @@
                 confirm_del: "Bu çıktıyı silmek istediğinize emin misiniz?",
                 alert_no_file: "Lütfen bir video dosyası seçin!",
                 share_headline: "🚀 Platformlarda Paylaş / Yükle:",
-                share_device: "Cihazda Paylaş (Uygulamalar)"
+                share_device: "Cihazda Paylaş (Uygulamalar)",
+                hero_eyebrow: "AI Killfeed Motoru · v2",
+                hero_title: "Gameplay'ini Saniyeler İçinde Viral Shorts'a Dönüştür",
+                hero_desc: "Videonu bırak, AI motoru kill anlarını bulsun, keskin 9:16 montajı ve kapağı hazırlasın."
             },
             en: {
                 nav_home: "Home",
@@ -813,7 +423,10 @@
                 confirm_del: "Are you sure you want to delete this render?",
                 alert_no_file: "Please select a video file!",
                 share_headline: "🚀 Share / Upload To Platforms:",
-                share_device: "Share on Device (Apps)"
+                share_device: "Share on Device (Apps)",
+                hero_eyebrow: "AI Killfeed Engine · v2",
+                hero_title: "Turn Your Gameplay Into Viral Shorts in Seconds",
+                hero_desc: "Drop your video, let the AI engine find every kill, and get a crisp 9:16 montage plus cover."
             }
         };
 
@@ -1299,5 +912,6 @@
 
         setLanguage(currentLang);
     </script>
+    <script src="assets/theme.js" defer></script>
 </body>
 </html>

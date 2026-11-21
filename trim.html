@@ -39,95 +39,20 @@
     <meta name="keywords" content="video kesici, timeline video kırpma, online video editörü, kayıpsız video trim">
     <link rel="canonical" href="https://www.cutmakeshorts.com/trim.html">
 
-    <style>
-        :root {
-            --bg-main: #0a0c10;
-            --bg-card: #13161f;
-            --bg-input: #0e1117;
-            --border-color: #242938;
-            --border-focus: #ff6b35;
-            --accent: #ff6b35;
-            --accent-hover: #ff5419;
-            --accent-glow: rgba(255, 107, 53, 0.35);
-            --text-main: #f3f5f9;
-            --text-muted: #8b93a7;
-            --success: #10b981;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            background: radial-gradient(circle at 50% 0%, #171b26 0%, var(--bg-main) 70%); 
-            color: var(--text-main); 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            min-height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
-        }
-        
-        header { 
-            width: 100%; min-height: 96px; padding: 0 36px; 
-            display: flex; justify-content: space-between; align-items: center; 
-            background: rgba(19, 22, 31, 0.92); backdrop-filter: blur(12px); 
-            border-bottom: 1px solid var(--border-color); box-sizing: border-box;
-            flex-wrap: wrap; gap: 16px;
-        }
-        .brand { display: inline-flex; align-items: center; gap: 16px; text-decoration: none; color: inherit; }
-        .header-logo { height: 64px; width: 64px; min-width: 64px; border-radius: 50%; border: 2px solid var(--accent); box-shadow: 0 0 16px var(--accent-glow); }
-        .brand h1 { font-size: 22px; font-weight: 800; letter-spacing: 0.8px; line-height: 1; }
-
-        .header-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-        .nav-pill-group { display: flex; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 3px; gap: 2px; }
-        .nav-link { color: var(--text-muted); text-decoration: none; font-size: 12px; font-weight: 800; padding: 7px 14px; border-radius: 6px; transition: all 0.2s; white-space: nowrap; }
-        .nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
-        .nav-link.active { color: #fff; background: #1c2230; border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); }
-        .header-divider { width: 1px; height: 24px; background: var(--border-color); display: inline-block; }
-
-        .lang-switch { display: flex; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
-        .lang-btn { background: transparent; border: none; color: var(--text-muted); padding: 7px 11px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.2s; border-right: 1px solid rgba(255, 255, 255, 0.05); }
-        .lang-btn:last-child { border-right: none; }
-        .lang-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.04); }
-        .lang-btn.active { background: var(--accent); color: #fff; }
-
-        main { flex: 1; display: flex; justify-content: center; align-items: center; padding: 36px 20px; width: 100%; }
-        .editor-container { width: 100%; max-width: 900px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
-        
-        .custom-file-upload { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 26px; border: 2px dashed var(--border-color); border-radius: 14px; background: var(--bg-input); cursor: pointer; text-align: center; margin-bottom: 20px; }
-        .custom-file-upload:hover { border-color: var(--accent); }
-        .hidden-file-input { display: none; }
-
-        .workspace { display: none; margin-top: 10px; }
-        .player-frame { width: 100%; max-height: 420px; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); margin-bottom: 16px; display: flex; justify-content: center; }
-        .player-frame video { width: 100%; max-height: 420px; outline: none; }
-
-        .timeline-controls { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 12px; padding: 18px; margin-bottom: 20px; }
-        .timeline-slider { width: 100%; accent-color: var(--accent); cursor: pointer; margin-bottom: 14px; }
-
-        .time-markers { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-        .marker-group { display: flex; align-items: center; gap: 8px; }
-        .marker-btn { background: #1c2230; color: #fff; border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 6px; font-size: 12px; font-weight: 800; cursor: pointer; }
-        .marker-btn:hover { border-color: var(--accent); color: var(--accent); }
-        .time-badge { font-family: monospace; font-size: 14px; font-weight: 700; color: #00e1ff; background: #06090e; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); }
-
-        .btn-submit { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--accent), var(--accent-hover)); border: none; border-radius: 10px; color: #fff; font-size: 15px; font-weight: 800; cursor: pointer; text-transform: uppercase; box-shadow: 0 8px 24px var(--accent-glow); }
-        .btn-submit:hover { transform: translateY(-2px); }
-        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .progress-box { display: none; margin-top: 20px; padding: 16px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 10px; }
-        .progress-bar-fill { width: 0%; height: 8px; background: linear-gradient(90deg, var(--accent), #10b981); border-radius: 4px; transition: width 0.2s; }
-
-        .result-box { display: none; margin-top: 24px; padding: 20px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; }
-        .download-btn { display: block; text-align: center; padding: 14px; background: #10b981; color: #fff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 800; }
-
-        footer { background: var(--bg-card); border-top: 1px solid var(--border-color); padding: 20px; text-align: center; font-size: 12px; color: var(--text-muted); }
-        footer span { color: var(--accent); font-weight: 700; }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" crossorigin>
+    <link rel="stylesheet" href="assets/theme.css">
 </head>
-<body>
+<body class="page-trim">
 
     <header>
-        <a href="index.html" class="brand">
-            <video src="site_logo.webm" class="header-logo" autoplay loop muted playsinline></video>
-            <h1>MCEYS TRIM STUDİO</h1>
-        </a>
+        <div class="header-left">
+            <a href="index.html" class="brand">
+                <span class="logo-ring"><video src="site_logo.webm" class="header-logo" autoplay loop muted playsinline></video></span>
+                <span class="brand-text"><h1>MCEYS TRIM STUDİO</h1><span class="brand-sub">cutmakeshorts.com</span></span>
+            </a>
+        </div>
         <div class="header-right">
             <nav class="nav-pill-group">
                 <a href="index.html" class="nav-link" data-i18n="nav_home">Ana Sayfa</a>
@@ -147,14 +72,22 @@
     </header>
 
     <main>
-        <div class="editor-container">
-            <h2 class="trim-title" style="font-size: 20px; font-weight: 900; margin-bottom: 6px; text-align: center;" data-i18n="title">Canlı Önizlemeli Video Kesici</h2>
-            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;" data-i18n="desc">Videoyu timeline üzerinde oynat, kesmek istediğin başlangıç ve bitiş anını tek tıkla seç.</p>
-
+        <section class="page-hero">
+            <div class="eyebrow reveal"><span class="eyebrow-dot"></span><span>WebAssembly · FFmpeg · -c copy</span></div>
+            <h2 class="hero-title trim-title reveal-2" data-i18n="title">Canlı Önizlemeli Video Kesici</h2>
+            <p class="hero-sub reveal-3" data-i18n="desc">Videoyu timeline üzerinde oynat, kesmek istediğin başlangıç ve bitiş anını tek tıkla seç.</p>
+            <div class="chip-row reveal-3">
+                <span class="chip">⚡ Lossless</span>
+                <span class="chip">🔒 100% Client-side</span>
+                <span class="chip">⏱️ 0.1s Precision</span>
+                <span class="chip">🎞️ MP4 · MOV · MKV</span>
+            </div>
+        </section>
+        <div class="editor-container reveal-3">
             <label class="custom-file-upload" for="t-video" id="upload-box">
-                <span style="font-size: 32px;">🎞️</span>
-                <span id="t-file-name" style="font-weight: 700;" data-i18n="upload_title">Video Dosyası Yükle</span>
-                <span style="font-size: 11px; color: var(--text-muted);" data-i18n="upload_hint">MP4, MOV veya MKV</span>
+                <span class="upload-icon">🎞️</span>
+                <span class="upload-title" id="t-file-name" data-i18n="upload_title">Video Dosyası Yükle</span>
+                <span class="upload-hint" data-i18n="upload_hint">MP4, MOV veya MKV</span>
                 <input type="file" id="t-video" class="hidden-file-input" accept="video/mp4,video/quicktime,video/mkv" onchange="loadVideoWorkspace(this)">
             </label>
 
@@ -165,9 +98,9 @@
                 </div>
 
                 <div class="timeline-controls">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                        <button type="button" class="marker-btn" id="btn-play-pause" onclick="togglePlay()" style="padding: 6px 14px; font-size: 14px;">▶️</button>
-                        <input type="range" id="timeline-scrubber" class="timeline-slider" min="0" value="0" step="0.05" oninput="onScrub(this.value)" style="margin-bottom: 0; flex: 1;">
+                    <div class="scrub-row">
+                        <button type="button" class="marker-btn play-btn" id="btn-play-pause" onclick="togglePlay()">▶️</button>
+                        <input type="range" id="timeline-scrubber" class="timeline-slider" min="0" value="0" step="0.05" oninput="onScrub(this.value)">
                     </div>
                     
                     <div class="time-markers">
@@ -176,8 +109,8 @@
                             <span class="time-badge" id="badge-start">00:00.0</span>
                         </div>
 
-                        <div style="font-size: 13px; font-weight: 800; color: var(--text-muted);">
-                            <span data-i18n="lbl_dur">Süre:</span> <span id="badge-duration" style="color: #fff;">0.0s</span>
+                        <div class="dur-pill">
+                            <span data-i18n="lbl_dur">Süre:</span> <span id="badge-duration">0.0s</span>
                         </div>
 
                         <div class="marker-group">
@@ -190,17 +123,23 @@
                 <button type="button" class="btn-submit" id="btn-trim" onclick="executeLosslessTrim()" data-i18n="btn_trim">⚡ SEÇİLEN ARALIĞI KAYIPSIZ KES</button>
             </div>
             <div id="progress-box" class="progress-box">
-                <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px;">
+                <ol class="stepper" data-progress-source="progress-fill" data-steps="local" aria-hidden="true">
+                    <li class="step"><span class="step-dot">1</span><span class="step-label" data-step-label="0">Motor</span></li>
+                    <li class="step"><span class="step-dot">2</span><span class="step-label" data-step-label="1">Belleğe Alma</span></li>
+                    <li class="step"><span class="step-dot">3</span><span class="step-label" data-step-label="2">Kesiliyor</span></li>
+                    <li class="step"><span class="step-dot">4</span><span class="step-label" data-step-label="3">Hazır</span></li>
+                </ol>
+                <div class="progress-meta">
                     <span id="progress-text">Hazırlanıyor...</span>
                     <span id="progress-percent">%0</span>
                 </div>
-                <div style="background: #1a1e2b; height: 8px; border-radius: 4px; overflow: hidden;">
+                <div class="progress-bar-bg">
                     <div id="progress-fill" class="progress-bar-fill"></div>
                 </div>
             </div>
 
             <div id="result-box" class="result-box">
-                <div class="player-frame" style="max-height: 320px; margin-bottom: 12px;">
+                <div class="player-frame">
                     <video id="out-player" controls playsinline></video>
                 </div>
                 <a id="btn-download" class="download-btn" href="#" download="trimmed_video.mp4" data-i18n="btn_dl">🎬 Kesilen Videoyu İndir</a>
@@ -480,5 +419,6 @@
 
         setTrimLang(currentLang);
     </script>
+    <script src="assets/theme.js" defer></script>
 </body>
 </html>

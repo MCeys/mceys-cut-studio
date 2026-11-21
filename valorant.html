@@ -26,119 +26,18 @@
     <title>MCEYS VALORANT STUDIO - Akıllı Highlight Kesici</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
 
-    <style>
-        :root {
-            --bg-main: #0a0c10;
-            --bg-card: #121620;
-            --bg-input: #0e1117;
-            --border-color: #242b3d;
-            --val-red: #ff4655;
-            --val-red-hover: #ff2b3d;
-            --val-glow: rgba(255, 70, 85, 0.4);
-            --text-main: #ece8e1;
-            --text-muted: #8b94a7;
-            --success: #10b981;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            background: radial-gradient(circle at 50% 0%, #1a1724 0%, var(--bg-main) 75%); 
-            color: var(--text-main); 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            min-height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
-        }
-        header { 
-            width: 100%; min-height: 96px; padding: 0 36px; 
-            display: flex; justify-content: space-between; align-items: center; 
-            background: rgba(18, 22, 32, 0.92); backdrop-filter: blur(12px); 
-            border-bottom: 1px solid var(--border-color);
-            flex-wrap: wrap; gap: 16px;
-        }
-        .brand { display: inline-flex; align-items: center; gap: 16px; text-decoration: none; color: inherit; }
-        .header-logo { height: 64px; width: 64px; border-radius: 50%; border: 2px solid var(--val-red); box-shadow: 0 0 16px var(--val-glow); object-fit: cover; }
-        .brand h1 { font-size: 20px; font-weight: 900; letter-spacing: 0.8px; line-height: 1; }
-        .badge-val { background: rgba(255, 70, 85, 0.12); color: var(--val-red); font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 800; border: 1px solid rgba(255, 70, 85, 0.3); margin-left: 10px; }
-
-        .header-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-        .nav-pill-group { display: flex; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 3px; gap: 2px; }
-        .nav-link { color: var(--text-muted); text-decoration: none; font-size: 12px; font-weight: 800; padding: 7px 14px; border-radius: 6px; transition: all 0.2s; white-space: nowrap; }
-        .nav-link:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
-        .nav-link.active { color: #fff; background: #1f1a26; border: 1px solid rgba(255, 70, 85, 0.2); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); }
-
-        .header-divider { width: 1px; height: 24px; background: var(--border-color); display: inline-block; }
-
-        .lang-switch { display: flex; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
-        .lang-btn { background: transparent; border: none; color: var(--text-muted); padding: 7px 11px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.2s; border-right: 1px solid rgba(255, 255, 255, 0.05); }
-        .lang-btn:last-child { border-right: none; }
-        .lang-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.04); }
-        .lang-btn.active { background: var(--val-red); color: #fff; }
-
-        main { flex: 1; display: flex; justify-content: center; align-items: center; padding: 36px 20px; width: 100%; }
-        .studio-card { width: 100%; max-width: 900px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
-
-        .custom-file-upload { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 30px; border: 2px dashed var(--border-color); border-radius: 14px; background: var(--bg-input); cursor: pointer; text-align: center; margin-bottom: 20px; transition: all 0.2s; }
-        .custom-file-upload:hover { border-color: var(--val-red); background: rgba(255, 70, 85, 0.05); }
-
-        .format-selector { display: flex; gap: 12px; margin-bottom: 18px; }
-        .format-card { flex: 1; background: var(--bg-input); border: 2px solid var(--border-color); border-radius: 12px; padding: 14px; cursor: pointer; text-align: center; transition: 0.2s; }
-        .format-card.selected { border-color: var(--val-red); background: rgba(255, 70, 85, 0.08); box-shadow: 0 0 16px var(--val-glow); }
-        .format-title { font-weight: 800; font-size: 14px; display: block; margin-bottom: 4px; }
-        .format-desc { font-size: 11px; color: var(--text-muted); }
-
-        .mode-container { margin-bottom: 18px; }
-        .mode-buttons { display: flex; gap: 10px; }
-        .btn-mode {
-            flex: 1;
-            padding: 12px 14px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-muted);
-            font-size: 12px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .btn-mode:hover { color: #fff; border-color: rgba(255, 70, 85, 0.4); }
-        .btn-mode.selected {
-            background: rgba(255, 70, 85, 0.12);
-            border-color: var(--val-red);
-            color: #fff;
-            box-shadow: 0 0 12px var(--val-glow);
-        }
-
-        .workspace { display: none; margin-top: 10px; }
-        .player-frame { width: 100%; max-height: 380px; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); margin-bottom: 16px; display: flex; justify-content: center; position: relative; }
-        .player-frame video { width: 100%; max-height: 380px; }
-
-        .debug-panel { display: flex; justify-content: space-between; align-items: center; background: #0b0d13; border: 1px solid #1f2535; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-family: monospace; color: var(--val-red); margin-bottom: 14px; }
-
-        .btn-submit { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--val-red), var(--val-red-hover)); border: none; border-radius: 10px; color: #fff; font-size: 15px; font-weight: 800; cursor: pointer; text-transform: uppercase; box-shadow: 0 8px 24px var(--val-glow); transition: 0.2s; }
-        .btn-submit:hover { transform: translateY(-2px); }
-        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .progress-box { display: none; margin-top: 20px; padding: 16px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 10px; }
-        .progress-bar-fill { width: 0%; height: 8px; background: linear-gradient(90deg, var(--val-red), #ff8a95); border-radius: 4px; transition: width 0.3s; }
-
-        .clips-container { display: none; margin-top: 24px; }
-        .clip-item { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 10px; padding: 14px 18px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .clip-info { display: flex; flex-direction: column; gap: 4px; }
-        .clip-tag { font-size: 13px; font-weight: 800; color: var(--val-red); }
-        .clip-time { font-size: 11px; color: var(--text-muted); }
-        .btn-clip-dl { padding: 8px 16px; background: var(--val-red); color: #fff; text-decoration: none; border-radius: 6px; font-size: 12px; font-weight: 800; }
-
-        footer { background: var(--bg-card); border-top: 1px solid var(--border-color); padding: 20px; text-align: center; font-size: 12px; color: var(--text-muted); }
-        footer span { color: var(--val-red); font-weight: 700; }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" crossorigin>
+    <link rel="stylesheet" href="assets/theme.css">
 </head>
-<body>
+<body class="page-val">
 
     <header>
-        <div style="display: flex; align-items: center;">
+        <div class="header-left">
             <a href="index.html" class="brand">
-                <video src="site_logo.webm" class="header-logo" autoplay loop muted playsinline></video>
-                <h1>VALORANT AUTO-STUDIO</h1>
+                <span class="logo-ring"><video src="site_logo.webm" class="header-logo" autoplay loop muted playsinline></video></span>
+                <span class="brand-text"><h1>VALORANT AUTO-STUDIO</h1><span class="brand-sub">cutmakeshorts.com</span></span>
             </a>
             <span class="badge-val" data-i18n="badge_val">⚡ PYTHON OPENCV MOTORU</span>
         </div>
@@ -162,14 +61,22 @@
     </header>
 
     <main>
-        <div class="studio-card">
-            <h2 style="font-size: 22px; font-weight: 900; margin-bottom: 6px; text-align: center;" data-i18n="title">Valorant Akıllı Highlight Kesici</h2>
-            <p style="font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 24px;" data-i18n="desc">Tam Otomatik Sunucu Motoru: Killfeed tespiti ve dikey montaj doğrudan Python tarafından yapılır!</p>
-
+        <section class="page-hero">
+            <div class="eyebrow reveal"><span class="eyebrow-dot"></span><span>Python · OpenCV · FFmpeg</span></div>
+            <h2 class="hero-title reveal-2" data-i18n="title">Valorant Akıllı Highlight Kesici</h2>
+            <p class="hero-sub reveal-3" data-i18n="desc">Tam Otomatik Sunucu Motoru: Killfeed tespiti ve dikey montaj doğrudan Python tarafından yapılır!</p>
+            <div class="chip-row reveal-3">
+                <span class="chip">🎯 Auto Kill Detect</span>
+                <span class="chip">📱 9:16 Shorts</span>
+                <span class="chip">🖥️ 16:9 Original</span>
+                <span class="chip">⚡ MP4 · MOV · WebM</span>
+            </div>
+        </section>
+        <div class="studio-card reveal-3">
             <div class="custom-file-upload" id="drop-zone" onclick="document.getElementById('v-video-file').click()">
-                <span style="font-size: 32px;">🎯</span>
-                <span id="v-file-name" style="font-weight: 700;" data-i18n="upload_title">Valorant Klibini Seç veya Sürükle</span>
-                <span style="font-size: 11px; color: var(--text-muted);" data-i18n="upload_hint">MP4, MOV veya WebM</span>
+                <span class="upload-icon">🎯</span>
+                <span class="upload-title" id="v-file-name" data-i18n="upload_title">Valorant Klibini Seç veya Sürükle</span>
+                <span class="upload-hint" data-i18n="upload_hint">MP4, MOV veya WebM</span>
                 <input type="file" id="v-video-file" style="display: none;" accept="video/mp4,video/quicktime,video/webm">
             </div>
 
@@ -186,7 +93,7 @@
                 </div>
 
                 <div class="mode-container">
-                    <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 6px;" data-i18n="mode_header">🎯 HEDEF KILL TÜRÜ:</span>
+                    <span class="mode-header" data-i18n="mode_header">🎯 HEDEF KILL TÜRÜ:</span>
                     <div class="mode-buttons">
                         <button type="button" class="btn-mode selected" id="mode-team" onclick="selectKillMode('team')" data-i18n="mode_team">👥 Tüm Takım & ACE (Önerilen)</button>
                         <button type="button" class="btn-mode" id="mode-solo" onclick="selectKillMode('solo')" data-i18n="mode_solo">👤 Sadece Kendi Kill'lerim</button>
@@ -199,24 +106,30 @@
 
                 <div class="debug-panel" id="debug-panel">
                     <span id="debug-status" data-i18n="status_ready">Durum: Sunucu motoru hazır</span>
-                    <span id="debug-metrics" style="color:#00f2fe;" data-i18n="engine_type">Mod: Python OpenCV</span>
+                    <span id="debug-metrics" data-i18n="engine_type">Mod: Python OpenCV</span>
                 </div>
 
                 <button type="button" class="btn-submit" id="btn-scan" onclick="startScanAndRender()" data-i18n="btn_scan">🎬 SUNUCUDA OTOMATİK TARA VE MONTAJLA</button>
             </div>
 
             <div id="progress-box" class="progress-box">
-                <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px;">
+                <ol class="stepper" data-progress-source="progress-fill" data-steps="server" aria-hidden="true">
+                    <li class="step"><span class="step-dot">1</span><span class="step-label" data-step-label="0">Yükleniyor</span></li>
+                    <li class="step"><span class="step-dot">2</span><span class="step-label" data-step-label="1">Analiz</span></li>
+                    <li class="step"><span class="step-dot">3</span><span class="step-label" data-step-label="2">Kesiliyor</span></li>
+                    <li class="step"><span class="step-dot">4</span><span class="step-label" data-step-label="3">Hazır</span></li>
+                </ol>
+                <div class="progress-meta">
                     <span id="progress-text">İşlem başlatılıyor...</span>
                     <span id="progress-pct">%0</span>
                 </div>
-                <div style="background: #1a1e2b; height: 8px; border-radius: 4px; overflow: hidden;">
+                <div class="progress-bar-bg">
                     <div id="progress-fill" class="progress-bar-fill"></div>
                 </div>
             </div>
 
             <div id="clips-container" class="clips-container">
-                <h3 style="font-size: 15px; margin-bottom: 12px; color: var(--val-red);" data-i18n="res_headline">🔥 Üretilen Montaj</h3>
+                <h3 class="clips-title" data-i18n="res_headline">🔥 Üretilen Montaj</h3>
                 <div id="clips-list"></div>
             </div>
         </div>
@@ -473,6 +386,7 @@
             formData.append('video', selectedFile);
             formData.append('format', selectedFormat);
             formData.append('mode', selectedKillMode);
+            formData.append('game', 'valorant');
 
             try {
                 setTimeout(() => {
@@ -531,5 +445,6 @@
 
         setValLang(currentLang);
     </script>
+    <script src="assets/theme.js" defer></script>
 </body>
 </html>
