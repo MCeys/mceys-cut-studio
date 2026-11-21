@@ -16,6 +16,8 @@ PRE_ROLL = 3.5       # seconds kept before the first kill of a fight
 POST_ROLL = 2.5      # seconds kept after the last kill of a fight
 MERGE_GAP = 7.0      # kills closer than this belong to the same fight -> one clip
 MIN_SEGMENT = 1.0
+X264_PRESET = 'superfast'
+FFMPEG_THREADS = 2
 
 
 def build_segments(kill_times, duration, fps, pre=PRE_ROLL, post=POST_ROLL, gap=MERGE_GAP):
@@ -100,12 +102,15 @@ def build_command(src, dst, segments, info, fmt, game, kf_box):
         parts.append(''.join(f'[v{i}]' for i in range(n)) + f'concat=n={n}:v=1:a=0[vc];')
     parts.append(layout_filter(fmt, game, kf_box, info.fps))
 
-    cmd = ['ffmpeg', '-y', '-v', 'error', '-nostdin', '-i', src,
-           '-filter_complex', ''.join(parts), '-map', '[outv]']
+    # Tuned for a 2 vCPU / 4 GB host: 2 decoder + 2 encoder threads, single-threaded filter
+    # graph, short x264 lookahead and a bounded mux queue keep resident memory low.
+    cmd = ['ffmpeg', '-y', '-v', 'error', '-nostdin', '-threads', str(FFMPEG_THREADS), '-i', src,
+           '-filter_complex_threads', '1', '-filter_complex', ''.join(parts), '-map', '[outv]']
     if info.has_audio:
         cmd += ['-map', '[outa]', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000']
-    cmd += ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-pix_fmt', 'yuv420p',
-            '-movflags', '+faststart', dst]
+    cmd += ['-c:v', 'libx264', '-preset', X264_PRESET, '-crf', '20', '-pix_fmt', 'yuv420p',
+            '-threads', str(FFMPEG_THREADS), '-rc-lookahead', '10',
+            '-max_muxing_queue_size', '512', '-movflags', '+faststart', dst]
     return cmd
 
 

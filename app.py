@@ -12,6 +12,7 @@ POST /api/process   (multipart/form-data)
 """
 import logging
 import os
+import threading
 import uuid
 
 from flask import Flask, jsonify, request, send_file
@@ -31,6 +32,12 @@ TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
 HEADSHOT_TEMPLATE = os.path.join(TEMPLATES_DIR, 'headshot.png')
 for d in (UPLOAD_DIR, OUTPUT_DIR, TEMPLATES_DIR):
     os.makedirs(d, exist_ok=True)
+
+# One heavy scan+render at a time per process (gunicorn: 1 worker, 2 threads). The second
+# thread stays free for fast responses; extra heavy jobs wait in line instead of running
+# in parallel and exhausting the 4 GB host.
+HEAVY_JOB = threading.BoundedSemaphore(1)
+QUEUE_WAIT_S = 1200
 
 ALLOWED_EXT = {'.mp4', '.mov', '.mkv', '.webm', '.m4v'}
 FORMATS = {'9-16', '16-9'}
@@ -80,8 +87,12 @@ def handle_process():
     input_path = os.path.join(UPLOAD_DIR, f'input_{uid}{ext if ext in ALLOWED_EXT else ".mp4"}')
     output_path = os.path.join(OUTPUT_DIR, f'montage_{uid}.mp4')
     file.save(input_path)
-    log.info('[%s] job start game=%s format=%s mode=%s file=%s', uid, game, fmt, mode, file.filename)
+    log.info('[%s] queued game=%s format=%s mode=%s file=%s', uid, game, fmt, mode, file.filename)
 
+    if not HEAVY_JOB.acquire(timeout=QUEUE_WAIT_S):
+        _remove(input_path)
+        return error('Sunucu şu an başka bir videoyu işliyor, lütfen birkaç dakika sonra tekrar deneyin.', 503)
+    log.info('[%s] job start', uid)
     try:
         try:
             info = ke.probe(input_path)
@@ -105,6 +116,7 @@ def handle_process():
         _remove(output_path)
         return error(f'{game.upper()} videosu işlenirken bir sorun oluştu', 500)
     finally:
+        HEAVY_JOB.release()
         _remove(input_path)
 
     resp = send_file(output_path, mimetype='video/mp4', as_attachment=True,
