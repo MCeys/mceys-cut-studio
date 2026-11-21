@@ -112,12 +112,15 @@
     }
 
     function init() {
+        initDropZones();
+        // Pages without a stepper (e.g. the landing page) start nothing else.
+        if (!document.querySelector('.stepper')) return;
         renderStepLabels();
         initSteppers();
-        initDropZones();
-        // Re-translate stepper labels after the page's own language switch runs
-        document.addEventListener('click', function (e) {
-            if (e.target.closest && e.target.closest('.lang-btn')) setTimeout(renderStepLabels, 0);
+        // Re-translate stepper labels after the page's own language switch runs.
+        // Bound only to the language buttons, never to scroll/resize or the whole body.
+        document.querySelectorAll('.lang-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () { setTimeout(renderStepLabels, 0); }, { passive: true });
         });
     }
 
