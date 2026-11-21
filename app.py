@@ -1,327 +1,123 @@
-from flask import Flask, request, send_file, jsonify
-import cv2
-import numpy as np
-import subprocess
+"""
+MCEYS Cut Studio - backend API.
+
+POST /api/process   (multipart/form-data)
+    video   file      required
+    game    cs2 | valorant                      required
+    format  9-16 | 16-9                         default 9-16
+    mode    valorant: team | solo | headshot | multikill   (default team)
+            cs2:      solo | multikill                     (default solo)
+-> 200 video/mp4 attachment
+-> 4xx/5xx {"error": "..."}  (shown to the user by the frontend)
+"""
+import logging
 import os
 import uuid
-import glob
+
+from flask import Flask, jsonify, request, send_file
+
+import kill_engine as ke
+import renderer
+
+try:                                  # optional; frontend calls the API same-origin
+    from flask_cors import CORS
+except ImportError:                   # pragma: no cover
+    CORS = None
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_DIR = os.path.join(BASE_DIR, 'uploads')
+OUTPUT_DIR = os.path.join(BASE_DIR, 'outputs')
+TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
+HEADSHOT_TEMPLATE = os.path.join(TEMPLATES_DIR, 'headshot.png')
+for d in (UPLOAD_DIR, OUTPUT_DIR, TEMPLATES_DIR):
+    os.makedirs(d, exist_ok=True)
+
+ALLOWED_EXT = {'.mp4', '.mov', '.mkv', '.webm', '.m4v'}
+FORMATS = {'9-16', '16-9'}
 
 app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 1024      # matches nginx client_max_body_size
+if CORS:
+    CORS(app)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+log = logging.getLogger('cutstudio')
 
-# ---------------- CONFIG ----------------
-UPLOAD_DIR = 'uploads/'
-TEMP_DIR = 'temp_clips/'
-OUTPUT_DIR = 'outputs/'
-TEMPLATES_DIR = 'templates/'
-DEBUG_DIR = 'debug_frames/'
 
-# Valorant Killfeed Turkuaz / Nane Yeşili HSV Aralığı
-LOWER_CYAN = np.array([65, 50, 100])
-UPPER_CYAN = np.array([105, 255, 255])
+def error(msg, code):
+    return jsonify({'error': msg}), code
 
-# CS2 Killfeed Kırmızı / Turuncu Bildirim HSV Aralıkları
-LOWER_RED1 = np.array([0, 120, 70])
-UPPER_RED1 = np.array([10, 255, 255])
-LOWER_RED2 = np.array([170, 120, 70])
-UPPER_RED2 = np.array([180, 255, 255])
-# ----------------------------------------
 
-for d in [UPLOAD_DIR, TEMP_DIR, OUTPUT_DIR, DEBUG_DIR]:
-    if not os.path.exists(d):
-        os.makedirs(d)
+def _remove(*paths):
+    for p in paths:
+        try:
+            if p and os.path.exists(p):
+                os.remove(p)
+        except OSError:
+            log.warning('could not remove %s', p)
 
-def load_templates(directory):
-    templates = []
-    for filepath in glob.glob(os.path.join(directory, '*.png')):
-        filename = os.path.basename(filepath)
-        if 'headshot' in filename.lower():
-            continue
-        tpl = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)
-        if tpl is not None:
-            templates.append((filename, tpl))
-    print(f"Toplam {len(templates)} adet silah şablonu yüklendi.")
-    return templates
 
-def detect_valorant_kills(video_path, templates):
-    cap = cv2.VideoCapture(video_path)
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    if not fps or fps <= 0:
-        fps = 30.0
-        
-    kill_timestamps = []
-    frame_count = 0
-    skip_frames = max(1, int(fps / 4))
-
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
-            
-        frame_count += 1
-        if frame_count % skip_frames != 0:
-            continue
-
-        height, width = frame.shape[:2]
-        
-        roi_x1 = int(width * 0.72)
-        roi_y1 = int(height * 0.04)
-        roi_x2 = width
-        roi_y2 = int(height * 0.28)
-        
-        roi_bgr = frame[roi_y1:roi_y2, roi_x1:roi_x2]
-        roi_hsv = cv2.cvtColor(roi_bgr, cv2.COLOR_BGR2HSV)
-        
-        mask = cv2.inRange(roi_hsv, LOWER_CYAN, UPPER_CYAN)
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (20, 5))
-        mask_closed = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-        
-        contours, _ = cv2.findContours(mask_closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        
-        for cnt in contours:
-            x, y, w, h = cv2.boundingRect(cnt)
-            
-            if (130 < w < 280) and (22 < h < 42):
-                timestamp = frame_count / fps
-                kill_timestamps.append(timestamp)
-                
-                print(f"[!] Valorant Kill Yakalandı: {timestamp:.2f}. sn (Boyut: {w}x{h})")
-                
-                debug_frame = roi_bgr.copy()
-                cv2.rectangle(debug_frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
-                cv2.imwrite(os.path.join(DEBUG_DIR, f"val_feed_{timestamp:.2f}.png"), debug_frame)
-                
-                frame_count += int(fps * 3.0)
-                cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
-                break
-
-    cap.release()
-    return kill_timestamps
-
-def detect_cs2_kills(video_path):
-    cap = cv2.VideoCapture(video_path)
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    if not fps or fps <= 0:
-        fps = 30.0
-
-    kill_timestamps = []
-    frame_count = 0
-    skip_frames = max(1, int(fps / 5))
-
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        frame_count += 1
-        if frame_count % skip_frames != 0:
-            continue
-
-        height, width = frame.shape[:2]
-
-        roi_x1 = int(width * 0.70)
-        roi_y1 = int(height * 0.02)
-        roi_x2 = int(width * 0.98)
-        roi_y2 = int(height * 0.25)
-
-        roi_bgr = frame[roi_y1:roi_y2, roi_x1:roi_x2]
-        roi_hsv = cv2.cvtColor(roi_bgr, cv2.COLOR_BGR2HSV)
-
-        mask1 = cv2.inRange(roi_hsv, LOWER_RED1, UPPER_RED1)
-        mask2 = cv2.inRange(roi_hsv, LOWER_RED2, UPPER_RED2)
-        mask = mask1 | mask2
-
-        red_pixels = cv2.countNonZero(mask)
-
-        if red_pixels > 450:
-            timestamp = frame_count / fps
-            kill_timestamps.append(timestamp)
-
-            print(f"[!] CS2 Kill Yakalandı: {timestamp:.2f}. sn (Kırmızı Piksel: {red_pixels})")
-
-            debug_frame = roi_bgr.copy()
-            cv2.imwrite(os.path.join(DEBUG_DIR, f"cs2_feed_{timestamp:.2f}.png"), debug_frame)
-
-            frame_count += int(fps * 2.5)
-            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
-
-    cap.release()
-    return kill_timestamps
-
-def merge_segments(timestamps, pre_roll=3.5, post_roll=2.5):
-    if not timestamps:
-        return []
-        
-    segments = []
-    for ts in timestamps:
-        start = max(0.0, ts - pre_roll)
-        end = ts + post_roll
-        
-        if not segments:
-            segments.append([start, end])
-        else:
-            last_segment = segments[-1]
-            if start <= last_segment[1]:
-                last_segment[1] = max(last_segment[1], end)
-            else:
-                segments.append([start, end])
-    return segments
-
-def process_video(input_video, output_video, format_type='9-16', game='valorant'):
-    job_id = str(uuid.uuid4())[:8]
-    print(f"[{job_id}] İşlem başladı (Oyun: {game}, Format: {format_type})...")
-    
-    if game.lower() == 'cs2':
-        timestamps = detect_cs2_kills(input_video)
-    else:
-        templates = load_templates(TEMPLATES_DIR)
-        timestamps = detect_valorant_kills(input_video, templates)
-    
-    if not timestamps:
-        print(f"[{job_id}] Hiç geçerli kill bulunamadı.")
-        return False
-        
-    segments = merge_segments(timestamps)
-    print(f"[{job_id}] Kırpılacak Kesitler: {segments}")
-    
-    # 9:16 modunda oyun bazlı killfeed kırpma alanı
-    if game.lower() == 'cs2':
-        vertical_filter = (
-            "[0:v]scale=-1:1920,crop=1080:1920:(iw-1080)/2:0[main];"
-            "[0:v]crop=w=iw*0.30:h=ih*0.22:x=iw*0.69:y=ih*0.02,scale=920:-1[kf];"
-            "[main][kf]overlay=(W-w)/2:120[outv]"
-        )
-    else:
-        vertical_filter = (
-            "[0:v]scale=-1:1920,crop=1080:1920:(iw-1080)/2:0[main];"
-            "[0:v]crop=w=iw*0.32:h=ih*0.20:x=iw*0.68:y=ih*0.02,scale=900:-1[kf];"
-            "[main][kf]overlay=(W-w)/2:140[outv]"
-        )
-    
-    temp_files = []
-    concat_list_path = os.path.join(TEMP_DIR, f"concat_{job_id}.txt")
-    
-    with open(concat_list_path, 'w', encoding='utf-8') as f:
-        for idx, (start, end) in enumerate(segments):
-            duration = end - start
-            temp_output = os.path.join(TEMP_DIR, f"clip_{job_id}_{idx}.mp4")
-            
-            if format_type == '16-9':
-                ffmpeg_cmd = [
-                    'ffmpeg', '-y', '-ss', f"{start:.2f}", '-t', f"{duration:.2f}",
-                    '-i', input_video,
-                    '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20',
-                    '-c:a', 'aac',
-                    temp_output
-                ]
-            else:
-                ffmpeg_cmd = [
-                    'ffmpeg', '-y', '-ss', f"{start:.2f}", '-t', f"{duration:.2f}",
-                    '-i', input_video,
-                    '-filter_complex', vertical_filter,
-                    '-map', '[outv]', '-map', '0:a',
-                    '-c:v', 'libx264', '-preset', 'fast', '-crf', '22',
-                    '-c:a', 'aac',
-                    temp_output
-                ]
-            
-            print(f"[{job_id}] Kesit hazırlanıyor: {idx+1}/{len(segments)} ({start:.2f}s - {end:.2f}s)")
-            subprocess.run(ffmpeg_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            
-            f.write(f"file '{os.path.abspath(temp_output)}'\n")
-            temp_files.append(temp_output)
-            
-    print(f"[{job_id}] Klipler birleştiriliyor...")
-    concat_cmd = [
-        'ffmpeg', '-y', '-f', 'concat', '-safe', '0',
-        '-i', concat_list_path,
-        '-c', 'copy',
-        output_video
-    ]
-    subprocess.run(concat_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    
-    if os.path.exists(concat_list_path):
-        os.remove(concat_list_path)
-    for tmp in temp_files:
-        if os.path.exists(tmp):
-            os.remove(tmp)
-            
-    print(f"[{job_id}] BİTTİ! Dosya hazır: {output_video}")
-    return True
-
-def detect_cs2_kills(video_path):
-    cap = cv2.VideoCapture(video_path)
-    fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
-
-    lower_red1 = np.array([0, 120, 70])
-    upper_red1 = np.array([10, 255, 255])
-    lower_red2 = np.array([170, 120, 70])
-    upper_red2 = np.array([180, 255, 255])
-
-    detected_kills = []
-    frame_step = max(1, int(fps * 0.15))
-    current_frame = 0
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-
-    while current_frame < total_frames:
-        cap.set(cv2.CAP_PROP_POS_FRAMES, current_frame)
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        frame_1080 = cv2.resize(frame, (1920, 1080))
-        # CS2 sağ üst killfeed kutusu
-        roi = frame_1080[20:250, 1350:1900]
-        hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
-
-        mask = cv2.inRange(hsv, lower_red1, upper_red1) | cv2.inRange(hsv, lower_red2, upper_red2)
-        red_pixels = cv2.countNonZero(mask)
-
-        if red_pixels > 450:
-            timestamp = current_frame / fps
-            if len(detected_kills) == 0 or (timestamp - detected_kills[-1] > 2.5):
-                detected_kills.append(timestamp)
-                print(f"[!] CS2 Kill Yakalandı: {timestamp:.2f}. sn (Piksel: {red_pixels})", flush=True)
-                current_frame += int(fps * 2.0)
-                continue
-
-        current_frame += frame_step
-
-    cap.release()
-    return detected_kills
-
-# ---------------- API ENDPOINT ----------------
 @app.route('/api/process', methods=['POST'])
 def handle_process():
-    if 'video' not in request.files:
-        return jsonify({'error': 'Video dosyası bulunamadı'}), 400
-        
-    file = request.files['video']
-    if file.filename == '':
-        return jsonify({'error': 'Dosya seçilmedi'}), 400
+    file = request.files.get('video')
+    if file is None:
+        return error('Video dosyası bulunamadı', 400)
+    if not file.filename:
+        return error('Dosya seçilmedi', 400)
 
-    selected_format = request.form.get('format', '9-16')
-    selected_game = request.form.get('game', 'valorant')  # 'cs2' veya 'valorant'
-    
-    uid = str(uuid.uuid4())[:8]
-    input_path = os.path.join(UPLOAD_DIR, f"input_{uid}_{file.filename}")
-    output_path = os.path.join(OUTPUT_DIR, f"montage_{uid}.mp4")
-    
+    game = (request.form.get('game') or '').strip().lower()
+    if game not in ke.ROI:
+        return error("Geçersiz veya eksik 'game' parametresi (cs2 veya valorant olmalı)", 400)
+    fmt = (request.form.get('format') or '9-16').strip()
+    if fmt not in FORMATS:
+        return error("Geçersiz 'format' parametresi (9-16 veya 16-9 olmalı)", 400)
+    mode = ke.normalize_mode(game, request.form.get('mode'))
+    if mode is None:
+        return error(f"Geçersiz 'mode' parametresi. {game.upper()} için: "
+                     + ', '.join(sorted(ke.MODES[game])), 400)
+
+    uid = uuid.uuid4().hex[:10]
+    ext = os.path.splitext(file.filename)[1].lower()
+    input_path = os.path.join(UPLOAD_DIR, f'input_{uid}{ext if ext in ALLOWED_EXT else ".mp4"}')
+    output_path = os.path.join(OUTPUT_DIR, f'montage_{uid}.mp4')
     file.save(input_path)
-    
-    success = process_video(input_path, output_path, format_type=selected_format, game=selected_game)
-    
-    if os.path.exists(input_path):
-        os.remove(input_path)
-        
-    if not success:
-        return jsonify({'error': f'{selected_game.upper()} videosunda kill bulunamadı'}), 400
-        
-    return send_file(
-        output_path,
-        mimetype='video/mp4',
-        as_attachment=True,
-        download_name=f"{selected_game}_{selected_format}_{uid}.mp4"
-    )
+    log.info('[%s] job start game=%s format=%s mode=%s file=%s', uid, game, fmt, mode, file.filename)
+
+    try:
+        try:
+            info = ke.probe(input_path)
+        except ValueError:
+            return error('Video okunamadı. Lütfen geçerli bir MP4/MOV/MKV/WebM dosyası yükleyin.', 400)
+
+        scan = ke.scan_video(input_path, game, info, HEADSHOT_TEMPLATE)
+        if mode == 'headshot' and not scan.headshot_supported:
+            return error('Headshot modu için templates/headshot.png şablonu eksik veya geçersiz.', 400)
+        times = ke.select_kills(scan.kills, game, mode, renderer.MERGE_GAP)
+        log.info('[%s] %d banner kills, %d kept for mode=%s: %s', uid, len(scan.kills), len(times), mode,
+                 ', '.join(f'{t:.1f}s' for t in times))
+        segments = renderer.build_segments(times, info.duration, info.fps)
+        if not segments:
+            return error(f'{game.upper()} videosunda seçilen moda ({mode}) uygun kill bulunamadı.', 422)
+
+        log.info('[%s] segments: %s', uid, ', '.join(f'{s:.2f}-{e:.2f}' for s, e in segments))
+        renderer.render(input_path, output_path, segments, info, fmt, game, scan.killfeed_box)
+    except Exception:
+        log.exception('[%s] processing failed', uid)
+        _remove(output_path)
+        return error(f'{game.upper()} videosu işlenirken bir sorun oluştu', 500)
+    finally:
+        _remove(input_path)
+
+    resp = send_file(output_path, mimetype='video/mp4', as_attachment=True,
+                     download_name=f'{game}_{fmt}_{uid}.mp4')
+    resp.call_on_close(lambda: _remove(output_path))
+    log.info('[%s] done', uid)
+    return resp
+
+
+@app.errorhandler(413)
+def too_large(_):
+    return error('Dosya çok büyük (en fazla 1 GB).', 413)
+
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='127.0.0.1', port=int(os.environ.get('PORT', 5001)), debug=False)
